@@ -1,3 +1,17 @@
+```jsonc
+{
+  "name": "moneymemoneynow",
+  "compatibility_date": "2025-11-27",
+  "assets": {
+    "directory": "./dist"
+  },
+  "build": {
+    "command": "npm run build",
+    "cwd": "./"
+  }
+}
+
+```
 {
   "name": "moneymemoneynow",
   "pages_build_output_dir": "./dist",
