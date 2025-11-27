@@ -141,6 +141,38 @@ input, textarea, select {
   border-radius: 8px;
 }
 
+/* Map common Tailwind utility classes to the dark theme so existing markup
+   using `bg-white`, `bg-gray-50`, `text-gray-900`, etc. displays correctly. */
+.dark .bg-white {
+  background-color: var(--card) !important;
+  color: var(--card-foreground) !important;
+  border-color: rgba(255,255,255,0.03) !important;
+}
+
+.dark .bg-gray-50 {
+  background-color: var(--background) !important;
+}
+
+.dark .text-gray-900 {
+  color: var(--foreground) !important;
+}
+
+.dark .text-gray-700,
+.dark .text-gray-600,
+.dark .text-gray-500 {
+  color: color-mix(in oklab, var(--foreground) 78%, transparent) !important;
+}
+
+.dark .border-gray-200,
+.dark .border-gray-300 {
+  border-color: rgba(255,255,255,0.04) !important;
+}
+
+.dark .shadow-sm {
+  --tw-shadow: 0 6px 18px rgba(0,0,0,0.65), 0 1px 0 rgba(255,255,255,0.02) inset;
+  box-shadow: var(--tw-inset-shadow), var(--tw-inset-ring-shadow), var(--tw-ring-offset-shadow), var(--tw-ring-shadow), var(--tw-shadow);
+}
+
 
 @theme inline {
   --color-background: var(--background);
