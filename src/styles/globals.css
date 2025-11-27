@@ -42,10 +42,10 @@
 }
 
 .dark {
-  --background: oklch(0.145 0 0);
-  --foreground: oklch(0.985 0 0);
-  --card: oklch(0.145 0 0);
-  --card-foreground: oklch(0.985 0 0);
+  --background: #000000;
+  --foreground: #f5efe6; /* warm off-white for text */
+  --card: #000000; /* keep panels purely black */
+  --card-foreground: #efe3c8; /* slightly warm, professional text on cards */
   --popover: oklch(0.145 0 0);
   --popover-foreground: oklch(0.985 0 0);
   --primary: oklch(0.985 0 0);
@@ -77,6 +77,70 @@
   --sidebar-border: oklch(0.269 0 0);
   --sidebar-ring: oklch(0.439 0 0);
 }
+
+/* Subtle gold gradient behind the app content. Implemented as a fixed pseudo-element
+   so panels (which use --card) stay pure black while the underlying page shows
+   a delicate gold wash. */
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background-image:
+    radial-gradient(900px 500px at 8% 12%, rgba(212,175,55,0.06), rgba(0,0,0,0) 25%),
+    radial-gradient(700px 350px at 92% 78%, rgba(255,200,80,0.04), rgba(0,0,0,0) 20%),
+    linear-gradient(180deg, rgba(212,175,55,0.02), rgba(0,0,0,0) 50%, rgba(212,175,55,0.03));
+  filter: blur(36px) saturate(120%);
+  mix-blend-mode: screen;
+}
+
+/* Ensure the app content stacks above the decorative background */
+#root, main, .app-root, .__next {
+  position: relative;
+  z-index: 1;
+}
+
+/* Card / panel visual polish: keep panels black but add subtle outline and depth */
+.card, .panel, .bg-card, [data-card], .panel-root {
+  background: var(--card) !important;
+  color: var(--card-foreground) !important;
+  border-radius: var(--radius);
+  border: 1px solid rgba(212,175,55,0.04); /* faint gold edge */
+  box-shadow: 0 8px 28px rgba(0,0,0,0.7), 0 1px 0 rgba(255,255,255,0.02) inset;
+}
+
+/* Headings and accent elements — subtle gold tint for highlights */
+.accent-gold, .text-accent-gold {
+  color: #e6c86b;
+}
+.ring-accent-gold {
+  box-shadow: 0 0 0 4px rgba(230,200,107,0.06);
+}
+
+/* Improve button contrast and style to match professional dark theme */
+button, .btn {
+  background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.005));
+  color: var(--foreground);
+  border: 1px solid rgba(255,255,255,0.03);
+  padding: 0.5rem 0.75rem;
+  border-radius: 8px;
+  transition: transform 160ms var(--default-transition-timing-function), box-shadow 160ms var(--default-transition-timing-function);
+}
+button:hover, .btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 8px 24px rgba(0,0,0,0.6), 0 0 0 4px rgba(230,200,107,0.03);
+}
+
+/* Inputs and cards inner spacing */
+input, textarea, select {
+  background: rgba(255,255,255,0.02);
+  border: 1px solid rgba(255,255,255,0.03);
+  color: var(--foreground);
+  padding: 0.5rem 0.75rem;
+  border-radius: 8px;
+}
+
 
 @theme inline {
   --color-background: var(--background);
