@@ -1,0 +1,13 @@
+{
+  "name": "moneymemoneynow",
+  "type": "javascript",
+  "main": "build/index.html",
+  "site": {
+    "bucket": "./build"
+  },
+  "build": {
+    "command": "npm run build",
+    "cwd": "./",
+    "watch_paths": ["src/**/*.tsx", "src/**/*.ts", "src/**/*.css"]
+  }
+}
