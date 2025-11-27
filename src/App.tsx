@@ -34,49 +34,76 @@ export default function App() {
     setAccounts(accounts.filter(acc => acc.id !== id));
   };
 
+  const [tab, setTab] = useState<'assets' | 'projections'>('assets');
+
   return (
     <div className="min-h-screen bg-gray-50 p-8">
       <div className="max-w-7xl mx-auto">
-        <h1 className="mb-8 text-gray-900">Finance Portfolio Tracker</h1>
-        
-        <div className="flex gap-6 mb-6">
-          <ResizablePanel defaultWidth={400} minWidth={300} maxWidth={600}>
-            <div className="bg-white rounded-lg shadow-sm p-6 h-full overflow-auto">
-              <h2 className="mb-4 text-gray-900">Add Account</h2>
-              <AccountForm onSubmit={addAccount} />
-              <div className="mt-6">
-                <AccountsList 
-                  accounts={accounts} 
-                  onUpdate={updateAccount}
-                  onDelete={deleteAccount}
-                />
-              </div>
-            </div>
-          </ResizablePanel>
+        <h1 className="mb-4 text-gray-900">Finance Portfolio Tracker</h1>
 
-          <div className="flex-1 flex flex-col gap-6">
-            <ResizablePanel defaultHeight={300} minHeight={200} direction="vertical">
-              <div className="bg-white rounded-lg shadow-sm p-6 h-full">
-                <h2 className="mb-4 text-gray-900">Current Net Worth Composition</h2>
-                <CompositionChart accounts={accounts} />
+        {/* Tabs */}
+        <div className="flex items-center gap-3 mb-6">
+          <button
+            onClick={() => setTab('assets')}
+            className={`px-4 py-2 rounded-md ${tab === 'assets' ? 'btn-primary' : 'bg-transparent text-muted border border-transparent'}`}>
+            Assets
+          </button>
+          <button
+            onClick={() => setTab('projections')}
+            className={`px-4 py-2 rounded-md ${tab === 'projections' ? 'btn-primary' : 'bg-transparent text-muted border border-transparent'}`}>
+            Projections
+          </button>
+        </div>
+
+        {tab === 'assets' ? (
+          <div className="flex gap-6 mb-6">
+            <ResizablePanel defaultWidth={400} minWidth={300} maxWidth={600}>
+              <div className="bg-white rounded-lg shadow-sm p-6 h-full overflow-auto">
+                <h2 className="mb-4 text-gray-900">Add Account</h2>
+                <AccountForm onSubmit={addAccount} />
+                <div className="mt-6">
+                  <AccountsList 
+                    accounts={accounts} 
+                    onUpdate={updateAccount}
+                    onDelete={deleteAccount}
+                  />
+                </div>
               </div>
             </ResizablePanel>
 
-            <ResizablePanel defaultHeight={400} minHeight={250} direction="vertical">
+            <div className="flex-1 flex flex-col gap-6">
+              <ResizablePanel defaultHeight={300} minHeight={200} direction="vertical">
+                <div className="bg-white rounded-lg shadow-sm p-6 h-full">
+                  <h2 className="mb-4 text-gray-900">Current Net Worth Composition</h2>
+                  <CompositionChart accounts={accounts} />
+                </div>
+              </ResizablePanel>
+
+              <ResizablePanel defaultHeight={300} minHeight={200} direction="vertical">
+                <div className="bg-white rounded-lg shadow-sm p-6 h-full">
+                  <h2 className="mb-4 text-gray-900">Net Worth Projection</h2>
+                  <ProjectionChart accounts={accounts} />
+                </div>
+              </ResizablePanel>
+            </div>
+          </div>
+        ) : (
+          <div className="space-y-6">
+            <ResizablePanel defaultHeight={360} minHeight={200} direction="vertical">
               <div className="bg-white rounded-lg shadow-sm p-6 h-full">
                 <h2 className="mb-4 text-gray-900">Net Worth Projection</h2>
                 <ProjectionChart accounts={accounts} />
               </div>
             </ResizablePanel>
-          </div>
-        </div>
 
-        <ResizablePanel defaultHeight={300} minHeight={200} direction="vertical">
-          <div className="bg-white rounded-lg shadow-sm p-6 h-full overflow-auto">
-            <h2 className="mb-4 text-gray-900">Projection Data Table</h2>
-            <DataTable accounts={accounts} />
+            <ResizablePanel defaultHeight={420} minHeight={200} direction="vertical">
+              <div className="bg-white rounded-lg shadow-sm p-6 h-full overflow-auto">
+                <h2 className="mb-4 text-gray-900">Projection Data Table</h2>
+                <DataTable accounts={accounts} />
+              </div>
+            </ResizablePanel>
           </div>
-        </ResizablePanel>
+        )}
       </div>
     </div>
   );

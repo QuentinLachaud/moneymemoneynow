@@ -160,7 +160,7 @@ export function AccountForm({ onSubmit, initialData, submitLabel = 'Add Account'
 
       <button
         type="submit"
-        className="w-full bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-colors flex items-center justify-center gap-2"
+        className="w-full btn-primary flex items-center justify-center gap-2"
       >
         <Plus size={20} />
         {submitLabel}

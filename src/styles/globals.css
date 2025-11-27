@@ -90,10 +90,10 @@ body::before {
   pointer-events: none;
   /* Slightly brighter and more visible gold wash but still subtle */
   background-image:
-    radial-gradient(900px 500px at 8% 12%, rgba(212,175,55,0.08), rgba(0,0,0,0) 30%),
-    radial-gradient(700px 350px at 92% 78%, rgba(255,200,80,0.06), rgba(0,0,0,0) 25%),
-    linear-gradient(180deg, rgba(212,175,55,0.03), rgba(0,0,0,0) 45%, rgba(212,175,55,0.04));
-  filter: blur(28px) saturate(115%);
+    radial-gradient(900px 500px at 80% 12%, rgba(6,110,110,0.07), rgba(0,0,0,0) 30%),
+    radial-gradient(700px 350px at 92% 78%, rgba(45,212,191,0.055), rgba(0,0,0,0) 25%),
+    linear-gradient(180deg, rgba(6,110,110,0.03), rgba(0,0,0,0) 45%, rgba(45,212,191,0.03));
+  filter: blur(28px) saturate(110%);
   mix-blend-mode: screen;
 }
 
@@ -110,7 +110,7 @@ body::before {
   border-radius: var(--radius);
   /* a softer, brighter edge: blend gold and near-white to brighten the panel borders */
   border: 1px solid rgba(230,200,107,0.08);
-  box-shadow: 0 6px 18px rgba(8,10,12,0.55), 0 1px 0 rgba(255,255,255,0.02) inset, 0 4px 18px rgba(212,175,55,0.025);
+  box-shadow: 0 6px 18px rgba(8,10,12,0.55), 0 1px 0 rgba(255,255,255,0.02) inset, 0 4px 18px rgba(6,110,110,0.025);
   position: relative;
   /* much slower, very gentle transition for a premium feel */
   transition: transform 900ms cubic-bezier(.16,.84,.24,1), box-shadow 900ms cubic-bezier(.16,.84,.24,1);
@@ -120,10 +120,10 @@ body::before {
 
 /* Headings and accent elements — subtle gold tint for highlights */
 .accent-gold, .text-accent-gold {
-  color: #e6c86b;
+  color: #b3d334; /* teal accent */
 }
 .ring-accent-gold {
-  box-shadow: 0 0 0 4px rgba(230,200,107,0.06);
+  box-shadow: 0 0 0 4px rgba(45,212,191,0.06);
 }
 
 /* Improve button contrast and style to match professional dark theme */
@@ -137,7 +137,7 @@ button, .btn {
 }
 button:hover, .btn:hover {
   transform: translateY(-0.25px) scale(1.003);
-  box-shadow: 0 8px 22px rgba(0,0,0,0.38), 0 0 0 6px rgba(230,200,107,0.03);
+  box-shadow: 0 8px 22px rgba(0,0,0,0.38), 0 0 0 6px rgba(45,212,191,0.03);
   transition-duration: 420ms;
 }
 
@@ -218,7 +218,7 @@ input, textarea, select {
   background: linear-gradient(180deg, rgba(255,255,255,0.035), rgba(255,255,255,0.012));
   -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
   mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
-  box-shadow: 0 0 0 1px rgba(255,255,255,0.035) inset, 0 0 18px rgba(230,200,107,0.05);
+  box-shadow: 0 0 0 1px rgba(255,255,255,0.035) inset, 0 0 18px rgba(45,212,191,0.05);
   z-index: 0;
 }
 
@@ -230,17 +230,17 @@ input, textarea, select {
 
 /* Premium primary button */
 .btn-primary {
-  background: linear-gradient(180deg, #f6de9a 0%, #d4af37 100%);
-  color: #0b0b0b;
-  border: 1px solid rgba(255,255,255,0.06);
+  background: linear-gradient(180deg, #34d399 0%, #059669 100%);
+  color: var(--card-foreground);
+  border: 1px solid rgba(255,255,255,0.04);
   padding: 0.6rem 0.95rem;
   border-radius: 10px;
-  box-shadow: 0 10px 30px rgba(212,175,55,0.14), 0 2px 0 rgba(255,255,255,0.02) inset;
+  box-shadow: 0 10px 30px rgba(6,110,110,0.14), 0 2px 0 rgba(255,255,255,0.02) inset;
   transition: transform 180ms, box-shadow 180ms, filter 180ms;
 }
 .btn-primary:hover {
   transform: translateY(-3px) scale(1.02);
-  box-shadow: 0 18px 46px rgba(212,175,55,0.18), 0 2px 0 rgba(255,255,255,0.03) inset;
+  box-shadow: 0 18px 46px rgba(6,110,110,0.18), 0 2px 0 rgba(255,255,255,0.03) inset;
 }
 .btn-primary:active {
   transform: translateY(0.5px) scale(0.997);
@@ -249,8 +249,8 @@ input, textarea, select {
 
 /* Provide a semantic utility so you can apply gold accent to existing elements */
 .accent-gold-bg {
-  background: linear-gradient(180deg, rgba(230,200,107,0.12), rgba(212,175,55,0.06));
-  border: 1px solid rgba(230,200,107,0.08);
+  background: linear-gradient(180deg, rgba(45,212,191,0.12), rgba(6,110,110,0.06));
+  border: 1px solid rgba(45,212,191,0.08);
 }
 
 
