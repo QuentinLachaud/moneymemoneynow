@@ -51,7 +51,8 @@
     },
     build: {
       target: 'esnext',
-      outDir: 'build',
+      // Cloudflare Pages expects the production build in /dist
+      outDir: 'dist',
     },
     server: {
       port: 3000,
