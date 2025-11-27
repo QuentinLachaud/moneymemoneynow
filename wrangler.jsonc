@@ -1,7 +1,7 @@
-
 {
   "name": "moneymemoneynow",
   "compatibility_date": "2025-11-27",
+  "main": "src/index.js",
   "assets": {
     "directory": "./dist"
   },
@@ -11,11 +11,3 @@
   }
 }
 
-{
-  "name": "moneymemoneynow",
-  "pages_build_output_dir": "./dist",
-  "build": {
-    "command": "npm run build",
-    "cwd": "./"
-  }
-}
