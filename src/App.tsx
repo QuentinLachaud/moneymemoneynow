@@ -14,13 +14,17 @@
  * │          │  Accounts Strip (horizontal scrollable)             │
  * └──────────┴──────────────────────────────────────────────────────┘
  *
+ * STATE MANAGEMENT:
+ * - Core state (accounts, selections) persisted via Zustand + localStorage
+ * - UI state (modals, editing) remains local to component
+ *
  * KEY CUSTOMIZATION POINTS:
  * - To add new tabs: add to `tab` state type and tab-toggle buttons
  * - To change left tray width: update --left-tray-width in globals.css
  * - To change spacing: update --page-gap in globals.css
  */
 
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef } from 'react';
 import { Plus, Check, X } from 'lucide-react';
 import { getLocaleCurrency } from './utils/format';
 import { AccountForm } from './components/AccountForm';
@@ -31,7 +35,12 @@ import { ProjectionsPanel } from './components/ProjectionsPanel';
 import { PortfolioPanel } from './components/PortfolioPanel';
 import { getColorForId } from './utils/colors';
 import Sparkline from './components/Sparkline';
-import TicketEditor from './components/TicketEditor';
+
+// Import Zustand store and Account type
+import { useAppStore, useProjectionAccount, useFilteredAccounts, Account } from './store/useAppStore';
+
+// Re-export Account type for backwards compatibility
+export type { Account } from './store/useAppStore';
 
 /**
  * SelectionToggle — Toggle button showing grey tick (off) → green tick (on) → X on hover
@@ -57,43 +66,31 @@ function SelectionToggle({ isSelected, onToggle }: { isSelected: boolean; onTogg
   );
 }
 
-/**
- * Account — represents a single financial account/asset.
- * Used throughout the app for projections, charts, and the accounts list.
- *
- * @property id              - Unique identifier (timestamp-based)
- * @property name            - Display name (e.g., "Retirement 401k")
- * @property amount          - Current balance in dollars
- * @property date            - Start date (ISO string, e.g., "2025-01-01")
- * @property expectedReturn  - Annual return percentage (e.g., 7 for 7%)
- * @property volatility      - Optional: "low" | "medium" | "high"
- * @property timeHorizon     - Investment period in years
- * @property frequency       - How often transactions occur
- * @property transactionType - Whether recurring transaction is deposit or withdraw
- * @property transactionAmount - Dollar amount of recurring transaction (always positive)
- */
-export interface Account {
-  id: string;
-  name: string;
-  amount: number;
-  date: string;
-  expectedReturn: number;
-  volatility?: string;
-  timeHorizon: number;
-  frequency: 'monthly' | 'annual';
-  transactionType: 'deposit' | 'withdraw';
-  transactionAmount: number;
-}
-
 export default function App() {
-  /* ─── STATE ─────────────────────────────────────────────────────── */
-
-  /** All accounts in the portfolio */
-  const [accounts, setAccounts] = useState<Account[]>([]);
-
-  /** Selected account IDs for filtering projections (empty = show all) */
-  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
-
+  /* ─── ZUSTAND STORE ─────────────────────────────────────────────── */
+  
+  // Get state from Zustand store (persisted to localStorage)
+  const accounts = useAppStore((state) => state.accounts);
+  const selectedIds = useAppStore((state) => state.selectedIds);
+  const tab = useAppStore((state) => state.tab);
+  const projectionAccountId = useAppStore((state) => state.projectionAccountId);
+  const portfolioSelectedIds = useAppStore((state) => state.portfolioSelectedIds);
+  
+  // Get actions from Zustand store
+  const addAccountToStore = useAppStore((state) => state.addAccount);
+  const updateAccountInStore = useAppStore((state) => state.updateAccount);
+  const deleteAccountFromStore = useAppStore((state) => state.deleteAccount);
+  const toggleSelection = useAppStore((state) => state.toggleSelection);
+  const setTab = useAppStore((state) => state.setTab);
+  const toggleProjectionAccount = useAppStore((state) => state.toggleProjectionAccount);
+  const togglePortfolioAccount = useAppStore((state) => state.togglePortfolioAccount);
+  
+  // Derived state from custom hooks
+  const projectionAccount = useProjectionAccount();
+  const filteredAccounts = useFilteredAccounts();
+  
+  /* ─── LOCAL UI STATE (not persisted) ────────────────────────────── */
+  
   /** Ref to left panel for scroll-into-view */
   const leftTrayRef = useRef<HTMLDivElement | null>(null);
 
@@ -108,6 +105,14 @@ export default function App() {
 
   /** Get the account being edited in modal */
   const editingAccount = editingAccountId ? accounts.find(a => a.id === editingAccountId) : null;
+
+  /** ID of account being edited in left tray (null = adding new) */
+  const [editingId, setEditingId] = useState<string | null>(null);
+
+  /** ID of account being edited inline in bottom strip */
+  const [inlineEditingId, setInlineEditingId] = useState<string | null>(null);
+
+  /* ─── LOCAL UI HANDLERS ─────────────────────────────────────────── */
 
   /** Open modal for adding new account */
   const openAddModal = () => {
@@ -127,27 +132,14 @@ export default function App() {
     setEditingAccountId(null);
   };
 
-  /* ─── ACCOUNT CRUD ─────────────────────────────────────────────────── */
-
-  /** Add a new account and auto-select it for projections */
-  const addAccount = (account: Omit<Account, 'id'>) => {
-    const id = Date.now().toString();
-    const newAccount = { ...account, id } as Account;
-    setAccounts((prev) => [...prev, newAccount]);
-    setSelectedIds((prev) => new Set(prev).add(id));
-  };
-
-  /** ID of account being edited in left tray (null = adding new) */
-  const [editingId, setEditingId] = useState<string | null>(null);
-
-  /** ID of account being edited inline in bottom strip */
-  const [inlineEditingId, setInlineEditingId] = useState<string | null>(null);
-
   /** Start editing an account in the left tray form */
   const startEdit = (id: string) => {
     setEditingId(id);
     leftTrayRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
   };
+
+  /** Cancel left tray editing */
+  const cancelEdit = () => setEditingId(null);
 
   /** Start inline editing in bottom strip */
   const startInlineEdit = (id: string) => setInlineEditingId(id);
@@ -157,77 +149,26 @@ export default function App() {
 
   /** Save inline edit and close editor */
   const saveInlineEdit = (id: string, data: Omit<Account, 'id'>) => {
-    updateAccount(id, data);
+    updateAccountInStore(id, data);
     setInlineEditingId(null);
   };
 
-  /** Cancel left tray editing */
-  const cancelEdit = () => setEditingId(null);
+  /* ─── ACCOUNT CRUD WRAPPERS ─────────────────────────────────────── */
+  
+  /** Add a new account (wrapper for store action) */
+  const addAccount = (account: Omit<Account, 'id'>) => {
+    addAccountToStore(account);
+  };
 
-  /** Update an existing account by ID */
+  /** Update an existing account (wrapper for store action) */
   const updateAccount = (id: string, account: Omit<Account, 'id'>) => {
-    setAccounts((prev) => prev.map((acc) => (acc.id === id ? { ...account, id } : acc)));
+    updateAccountInStore(id, account);
   };
 
-  /** Delete an account and remove from selection */
+  /** Delete an account (wrapper for store action) */
   const deleteAccount = (id: string) => {
-    setAccounts((prev) => prev.filter((acc) => acc.id !== id));
-    setSelectedIds((prev) => {
-      const next = new Set(prev);
-      next.delete(id);
-      return next;
-    });
+    deleteAccountFromStore(id);
   };
-
-  /** Current tab: 'assets' shows composition; 'projections' shows single Monte Carlo; 'portfolio' shows combined */
-  const [tab, setTab] = useState<'assets' | 'projections' | 'portfolio'>('assets');
-
-  /** Selected account ID for Monte Carlo projection (single account) */
-  const [projectionAccountId, setProjectionAccountId] = useState<string | null>(null);
-
-  /** Selected account IDs for portfolio tab (all selected by default) */
-  const [portfolioSelectedIds, setPortfolioSelectedIds] = useState<Set<string>>(new Set());
-
-  // Initialize portfolio selection when accounts change
-  useEffect(() => {
-    // Add new accounts to portfolio selection by default
-    const newIds = accounts.map(a => a.id).filter(id => !portfolioSelectedIds.has(id));
-    if (newIds.length > 0) {
-      setPortfolioSelectedIds(prev => {
-        const next = new Set(prev);
-        newIds.forEach(id => next.add(id));
-        return next;
-      });
-    }
-  }, [accounts]);
-
-  /** Get the account selected for projection */
-  const projectionAccount = projectionAccountId 
-    ? accounts.find(a => a.id === projectionAccountId) 
-    : null;
-
-  /** Toggle account selection for projection (single account mode) */
-  const toggleProjectionAccount = (id: string) => {
-    setProjectionAccountId(prev => prev === id ? null : id);
-  };
-
-  /** Toggle account selection for portfolio (multi-select mode) */
-  const togglePortfolioAccount = (id: string) => {
-    setPortfolioSelectedIds(prev => {
-      const next = new Set(prev);
-      if (next.has(id)) {
-        next.delete(id);
-      } else {
-        next.add(id);
-      }
-      return next;
-    });
-  };
-
-  /** Accounts to show in projections (all if none selected) */
-  const filteredAccounts = selectedIds.size === 0
-    ? accounts
-    : accounts.filter((acc) => selectedIds.has(acc.id));
 
   /* ─── RENDER ────────────────────────────────────────────────────── */
   return (
