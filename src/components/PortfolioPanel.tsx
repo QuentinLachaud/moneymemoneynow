@@ -40,6 +40,8 @@ export function PortfolioPanel({ accounts, selectedAccountIds }: PortfolioPanelP
   const [histogramBins, setHistogramBins] = useState(20);
   const [showHistogram, setShowHistogram] = useState(true);
   const [showDataTable, setShowDataTable] = useState(false);
+  const [useLogScale, setUseLogScale] = useState(false);
+  const [projectionYearsOverride, setProjectionYearsOverride] = useState<number | null>(null);
   
   // Per-asset overrides: Map<assetName, AssetOverride>
   const [assetOverrides, setAssetOverrides] = useState<Map<string, AssetOverride>>(new Map());
@@ -74,15 +76,27 @@ export function PortfolioPanel({ accounts, selectedAccountIds }: PortfolioPanelP
     return map;
   }, [assetOverrides]);
 
+  // Calculate natural time horizon (based on account end dates)
+  const naturalTimeHorizon = useMemo(() => {
+    if (activeAccounts.length === 0) return 30;
+    const startYear = Math.min(...activeAccounts.map(a => new Date(a.date).getFullYear()));
+    const endYear = Math.max(...activeAccounts.map(a => new Date(a.date).getFullYear() + a.timeHorizon));
+    return endYear - startYear;
+  }, [activeAccounts]);
+
+  // Effective projection years (override or natural)
+  const effectiveProjectionYears = projectionYearsOverride ?? naturalTimeHorizon;
+
   // Run portfolio simulation
   const simulation: PortfolioSimulationResult = useMemo(() => {
     return runPortfolioMonteCarloSimulation(
       accountsWithOverrides,
       numSimulations,
       globalVolatilityOverride,
-      assetVolatilityOverrides
+      assetVolatilityOverrides,
+      projectionYearsOverride ?? undefined
     );
-  }, [accountsWithOverrides, numSimulations, globalVolatilityOverride, assetVolatilityOverrides]);
+  }, [accountsWithOverrides, numSimulations, globalVolatilityOverride, assetVolatilityOverrides, projectionYearsOverride]);
 
   // Get final values for histogram
   const finalValues = useMemo(() => {
@@ -206,6 +220,59 @@ export function PortfolioPanel({ accounts, selectedAccountIds }: PortfolioPanelP
             ))}
           </div>
         </div>
+
+        {/* Projection Years Slider */}
+        <div className="control-group projection-years-control">
+          <label>
+            Projection: <span className="value-display">{effectiveProjectionYears} years</span>
+            {projectionYearsOverride !== null && (
+              <button 
+                className="reset-btn" 
+                onClick={() => setProjectionYearsOverride(null)}
+                title="Reset to natural horizon"
+              >
+                ↺
+              </button>
+            )}
+          </label>
+          <div className="projection-slider-container">
+            <input
+              type="range"
+              min="1"
+              max="100"
+              step="1"
+              value={effectiveProjectionYears}
+              onChange={(e) => setProjectionYearsOverride(parseInt(e.target.value))}
+              className="projection-slider"
+            />
+            <div className="projection-marks">
+              <span>1</span>
+              <span>25</span>
+              <span>50</span>
+              <span>75</span>
+              <span>100</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Scale Toggle */}
+        <div className="control-group scale-toggle-control">
+          <label>Y-Axis Scale</label>
+          <div className="scale-toggle">
+            <button
+              className={`scale-btn ${!useLogScale ? 'active' : ''}`}
+              onClick={() => setUseLogScale(false)}
+            >
+              Linear
+            </button>
+            <button
+              className={`scale-btn ${useLogScale ? 'active' : ''}`}
+              onClick={() => setUseLogScale(true)}
+            >
+              Log
+            </button>
+          </div>
+        </div>
       </div>
 
       {/* Main Content */}
@@ -221,10 +288,11 @@ export function PortfolioPanel({ accounts, selectedAccountIds }: PortfolioPanelP
               </h3>
               <div className="section-meta">
                 {numSimulations.toLocaleString()} simulations · {globalVolatilityOverride}% volatility · {timeHorizon} year horizon
+                {useLogScale && ' · Log scale'}
               </div>
             </div>
             <div className="chart-container">
-              <MonteCarloChart simulation={simulation} />
+              <MonteCarloChart simulation={simulation} useLogScale={useLogScale} />
             </div>
           </div>
 
@@ -316,10 +384,24 @@ export function PortfolioPanel({ accounts, selectedAccountIds }: PortfolioPanelP
                 const currentReturn = override?.returnOverride ?? c.weightedReturn;
                 const currentVolatility = override?.globalVolatilityOverride ?? globalVolatilityOverride;
                 
+                // Check if any underlying account is monthly
+                const hasMonthlyAccounts = c.accounts.some(acc => acc.frequency === 'monthly');
+                const hasAnnualAccounts = c.accounts.some(acc => acc.frequency === 'annual');
+                const frequencyLabel = hasMonthlyAccounts && hasAnnualAccounts 
+                  ? 'mixed' 
+                  : hasMonthlyAccounts 
+                    ? 'monthly' 
+                    : 'annual';
+                
                 return (
                   <div key={c.name} className="consolidated-account-item expandable">
                     <div className="account-header">
-                      <div className="account-name">{c.name}</div>
+                      <div className="account-name-row">
+                        <span className="account-name">{c.name}</span>
+                        <span className={`frequency-badge ${frequencyLabel}`}>
+                          {frequencyLabel === 'monthly' ? '●●●' : frequencyLabel === 'mixed' ? '●○' : '●'}
+                        </span>
+                      </div>
                       <div className="account-summary">
                         <span className="initial-value">
                           {c.initialValue.toLocaleString('en-GB', { style: 'currency', currency: 'GBP', maximumFractionDigits: 0 })}

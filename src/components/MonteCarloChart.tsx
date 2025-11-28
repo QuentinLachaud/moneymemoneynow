@@ -6,6 +6,7 @@
  * - Displays percentile lines (1st, 10th, 25th, 50th, 75th, 90th, 99th)
  * - Default: median (50th), 75th, 90th percentiles shown
  * - Right-side control panel for toggling lines
+ * - Supports linear or logarithmic Y-axis scale
  */
 
 import { useState, useMemo } from 'react';
@@ -25,6 +26,8 @@ import { Eye, EyeOff } from 'lucide-react';
 interface MonteCarloChartProps {
   simulation: SimulationResult;
   showPaths?: boolean;
+  /** Use logarithmic scale for Y-axis */
+  useLogScale?: boolean;
 }
 
 interface PercentileConfig {
@@ -44,7 +47,7 @@ const PERCENTILE_CONFIGS: PercentileConfig[] = [
   { key: 1, label: '1st Percentile', color: '#dc2626', defaultVisible: false },
 ];
 
-export function MonteCarloChart({ simulation, showPaths = false }: MonteCarloChartProps) {
+export function MonteCarloChart({ simulation, showPaths = false, useLogScale = false }: MonteCarloChartProps) {
   // Track visible percentiles
   const [visiblePercentiles, setVisiblePercentiles] = useState<Set<number>>(
     new Set(PERCENTILE_CONFIGS.filter(p => p.defaultVisible).map(p => p.key))
@@ -101,6 +104,9 @@ export function MonteCarloChart({ simulation, showPaths = false }: MonteCarloCha
             />
             
             <YAxis
+              scale={useLogScale ? 'log' : 'auto'}
+              domain={useLogScale ? ['auto', 'auto'] : ['auto', 'auto']}
+              allowDataOverflow={useLogScale}
               tickFormatter={(value) => {
                 if (value >= 1000000) return `£${(value / 1000000).toFixed(1)}M`;
                 if (value >= 1000) return `£${(value / 1000).toFixed(0)}k`;

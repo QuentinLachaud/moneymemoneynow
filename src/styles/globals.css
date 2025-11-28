@@ -95,13 +95,13 @@
  */
 
 .dark {
-  /* Background: Deep charcoal with warmth */
-  --background: #0f1416;
-  --foreground: #f7f5ee;
+  /* Background: Deep, sophisticated dark blue-black */
+  --background: #0a0d12;
+  --foreground: #f0f0f5;
 
-  /* Cards: Slightly lighter than background for depth */
-  --card: #121618;
-  --card-foreground: #f6f2e6;
+  /* Cards: Subtle elevation with blue undertones */
+  --card: #0f1318;
+  --card-foreground: #e8e8ed;
   --popover: oklch(0.145 0 0);
   --popover-foreground: oklch(0.985 0 0);
   --primary: oklch(0.985 0 0);
@@ -136,10 +136,9 @@
 
 /*
  * ==========================================================================
- * SECTION 2: DECORATIVE BACKGROUND — Subtle gold gradient wash
+ * SECTION 2: DECORATIVE BACKGROUND — Subtle gradient mesh
  * ==========================================================================
- * Creates a premium gold tint behind the app. Panels stay solid black while
- * the underlying page shows a delicate gold wash.
+ * Creates a premium, subtle gradient effect. Evokes trust and professionalism.
  */
 
 body::before {
@@ -148,12 +147,13 @@ body::before {
   inset: 0;
   z-index: 0;
   pointer-events: none;
-  /* Slightly brighter and more visible gold wash but still subtle */
+  /* Sophisticated blue-purple gradient mesh - premium finance aesthetic */
   background-image:
-    radial-gradient(900px 500px at 8% 12%, rgba(239, 203, 85, 0.08), rgba(0,0,0,0) 30%),
-    radial-gradient(700px 350px at 92% 78%, rgba(255,200,80,0.06), rgba(0,0,0,0) 25%),
-    linear-gradient(180deg, rgba(212,175,55,0.03), rgba(0,0,0,0) 45%, rgba(212,175,55,0.04));
-  filter: blur(28px) saturate(115%);
+    radial-gradient(ellipse 800px 600px at 10% 10%, rgba(99, 102, 241, 0.08), transparent 50%),
+    radial-gradient(ellipse 600px 400px at 85% 20%, rgba(139, 92, 246, 0.06), transparent 40%),
+    radial-gradient(ellipse 900px 500px at 50% 90%, rgba(59, 130, 246, 0.05), transparent 45%),
+    linear-gradient(180deg, rgba(99, 102, 241, 0.02) 0%, transparent 30%, rgba(59, 130, 246, 0.015) 100%);
+  filter: blur(60px) saturate(120%);
   mix-blend-mode: screen;
 }
 
@@ -170,51 +170,96 @@ body::before {
  * Base styles for UI components with premium dark theme polish
  */
 
-/* Card / Panel — Black background with subtle gold edge */
+/* Card / Panel — Elevated glass effect */
 .card, .panel, .bg-card, [data-card], .panel-root {
-  background: var(--card) !important;
+  background: linear-gradient(180deg, rgba(18, 22, 30, 0.95), rgba(15, 19, 24, 0.98)) !important;
   color: var(--card-foreground) !important;
   border-radius: var(--radius);
-  /* a softer, brighter edge: blend gold and near-white to brighten the panel borders */
-  border: 1px solid rgba(230,200,107,0.08);
-  box-shadow: 0 6px 18px rgba(8,10,12,0.55), 0 1px 0 rgba(255,255,255,0.02) inset, 0 4px 18px rgba(212,175,55,0.025);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  box-shadow: 
+    0 0 0 1px rgba(255, 255, 255, 0.02) inset,
+    0 4px 24px rgba(0, 0, 0, 0.4),
+    0 1px 2px rgba(0, 0, 0, 0.2);
   position: relative;
-  /* much slower, very gentle transition for a premium feel */
-  transition: transform 900ms cubic-bezier(.16,.84,.24,1), box-shadow 900ms cubic-bezier(.16,.84,.24,1);
+  transition: transform 400ms cubic-bezier(0.16, 1, 0.3, 1), 
+              box-shadow 400ms cubic-bezier(0.16, 1, 0.3, 1),
+              border-color 200ms ease;
   will-change: transform;
   transform-origin: center center;
 }
 
-/* Gold accent utilities */
+.card:hover, .panel:hover {
+  border-color: rgba(99, 102, 241, 0.15);
+  box-shadow: 
+    0 0 0 1px rgba(99, 102, 241, 0.05) inset,
+    0 8px 32px rgba(0, 0, 0, 0.5),
+    0 1px 2px rgba(0, 0, 0, 0.2);
+}
+
+/* Accent utilities - modernized */
 .accent-gold, .text-accent-gold {
-  color: #e6c86b;
+  color: #818cf8;
 }
 .ring-accent-gold {
-  box-shadow: 0 0 0 4px rgba(230,200,107,0.06);
+  box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.12);
 }
 
-/* Button — Glass-like appearance with hover lift */
+/* Button — Premium glass morphism */
 button, .btn {
-  background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.005));
+  background: linear-gradient(180deg, rgba(255,255,255,0.04), rgba(255,255,255,0.01));
   color: var(--foreground);
-  border: 1px solid rgba(255,255,255,0.03);
+  border: 1px solid rgba(255,255,255,0.06);
   padding: 0.5rem 0.75rem;
   border-radius: 8px;
-  transition: transform 160ms var(--default-transition-timing-function), box-shadow 160ms var(--default-transition-timing-function), background 160ms;
-}
-button:hover, .btn:hover {
-  transform: translateY(-0.25px) scale(1.003);
-  box-shadow: 0 8px 22px rgba(0,0,0,0.38), 0 0 0 6px rgba(230,200,107,0.03);
-  transition-duration: 420ms;
+  font-weight: 500;
+  transition: all 200ms cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-/* Form inputs */
+button:hover, .btn:hover {
+  background: linear-gradient(180deg, rgba(255,255,255,0.08), rgba(255,255,255,0.03));
+  border-color: rgba(99, 102, 241, 0.25);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3), 0 0 0 1px rgba(99, 102, 241, 0.1);
+  transform: translateY(-1px);
+}
+
+button:active, .btn:active {
+  transform: translateY(0);
+  transition-duration: 50ms;
+}
+
+/* Primary button variant */
+.btn-primary, button[type="submit"] {
+  background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: white;
+  font-weight: 600;
+  box-shadow: 0 2px 8px rgba(99, 102, 241, 0.3);
+}
+
+.btn-primary:hover, button[type="submit"]:hover {
+  background: linear-gradient(135deg, #7c7ef5 0%, #9d6ff9 100%);
+  box-shadow: 0 4px 20px rgba(99, 102, 241, 0.4);
+  border-color: rgba(255, 255, 255, 0.15);
+}
+
+/* Form inputs — Refined appearance */
 input, textarea, select {
-  background: rgba(255,255,255,0.02);
-  border: 1px solid rgba(255,255,255,0.03);
+  background: rgba(0, 0, 0, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.08);
   color: var(--foreground);
-  padding: 0.5rem 0.75rem;
+  padding: 0.625rem 0.875rem;
   border-radius: 8px;
+  transition: all 200ms ease;
+}
+
+input:hover, textarea:hover, select:hover {
+  border-color: rgba(255, 255, 255, 0.12);
+}
+
+input:focus, textarea:focus, select:focus {
+  outline: none;
+  border-color: rgba(99, 102, 241, 0.5);
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15);
 }
 
 /*
@@ -322,20 +367,20 @@ input, textarea, select {
 
 /* Gold background utility class */
 .accent-gold-bg {
-  background: linear-gradient(180deg, rgba(230,200,107,0.12), rgba(212,175,55,0.06));
-  border: 1px solid rgba(230,200,107,0.08);
+  background: linear-gradient(180deg, rgba(99, 102, 241, 0.12), rgba(79, 70, 229, 0.06));
+  border: 1px solid rgba(99, 102, 241, 0.12);
 }
 
 /* Transaction Type Toggle — Deposit (green) / Drawdown (red) */
 .transaction-type-toggle-container {
-  margin-bottom: 8px;
+  margin-bottom: 12px;
 }
 
 .transaction-type-toggle {
   display: flex;
-  background: rgba(255, 255, 255, 0.03);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 10px;
+  background: rgba(0, 0, 0, 0.25);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 12px;
   padding: 4px;
   gap: 4px;
 }
@@ -346,38 +391,40 @@ input, textarea, select {
   align-items: center;
   justify-content: center;
   gap: 6px;
-  padding: 10px 16px;
-  font-size: 0.875rem;
-  font-weight: 500;
+  padding: 12px 16px;
+  font-size: 0.85rem;
+  font-weight: 600;
   border: none;
-  border-radius: 7px;
+  border-radius: 9px;
   cursor: pointer;
   transition: all 200ms ease;
   background: transparent;
-  color: rgba(255, 255, 255, 0.5);
+  color: rgba(255, 255, 255, 0.4);
 }
 
 .toggle-option:hover {
-  background: rgba(255, 255, 255, 0.05);
-  color: rgba(255, 255, 255, 0.7);
+  background: rgba(255, 255, 255, 0.04);
+  color: rgba(255, 255, 255, 0.6);
+  box-shadow: none;
+  transform: none;
 }
 
 /* Deposit - Green */
 .toggle-option.deposit.active {
-  background: linear-gradient(180deg, rgba(34, 197, 94, 0.25), rgba(22, 163, 74, 0.15));
+  background: linear-gradient(135deg, rgba(34, 197, 94, 0.3), rgba(22, 163, 74, 0.2));
   color: #4ade80;
   box-shadow: 
-    0 2px 8px rgba(34, 197, 94, 0.2),
-    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+    0 2px 12px rgba(34, 197, 94, 0.25),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08);
 }
 
 /* Drawdown - Red */
 .toggle-option.withdraw.active {
-  background: linear-gradient(180deg, rgba(239, 68, 68, 0.25), rgba(220, 38, 38, 0.15));
+  background: linear-gradient(135deg, rgba(239, 68, 68, 0.3), rgba(220, 38, 38, 0.2));
   color: #f87171;
   box-shadow: 
-    0 2px 8px rgba(239, 68, 68, 0.2),
-    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+    0 2px 12px rgba(239, 68, 68, 0.25),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08);
 }
 
 /*
@@ -449,10 +496,15 @@ input, textarea, select {
 }
 
 .app-title {
-  font-size: 1.5rem;
-  font-weight: 600;
-  color: var(--foreground);
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.95);
   margin: 0;
+  letter-spacing: -0.02em;
+  background: linear-gradient(135deg, #e0e7ff 0%, #c7d2fe 50%, #a5b4fc 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
 }
 
 /* Tab Container — Full width toggle bar */
@@ -462,63 +514,69 @@ input, textarea, select {
   padding: 0 8px;
 }
 
-/* Tab Toggle — Glass-style pill with sliding indicator */
+/* Tab Toggle — Premium pill with sliding indicator */
 .tab-toggle {
   position: relative;
   display: inline-flex;
-  background: rgba(255, 255, 255, 0.03);
-  border: 1px solid rgba(255, 255, 255, 0.06);
-  border-radius: 12px;
-  padding: 4px;
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 14px;
+  padding: 5px;
   gap: 0;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.02);
 }
 
 /* Tab Slider — Animated background for active tab */
 .tab-slider {
   position: absolute;
-  top: 4px;
-  left: 4px;
-  width: calc(50% - 4px);
-  height: calc(100% - 8px);
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.04));
-  border-radius: 8px;
+  top: 5px;
+  left: 5px;
+  width: calc(50% - 5px);
+  height: calc(100% - 10px);
+  background: linear-gradient(135deg, rgba(99, 102, 241, 0.25), rgba(139, 92, 246, 0.2));
+  border: 1px solid rgba(99, 102, 241, 0.3);
+  border-radius: 10px;
   box-shadow: 
-    0 2px 8px rgba(0, 0, 0, 0.2),
+    0 2px 12px rgba(99, 102, 241, 0.2),
     inset 0 1px 0 rgba(255, 255, 255, 0.1);
-  transition: transform 300ms cubic-bezier(0.4, 0, 0.2, 1);
+  transition: transform 350ms cubic-bezier(0.4, 0, 0.2, 1);
   pointer-events: none;
 }
 
 /* Three-tab variant */
 .tab-toggle.three-tabs .tab-slider {
-  width: calc(33.333% - 2.67px);
+  width: calc(33.333% - 3.33px);
 }
 
 /* Tab Button — Individual tab */
 .tab-button {
   position: relative;
   z-index: 1;
-  padding: 10px 32px;
+  padding: 12px 36px;
   font-size: 0.875rem;
-  font-weight: 500;
-  color: rgba(255, 255, 255, 0.5);
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.45);
   background: transparent;
   border: none;
-  border-radius: 8px;
+  border-radius: 10px;
   cursor: pointer;
   transition: color 200ms ease;
+  letter-spacing: 0.01em;
 }
 
 .tab-toggle.three-tabs .tab-button {
-  padding: 10px 24px;
+  padding: 12px 28px;
 }
 
 .tab-button:hover {
-  color: rgba(255, 255, 255, 0.7);
+  color: rgba(255, 255, 255, 0.65);
+  background: transparent;
+  box-shadow: none;
+  transform: none;
 }
 
 .tab-button.active {
-  color: var(--foreground);
+  color: #c7d2fe;
 }
 
 /* Main Grid — Left panel + content area */
@@ -534,29 +592,32 @@ input, textarea, select {
 .left-panel {
   display: flex;
   flex-direction: column;
-  padding: 20px;
+  padding: 24px;
   overflow-y: auto;
   height: 100%;
+  background: linear-gradient(180deg, rgba(15, 19, 28, 0.95), rgba(12, 16, 22, 0.98));
 }
 
 .panel-title {
   font-size: 1rem;
-  font-weight: 600;
-  color: var(--foreground);
-  margin: 0 0 16px 0;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.9);
+  margin: 0 0 20px 0;
+  letter-spacing: -0.01em;
 }
 
 .cancel-btn {
   margin-top: 12px;
   width: 100%;
-  background: transparent;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  color: rgba(255, 255, 255, 0.6);
+  background: rgba(0, 0, 0, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  color: rgba(255, 255, 255, 0.5);
 }
 
 .cancel-btn:hover {
-  border-color: rgba(255, 255, 255, 0.2);
-  color: var(--foreground);
+  border-color: rgba(255, 255, 255, 0.15);
+  color: rgba(255, 255, 255, 0.8);
+  background: rgba(0, 0, 0, 0.3);
 }
 
 /* Content Area — Stacked graphs + accounts strip */
@@ -765,6 +826,8 @@ input, textarea, select {
   padding: 12px 16px;
   display: flex;
   align-items: center;
+  background: linear-gradient(180deg, rgba(10, 13, 18, 0.6), rgba(10, 13, 18, 0.8));
+  border-top: 1px solid rgba(255, 255, 255, 0.04);
 }
 
 .accounts-scroll {
@@ -773,7 +836,7 @@ input, textarea, select {
   overflow-x: auto;
   padding: 4px 0;
   scrollbar-width: thin;
-  scrollbar-color: rgba(255, 255, 255, 0.1) transparent;
+  scrollbar-color: rgba(255, 255, 255, 0.08) transparent;
 }
 
 .accounts-scroll::-webkit-scrollbar {
@@ -781,11 +844,11 @@ input, textarea, select {
 }
 
 .accounts-scroll::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.08);
   border-radius: 3px;
 }
 
-/* Add Account Button — Subtle orange plus button */
+/* Add Account Button — Subtle indigo plus button */
 .add-account-btn {
   flex-shrink: 0;
   display: flex;
@@ -794,19 +857,19 @@ input, textarea, select {
   width: 48px;
   height: 100%;
   min-height: 100px;
-  background: rgba(255, 140, 50, 0.06);
-  border: 1px dashed rgba(255, 140, 50, 0.3);
-  border-radius: 10px;
-  color: rgba(255, 140, 50, 0.7);
+  background: rgba(99, 102, 241, 0.06);
+  border: 1px dashed rgba(99, 102, 241, 0.25);
+  border-radius: 12px;
+  color: rgba(99, 102, 241, 0.6);
   cursor: pointer;
   transition: all 250ms ease;
 }
 
 .add-account-btn:hover {
-  background: rgba(255, 140, 50, 0.12);
-  border-color: rgba(255, 140, 50, 0.5);
-  color: rgba(255, 160, 80, 1);
-  box-shadow: 0 0 20px rgba(255, 140, 50, 0.1);
+  background: rgba(99, 102, 241, 0.12);
+  border-color: rgba(99, 102, 241, 0.4);
+  color: #818cf8;
+  box-shadow: 0 0 24px rgba(99, 102, 241, 0.15);
   transform: scale(1.02);
 }
 
@@ -819,8 +882,8 @@ input, textarea, select {
   display: flex;
   align-items: center;
   padding: 0 20px;
-  font-size: 0.875rem;
-  color: rgba(255, 255, 255, 0.4);
+  font-size: 0.85rem;
+  color: rgba(255, 255, 255, 0.35);
   font-style: italic;
 }
 
@@ -829,19 +892,20 @@ input, textarea, select {
   flex-shrink: 0;
   min-width: 200px;
   max-width: 240px;
-  padding: 12px 16px;
-  border-radius: 10px;
-  background: rgba(255, 255, 255, 0.02);
-  border: 1px solid rgba(255, 255, 255, 0.04);
+  padding: 14px 16px;
+  border-radius: 12px;
+  background: linear-gradient(180deg, rgba(18, 22, 30, 0.9), rgba(15, 19, 24, 0.95));
+  border: 1px solid rgba(255, 255, 255, 0.05);
   display: flex;
   flex-direction: column;
   gap: 6px;
-  transition: border-color 150ms ease, background 150ms ease;
+  transition: all 200ms ease;
 }
 
 .account-card:hover {
-  border-color: rgba(255, 255, 255, 0.08);
-  background: rgba(255, 255, 255, 0.03);
+  border-color: rgba(99, 102, 241, 0.2);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+  transform: translateY(-2px);
 }
 
 .account-card-header {
@@ -1256,12 +1320,14 @@ html {
 /* Projections Controls Header */
 .projections-controls {
   display: flex;
-  gap: 24px;
+  flex-wrap: wrap;
+  gap: 20px;
   padding: 16px 20px;
-  background: rgba(255, 255, 255, 0.02);
+  background: linear-gradient(180deg, rgba(15, 19, 28, 0.8), rgba(12, 16, 22, 0.9));
   border: 1px solid rgba(255, 255, 255, 0.06);
-  border-radius: 12px;
+  border-radius: 14px;
   flex-shrink: 0;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
 }
 
 .control-group {
@@ -1271,48 +1337,51 @@ html {
 }
 
 .control-group label {
-  font-size: 0.75rem;
-  font-weight: 500;
-  color: rgba(255, 255, 255, 0.6);
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.5);
   text-transform: uppercase;
-  letter-spacing: 0.5px;
+  letter-spacing: 0.08em;
 }
 
 .control-group .value-display {
-  color: #fbbf24;
-  font-weight: 600;
+  color: #a5b4fc;
+  font-weight: 700;
 }
 
 /* Simulation Count Selector */
 .simulation-count-selector {
   display: flex;
-  gap: 4px;
-  background: rgba(255, 255, 255, 0.03);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 8px;
-  padding: 4px;
+  gap: 2px;
+  background: rgba(0, 0, 0, 0.25);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 10px;
+  padding: 3px;
 }
 
 .count-btn {
-  padding: 8px 16px;
-  font-size: 0.875rem;
-  font-weight: 500;
+  padding: 8px 18px;
+  font-size: 0.8rem;
+  font-weight: 600;
   background: transparent;
   border: none;
-  border-radius: 6px;
-  color: rgba(255, 255, 255, 0.5);
+  border-radius: 8px;
+  color: rgba(255, 255, 255, 0.4);
   cursor: pointer;
   transition: all 200ms ease;
 }
 
 .count-btn:hover {
-  background: rgba(255, 255, 255, 0.05);
-  color: rgba(255, 255, 255, 0.8);
+  background: rgba(99, 102, 241, 0.1);
+  color: rgba(255, 255, 255, 0.7);
+  box-shadow: none;
+  transform: none;
 }
 
 .count-btn.active {
-  background: linear-gradient(180deg, rgba(212, 175, 55, 0.2), rgba(212, 175, 55, 0.1));
-  color: #fbbf24;
+  background: linear-gradient(135deg, rgba(99, 102, 241, 0.25), rgba(139, 92, 246, 0.2));
+  color: #c7d2fe;
+  box-shadow: 0 2px 8px rgba(99, 102, 241, 0.2);
 }
 
 /* Volatility Control */
@@ -1327,28 +1396,33 @@ html {
 
 .volatility-slider {
   width: 100%;
-  height: 6px;
+  height: 4px;
   -webkit-appearance: none;
   appearance: none;
-  background: rgba(255, 255, 255, 0.1);
-  border-radius: 3px;
+  background: linear-gradient(to right, rgba(99, 102, 241, 0.2), rgba(239, 68, 68, 0.2));
+  border-radius: 2px;
   outline: none;
 }
 
 .volatility-slider::-webkit-slider-thumb {
   -webkit-appearance: none;
-  width: 16px;
-  height: 16px;
-  background: linear-gradient(180deg, #f6de9a 0%, #d4af37 100%);
+  width: 14px;
+  height: 14px;
+  background: linear-gradient(135deg, #818cf8 0%, #a78bfa 100%);
   border-radius: 50%;
   cursor: pointer;
-  box-shadow: 0 2px 8px rgba(212, 175, 55, 0.3);
+  box-shadow: 0 2px 8px rgba(99, 102, 241, 0.4);
+  transition: transform 150ms ease;
+}
+
+.volatility-slider::-webkit-slider-thumb:hover {
+  transform: scale(1.15);
 }
 
 .volatility-slider::-moz-range-thumb {
-  width: 16px;
-  height: 16px;
-  background: linear-gradient(180deg, #f6de9a 0%, #d4af37 100%);
+  width: 14px;
+  height: 14px;
+  background: linear-gradient(135deg, #818cf8 0%, #a78bfa 100%);
   border-radius: 50%;
   cursor: pointer;
   border: none;
@@ -1357,37 +1431,41 @@ html {
 .volatility-marks {
   display: flex;
   justify-content: space-between;
-  margin-top: 4px;
-  font-size: 0.625rem;
-  color: rgba(255, 255, 255, 0.3);
+  margin-top: 6px;
+  font-size: 0.6rem;
+  color: rgba(255, 255, 255, 0.25);
 }
 
 .volatility-presets {
   display: flex;
   gap: 4px;
-  margin-top: 8px;
+  margin-top: 10px;
 }
 
 .preset-btn {
-  padding: 4px 8px;
-  font-size: 0.75rem;
-  background: rgba(255, 255, 255, 0.03);
+  padding: 5px 10px;
+  font-size: 0.7rem;
+  font-weight: 500;
+  background: rgba(0, 0, 0, 0.2);
   border: 1px solid rgba(255, 255, 255, 0.06);
-  border-radius: 4px;
-  color: rgba(255, 255, 255, 0.5);
+  border-radius: 6px;
+  color: rgba(255, 255, 255, 0.4);
   cursor: pointer;
   transition: all 150ms ease;
 }
 
 .preset-btn:hover {
-  background: rgba(255, 255, 255, 0.06);
-  color: rgba(255, 255, 255, 0.8);
+  background: rgba(99, 102, 241, 0.1);
+  border-color: rgba(99, 102, 241, 0.2);
+  color: rgba(255, 255, 255, 0.7);
+  box-shadow: none;
+  transform: none;
 }
 
 .preset-btn.active {
-  background: rgba(212, 175, 55, 0.15);
-  border-color: rgba(212, 175, 55, 0.3);
-  color: #fbbf24;
+  background: rgba(99, 102, 241, 0.2);
+  border-color: rgba(99, 102, 241, 0.4);
+  color: #a5b4fc;
 }
 
 /* Projections Content Layout */
@@ -1422,22 +1500,31 @@ html {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 16px 20px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  padding: 14px 20px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.02), transparent);
   flex-shrink: 0;
 }
 
 .section-header h3,
 .section-header h4 {
-  font-size: 0.875rem;
+  font-size: 0.85rem;
   font-weight: 600;
-  color: var(--foreground);
+  color: rgba(255, 255, 255, 0.9);
   margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.section-header .header-icon {
+  opacity: 0.6;
 }
 
 .section-meta {
-  font-size: 0.75rem;
-  color: rgba(255, 255, 255, 0.5);
+  font-size: 0.7rem;
+  color: rgba(255, 255, 255, 0.4);
+  font-weight: 500;
 }
 
 .chart-container {
@@ -1634,16 +1721,18 @@ html {
 }
 
 .simulation-summary h4 {
-  font-size: 0.875rem;
+  font-size: 0.8rem;
   font-weight: 600;
-  color: var(--foreground);
-  margin: 0 0 16px;
+  color: rgba(255, 255, 255, 0.85);
+  margin: 0 0 14px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
 }
 
 .summary-card {
-  background: rgba(255, 255, 255, 0.02);
+  background: linear-gradient(180deg, rgba(0, 0, 0, 0.2), rgba(0, 0, 0, 0.3));
   border: 1px solid rgba(255, 255, 255, 0.06);
-  border-radius: 10px;
+  border-radius: 12px;
   padding: 16px;
   margin-bottom: 12px;
 }
@@ -1656,20 +1745,20 @@ html {
 }
 
 .summary-label {
-  font-size: 0.75rem;
-  font-weight: 500;
-  color: rgba(255, 255, 255, 0.6);
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.5);
   text-transform: uppercase;
-  letter-spacing: 0.5px;
+  letter-spacing: 0.08em;
 }
 
 .risk-badge {
-  font-size: 0.625rem;
-  font-weight: 600;
-  padding: 4px 8px;
-  border-radius: 4px;
+  font-size: 0.6rem;
+  font-weight: 700;
+  padding: 4px 10px;
+  border-radius: 6px;
   text-transform: uppercase;
-  letter-spacing: 0.5px;
+  letter-spacing: 0.06em;
 }
 
 .survival-stats {
@@ -1677,21 +1766,39 @@ html {
 }
 
 .survival-rate {
-  font-size: 2rem;
+  font-size: 2.25rem;
   font-weight: 700;
   line-height: 1;
   margin-bottom: 8px;
+  background: linear-gradient(135deg, #22c55e, #4ade80);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.survival-rate.warning {
+  background: linear-gradient(135deg, #f59e0b, #fbbf24);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.survival-rate.danger {
+  background: linear-gradient(135deg, #ef4444, #f87171);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
 }
 
 .survival-detail {
-  font-size: 0.8125rem;
-  color: rgba(255, 255, 255, 0.7);
+  font-size: 0.8rem;
+  color: rgba(255, 255, 255, 0.65);
   margin-bottom: 4px;
 }
 
 .survival-note {
-  font-size: 0.6875rem;
-  color: rgba(255, 255, 255, 0.4);
+  font-size: 0.675rem;
+  color: rgba(255, 255, 255, 0.35);
 }
 
 /* Summary Table */
@@ -1702,18 +1809,19 @@ html {
 }
 
 .summary-table td {
-  padding: 6px 0;
+  padding: 8px 0;
   border-bottom: 1px solid rgba(255, 255, 255, 0.04);
 }
 
 .summary-table td:first-child {
-  color: rgba(255, 255, 255, 0.6);
+  color: rgba(255, 255, 255, 0.55);
+  font-weight: 500;
 }
 
 .summary-table td.value {
   text-align: right;
-  font-weight: 500;
-  color: var(--foreground);
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.9);
   font-family: 'SF Mono', 'Monaco', 'Inconsolata', monospace;
 }
 
@@ -2033,4 +2141,133 @@ html {
 
 .year-range {
   font-variant-numeric: tabular-nums;
+}
+
+/* Projection Years Control */
+.projection-years-control label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.projection-years-control .reset-btn {
+  background: none;
+  border: none;
+  color: rgba(255, 255, 255, 0.4);
+  cursor: pointer;
+  font-size: 1rem;
+  padding: 2px 4px;
+  border-radius: 4px;
+  transition: all 0.15s ease;
+}
+
+.projection-years-control .reset-btn:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.projection-slider-container {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.projection-slider {
+  width: 100%;
+  height: 4px;
+  -webkit-appearance: none;
+  appearance: none;
+  background: linear-gradient(to right, 
+    rgba(99, 102, 241, 0.3) 0%, 
+    rgba(168, 85, 247, 0.3) 100%);
+  border-radius: 2px;
+  outline: none;
+}
+
+.projection-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 14px;
+  height: 14px;
+  background: linear-gradient(135deg, #6366f1 0%, #a855f7 100%);
+  border-radius: 50%;
+  cursor: pointer;
+  box-shadow: 0 2px 6px rgba(99, 102, 241, 0.4);
+  transition: transform 0.15s ease;
+}
+
+.projection-slider::-webkit-slider-thumb:hover {
+  transform: scale(1.15);
+}
+
+.projection-marks {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.65rem;
+  color: rgba(255, 255, 255, 0.35);
+}
+
+/* Scale Toggle */
+.scale-toggle-control {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.scale-toggle {
+  display: flex;
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 6px;
+  padding: 2px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.scale-btn {
+  flex: 1;
+  padding: 6px 12px;
+  border: none;
+  background: transparent;
+  color: rgba(255, 255, 255, 0.5);
+  font-size: 0.75rem;
+  cursor: pointer;
+  border-radius: 4px;
+  transition: all 0.15s ease;
+}
+
+.scale-btn:hover {
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.scale-btn.active {
+  background: rgba(99, 102, 241, 0.25);
+  color: #818cf8;
+}
+
+/* Frequency Badge */
+.account-name-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.frequency-badge {
+  font-size: 0.6rem;
+  padding: 2px 6px;
+  border-radius: 10px;
+  letter-spacing: 1px;
+}
+
+.frequency-badge.monthly {
+  background: rgba(59, 130, 246, 0.15);
+  color: #60a5fa;
+}
+
+.frequency-badge.annual {
+  background: rgba(168, 85, 247, 0.15);
+  color: #c084fc;
+}
+
+.frequency-badge.mixed {
+  background: rgba(251, 191, 36, 0.15);
+  color: #fbbf24;
 }

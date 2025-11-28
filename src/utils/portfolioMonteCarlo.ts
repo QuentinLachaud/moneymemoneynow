@@ -108,10 +108,11 @@ export function consolidateAccounts(accounts: Account[]): ConsolidatedAccount[] 
   groups.forEach((accs, _key) => {
     const name = accs[0].name; // Use original casing from first account
     
-    // Calculate initial value (sum of deposits at their start dates)
-    const initialValue = accs
-      .filter(a => a.transactionType === 'deposit')
-      .reduce((sum, a) => sum + a.amount, 0);
+    // Calculate initial value
+    // For deposits: use the amount field (current balance)
+    // For drawdowns: also use the amount field (starting value for that drawdown)
+    // This allows drawdowns to have a "pot" they draw from
+    const initialValue = accs.reduce((sum, a) => sum + (a.amount || 0), 0);
     
     // Date range - from earliest start to latest end
     const startYear = Math.min(...accs.map(a => new Date(a.date).getFullYear()));
@@ -121,20 +122,21 @@ export function consolidateAccounts(accounts: Account[]): ConsolidatedAccount[] 
     const yearlyData = new Map<number, YearlyAccountData>();
     
     // Calculate weighted return and volatility for gap periods
-    const depositAccounts = accs.filter(a => a.transactionType === 'deposit');
-    const totalDeposits = depositAccounts.reduce((sum, a) => sum + a.amount, 0);
+    // Weight by amount (initial value contribution)
+    const accountsWithAmount = accs.filter(a => a.amount > 0);
+    const totalAmount = accountsWithAmount.reduce((sum, a) => sum + a.amount, 0);
     
-    const weightedReturn = totalDeposits > 0
-      ? depositAccounts.reduce((sum, a) => sum + (a.expectedReturn * a.amount), 0) / totalDeposits
+    const weightedReturn = totalAmount > 0
+      ? accountsWithAmount.reduce((sum, a) => sum + (a.expectedReturn * a.amount), 0) / totalAmount
       : accs[0].expectedReturn;
     
     // Get volatility from accounts (convert label to number)
     const volMap: Record<string, number> = { 'low': 5, 'medium': 15, 'high': 25 };
-    const weightedVolatility = totalDeposits > 0
-      ? depositAccounts.reduce((sum, a) => {
+    const weightedVolatility = totalAmount > 0
+      ? accountsWithAmount.reduce((sum, a) => {
           const vol = a.volatility ? (volMap[a.volatility] || 15) : 15;
           return sum + (vol * a.amount);
-        }, 0) / totalDeposits
+        }, 0) / totalAmount
       : 15;
     
     // For each year in the range, determine what accounts are active
@@ -154,14 +156,15 @@ export function consolidateAccounts(accounts: Account[]): ConsolidatedAccount[] 
           hasActiveData = true;
           
           // Calculate annual cash flow contribution
+          // IMPORTANT: Deposits ADD to the pot, withdrawals SUBTRACT from it
           const annualAmount = acc.frequency === 'monthly' 
             ? acc.transactionAmount * 12 
             : acc.transactionAmount;
           const signedAmount = acc.transactionType === 'withdraw' ? -annualAmount : annualAmount;
           netCashFlow += signedAmount;
           
-          // Track for weighted return calculation
-          if (acc.transactionType === 'deposit') {
+          // Track for weighted return calculation (use amount from all accounts)
+          if (acc.amount > 0) {
             activeAmount += acc.amount;
             weightedYearReturn += acc.expectedReturn * acc.amount;
           }
@@ -202,12 +205,14 @@ export function consolidateAccounts(accounts: Account[]): ConsolidatedAccount[] 
  * @param numSimulations - Number of simulation paths
  * @param globalVolatilityOverride - Default volatility override for all assets (0-100%)
  * @param assetVolatilityOverrides - Per-asset volatility overrides (asset name -> 0-100%)
+ * @param projectionYears - Override projection length (years from start). If undefined, uses account end dates.
  */
 export function runPortfolioMonteCarloSimulation(
   accounts: Account[],
   numSimulations: number,
   globalVolatilityOverride?: number,
-  assetVolatilityOverrides?: Map<string, number | null>
+  assetVolatilityOverrides?: Map<string, number | null>,
+  projectionYears?: number
 ): PortfolioSimulationResult {
   if (accounts.length === 0) {
     return createEmptyResult();
@@ -218,7 +223,11 @@ export function runPortfolioMonteCarloSimulation(
   
   // Determine simulation time range
   const startYear = Math.min(...consolidated.map(c => c.startYear));
-  const endYear = Math.max(...consolidated.map(c => c.endYear));
+  // Use projectionYears override if provided, otherwise use natural end dates
+  const naturalEndYear = Math.max(...consolidated.map(c => c.endYear));
+  const endYear = projectionYears !== undefined 
+    ? startYear + projectionYears 
+    : naturalEndYear;
   const years: number[] = [];
   for (let y = startYear; y <= endYear; y++) {
     years.push(y);
