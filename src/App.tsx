@@ -1,31 +1,30 @@
 /**
  * App.tsx — Main application component
  *
- * LAYOUT STRUCTURE:
+ * LAYOUT STRUCTURE (per wireframe):
  * ┌─────────────────────────────────────────────────────────────────┐
- * │  Header: Title + Tab buttons (Assets | Projections)            │
+ * │  Title                                                          │
+ * ├─────────────────────────────────────────────────────────────────┤
+ * │  Tab Toggle (glass-style slider)                                │
  * ├──────────┬──────────────────────────────────────────────────────┤
- * │          │  Three-column main area (.content-columns)          │
- * │  Left    │  ┌────────────┬────────────┬────────────┐           │
- * │  Tray    │  │ Composition│ Projection │ Right      │           │
- * │  (Add    │  │ Chart      │ Chart      │ Placeholder│           │
- * │  Account)│  └────────────┴────────────┴────────────┘           │
- * ├──────────┴──────────────────────────────────────────────────────┤
- * │  Bottom Accounts Strip (horizontal scrollable list)            │
- * └─────────────────────────────────────────────────────────────────┘
+ * │          │  Graph 1: Net Worth Projection (full width)         │
+ * │  Add     ├──────────────────────────────────────────────────────┤
+ * │  Account │  Graph 2: Cash Flow (full width)                    │
+ * │  Panel   ├──────────────────────────────────────────────────────┤
+ * │          │  Accounts Strip (horizontal scrollable)             │
+ * └──────────┴──────────────────────────────────────────────────────┘
  *
  * KEY CUSTOMIZATION POINTS:
- * - To add new tabs: add to `tab` state type and create conditional content
+ * - To add new tabs: add to `tab` state type and tab-toggle buttons
  * - To change left tray width: update --left-tray-width in globals.css
- * - To add a 4th column: add another .column-item in .content-columns
- * - To change header height: update --header-height in globals.css
+ * - To change spacing: update --page-gap in globals.css
  */
 
-import { useState, useRef, useLayoutEffect } from 'react';
+import { useState, useRef } from 'react';
 import { getLocaleCurrency } from './utils/format';
 import { AccountForm } from './components/AccountForm';
 import { ProjectionChart } from './components/ProjectionChart';
-import { CompositionChart } from './components/CompositionChart';
+import { CashFlowChart } from './components/CashFlowChart';
 import { getColorForId } from './utils/colors';
 import Sparkline from './components/Sparkline';
 import TicketEditor from './components/TicketEditor';
@@ -67,46 +66,8 @@ export default function App() {
   /** Selected account IDs for filtering projections (empty = show all) */
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
 
-  /** Ref to left tray for positioning calculations */
+  /** Ref to left panel for scroll-into-view */
   const leftTrayRef = useRef<HTMLDivElement | null>(null);
-
-  /** Dynamic left offset for bottom strip (avoids overlapping left tray) */
-  const [bottomLeft, setBottomLeft] = useState<number | null>(null);
-
-  /**
-   * LAYOUT EFFECT: Calculate bottom strip position
-   * Runs on mount and window resize to keep bottom strip aligned with left tray
-   */
-  useLayoutEffect(() => {
-    function update() {
-      // On narrow screens, let CSS handle full-width layout
-      if (window.innerWidth <= 900) {
-        setBottomLeft(16);
-        return;
-      }
-      const el = leftTrayRef.current;
-      if (!el) {
-        setBottomLeft(16 + 360); // fallback: tray width + padding
-        return;
-      }
-      const rect = el.getBoundingClientRect();
-      setBottomLeft(Math.max(16, Math.ceil(rect.right + 12)));
-    }
-
-    update();
-    window.addEventListener('resize', update);
-
-    // Also update when tray DOM changes (e.g., form expands)
-    const obs = new MutationObserver(update);
-    if (leftTrayRef.current) {
-      obs.observe(leftTrayRef.current, { attributes: true, childList: true, subtree: true });
-    }
-
-    return () => {
-      window.removeEventListener('resize', update);
-      obs.disconnect();
-    };
-  }, []);
 
   /* ─── ACCOUNT CRUD ──────────────────────────────────────────────── */
 
@@ -170,33 +131,42 @@ export default function App() {
 
   /* ─── RENDER ────────────────────────────────────────────────────── */
   return (
-    <div className="min-h-screen bg-gray-50 p-8">
-      {/* ─── HEADER: Title + Tab Navigation ─────────────────────────── */}
-      <div className="max-w-7xl mx-auto">
-        <h1 className="mb-4 text-gray-900">Finance Portfolio Tracker</h1>
+    <div className="app-container">
+      {/* ─── HEADER: Title ──────────────────────────────────────────── */}
+      <header className="app-header">
+        <h1 className="app-title">Finance Portfolio Tracker</h1>
+      </header>
 
-        {/* Tab buttons - add more tabs by extending the tab state type */}
-        <div className="flex items-center gap-3 mb-6">
+      {/* ─── TAB TOGGLE: Glass-style slider ─────────────────────────── */}
+      <div className="tab-container">
+        <div className="tab-toggle">
+          <div 
+            className="tab-slider" 
+            style={{ transform: tab === 'assets' ? 'translateX(0)' : 'translateX(100%)' }} 
+          />
           <button
             onClick={() => setTab('assets')}
-            className={`px-4 py-2 rounded-md ${tab === 'assets' ? 'btn-primary' : 'bg-transparent text-muted border border-transparent'}`}
+            className={`tab-button ${tab === 'assets' ? 'active' : ''}`}
           >
             Assets
           </button>
           <button
             onClick={() => setTab('projections')}
-            className={`px-4 py-2 rounded-md ${tab === 'projections' ? 'btn-primary' : 'bg-transparent text-muted border border-transparent'}`}
+            className={`tab-button ${tab === 'projections' ? 'active' : ''}`}
           >
             Projections
           </button>
         </div>
       </div>
 
-      {/* ─── LEFT TRAY: Add/Edit Account Form ───────────────────────── */}
-      {/* Fixed position, visible on all tabs. Width: --left-tray-width */}
-      <aside className="left-tray" ref={(el) => { leftTrayRef.current = el as HTMLDivElement | null; }}>
-        <div className="bg-white rounded-lg shadow-sm p-6 h-full overflow-auto">
-          <h2 className="mb-4 text-gray-900">Add Account</h2>
+      {/* ─── MAIN LAYOUT: Left panel + Content area ─────────────────── */}
+      <div className="main-grid">
+        {/* Left Panel: Add Account Form (full height) */}
+        <aside 
+          className="left-panel card" 
+          ref={(el) => { leftTrayRef.current = el as HTMLDivElement | null; }}
+        >
+          <h2 className="panel-title">{editingId ? 'Edit Account' : 'Add Account'}</h2>
           <AccountForm
             onSubmit={(data) => {
               if (editingId) {
@@ -209,102 +179,97 @@ export default function App() {
             initialData={editingId ? accounts.find((a) => a.id === editingId) : undefined}
             submitLabel={editingId ? 'Update Account' : 'Add Account'}
           />
-        </div>
-      </aside>
+          {editingId && (
+            <button onClick={cancelEdit} className="btn cancel-btn">
+              Cancel Edit
+            </button>
+          )}
+        </aside>
 
-      {/* ─── MAIN CONTENT: Three-column layout ──────────────────────── */}
-      {/* To add columns: add .column-item divs. To resize: adjust flex in CSS */}
-      <main className="main-layout">
-        <div className="content-columns">
-          {/* Column 1: Current Holdings Composition */}
-          <div className="column-item card composition-panel">
-            <h2 className="mb-4 text-gray-900">Current Net Worth Composition</h2>
-            <div style={{ flex: 1, minHeight: 0 }}>
-              <CompositionChart accounts={tab === 'assets' ? accounts : filteredAccounts} />
-            </div>
-          </div>
-
-          {/* Column 2: Future Value Projection */}
-          <div className="column-item card projection-panel">
-            <h2 className="mb-4 text-gray-900">Net Worth Projection</h2>
-            <div style={{ flex: 1, minHeight: 0 }}>
+        {/* Right Content: Graphs stacked vertically */}
+        <div className="content-area">
+          {/* Graph 1: Net Worth Projection */}
+          <div className="graph-panel card">
+            <h2 className="panel-title">Net Worth Projection</h2>
+            <div className="graph-container">
               <ProjectionChart accounts={tab === 'assets' ? accounts : filteredAccounts} />
             </div>
           </div>
 
-          {/* Column 3: Reserved for future component */}
-          <div className="column-item card right-placeholder">
-            {/* Add your component here */}
+          {/* Graph 2: Cash Flow */}
+          <div className="graph-panel card">
+            <h2 className="panel-title">Cash Flow</h2>
+            <div className="graph-container">
+              <CashFlowChart accounts={tab === 'assets' ? accounts : filteredAccounts} />
+            </div>
+          </div>
+
+          {/* Accounts Strip */}
+          <div className="accounts-strip card">
+            {accounts.length > 0 ? (
+              <div className="accounts-scroll">
+                {(selectedIds.size === 0 ? accounts : accounts.filter((a) => selectedIds.has(a.id))).map((acct) => {
+                  const startYear = new Date(acct.date).getFullYear();
+                  const duration = `${acct.timeHorizon}y`;
+                  const sign = acct.transactionType === 'withdraw' ? '-' : '+';
+                  const color = getColorForId(acct.id);
+                  const formattedAmt = acct.transactionAmount?.toLocaleString(undefined, {
+                    style: 'currency',
+                    currency: getLocaleCurrency().currency,
+                  }) || '£0';
+
+                  return (
+                    <div className="account-card" key={acct.id}>
+                      {inlineEditingId === acct.id ? (
+                        <TicketEditor
+                          account={acct}
+                          onSave={(data) => saveInlineEdit(acct.id, data)}
+                          onCancel={cancelInlineEdit}
+                        />
+                      ) : (
+                        <>
+                          {/* Card header */}
+                          <div className="account-card-header">
+                            <div className="account-card-title">
+                              <div 
+                                className="account-dot" 
+                                style={{ background: color }} 
+                              />
+                              <span className="account-name">{acct.name}</span>
+                            </div>
+                            <Sparkline account={acct} years={Math.min(acct.timeHorizon, 10)} color={color} />
+                          </div>
+
+                          {/* Card body */}
+                          <div className="account-card-meta">
+                            {startYear} · {duration} · {acct.frequency}
+                          </div>
+
+                          {/* Card amount */}
+                          <div className={`account-card-amount ${acct.transactionType}`}>
+                            <span>{sign}{formattedAmt}</span>
+                            <span className="per-period">/{acct.frequency === 'monthly' ? 'mo' : 'yr'}</span>
+                          </div>
+
+                          {/* Card actions */}
+                          <div className="account-card-actions">
+                            <button onClick={() => startInlineEdit(acct.id)} className="btn-sm">Edit</button>
+                            <button onClick={() => deleteAccount(acct.id)} className="btn-sm btn-danger">Delete</button>
+                          </div>
+                        </>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            ) : (
+              <div className="empty-state">
+                <span className="empty-title">No accounts yet</span>
+                <span className="empty-desc">Add accounts to see them here and in projections.</span>
+              </div>
+            )}
           </div>
         </div>
-      </main>
-      {/* ─── BOTTOM STRIP: Account cards ─────────────────────────────── */}
-      {/* Horizontal scrollable list of account cards with inline editing */}
-      <div
-        className="bottom-accounts"
-        role="region"
-        aria-label="Selected accounts"
-        style={bottomLeft != null ? { left: `${bottomLeft}px` } : undefined}
-      >
-        {accounts.length > 0 ? (
-          (selectedIds.size === 0 ? accounts : accounts.filter((a) => selectedIds.has(a.id))).map((acct) => {
-            const startYear = new Date(acct.date).getFullYear();
-            const duration = `${acct.timeHorizon}y`;
-            const sign = acct.transactionType === 'withdraw' ? '-' : '+';
-            const color = getColorForId(acct.id);
-            const formattedAmt = acct.transactionAmount?.toLocaleString(undefined, {
-              style: 'currency',
-              currency: getLocaleCurrency().currency,
-            }) || '$0';
-
-            return (
-              <div className="acct" key={acct.id}>
-                {/* Card header: color dot, name, sparkline, actions */}
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-                    <div style={{ width: 12, height: 12, borderRadius: 3, background: color }} aria-hidden />
-                    <div style={{ fontWeight: 600 }}>{acct.name}</div>
-                    <div style={{ marginLeft: 8 }}>
-                      <Sparkline account={acct} years={Math.min(acct.timeHorizon, 10)} color={color} />
-                    </div>
-                  </div>
-                  <div style={{ display: 'flex', gap: 8 }}>
-                    <button onClick={() => startInlineEdit(acct.id)} className="btn" title="Edit">Edit</button>
-                    <button onClick={() => deleteAccount(acct.id)} className="btn" title="Delete">Delete</button>
-                  </div>
-                </div>
-
-                {/* Card body: date and duration */}
-                <div style={{ fontSize: '0.9rem', color: 'var(--muted-foreground)', marginTop: 6 }}>
-                  {startYear} · {duration}
-                </div>
-
-                {/* Card footer: transaction amount */}
-                <div style={{ marginTop: 8, fontWeight: 700 }}>
-                  <span style={{ color: acct.transactionType === 'withdraw' ? '#ef4444' : '#10b981', marginRight: 8 }}>{sign}</span>
-                  <span style={{ color: acct.transactionType === 'withdraw' ? '#ef4444' : '#10b981' }}>{formattedAmt}</span>
-                </div>
-
-                {/* Inline editor (shown when editing this account) */}
-                {inlineEditingId === acct.id && (
-                  <div style={{ marginTop: 8 }}>
-                    <TicketEditor
-                      account={acct}
-                      onSave={(data) => saveInlineEdit(acct.id, data)}
-                      onCancel={cancelInlineEdit}
-                    />
-                  </div>
-                )}
-              </div>
-            );
-          })
-        ) : (
-          /* Empty state */
-          <div className="acct" style={{ minWidth: 340, display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: 8 }}>
-            <div style={{ fontWeight: 700 }}>No accounts yet</div>
-            <div style={{ color: 'var(--muted-foreground)' }}>Add accounts to see them here and in projections.</div>
-          </div>
-        )}
       </div>
     </div>
   );
