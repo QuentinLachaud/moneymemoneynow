@@ -32,7 +32,7 @@ export interface Account {
 }
 
 /** Tab types for navigation */
-export type TabType = 'assets' | 'projections' | 'portfolio';
+export type TabType = 'projections' | 'portfolio';
 
 /**
  * Store state interface — all persisted state
@@ -90,7 +90,7 @@ const initialState: AppState = {
   selectedIds: new Set(),
   projectionAccountId: null,
   portfolioSelectedIds: new Set(),
-  tab: 'assets',
+  tab: 'projections',
 };
 
 /**
@@ -239,6 +239,16 @@ export const useAppStore = create<AppStore>()(
     {
       name: 'finance-portfolio-storage',
       storage: customStorage,
+      version: 1, // Increment version for migration
+      migrate: (persistedState, version) => {
+        const state = persistedState as AppState & { tab?: string };
+        // Migration from v0: 'assets' tab no longer exists
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        if ((state.tab as any) === 'assets') {
+          state.tab = 'projections' as TabType;
+        }
+        return state as AppState;
+      },
       // Only persist essential data, skip derived state
       partialize: (state) => ({
         accounts: state.accounts,

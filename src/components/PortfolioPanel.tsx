@@ -51,27 +51,14 @@ export function PortfolioPanel({ accounts, selectedAccountIds }: PortfolioPanelP
     return accounts.filter(acc => selectedAccountIds.has(acc.id));
   }, [accounts, selectedAccountIds]);
 
-  // Apply per-asset return overrides to accounts before simulation
-  const accountsWithOverrides = useMemo(() => {
-    return activeAccounts.map(acc => {
-      const override = assetOverrides.get(acc.name.toLowerCase().trim());
-      if (!override) return acc;
-      
-      return {
-        ...acc,
-        expectedReturn: override.returnOverride ?? acc.expectedReturn,
-        // Volatility is handled separately via assetVolatilityOverrides
-      };
-    });
-  }, [activeAccounts, assetOverrides]);
-
-  // Build per-asset volatility overrides map for simulation
-  const assetVolatilityOverrides = useMemo(() => {
-    const map = new Map<string, number | null>();
+  // Build per-asset overrides map for simulation (applied only to gap periods)
+  const assetOverridesForSimulation = useMemo(() => {
+    const map = new Map<string, { returnOverride: number | null; volatilityOverride: number | null }>();
     assetOverrides.forEach((override, key) => {
-      if (override.globalVolatilityOverride !== null) {
-        map.set(key, override.globalVolatilityOverride);
-      }
+      map.set(key, {
+        returnOverride: override.returnOverride,
+        volatilityOverride: override.globalVolatilityOverride,
+      });
     });
     return map;
   }, [assetOverrides]);
@@ -90,13 +77,13 @@ export function PortfolioPanel({ accounts, selectedAccountIds }: PortfolioPanelP
   // Run portfolio simulation
   const simulation: PortfolioSimulationResult = useMemo(() => {
     return runPortfolioMonteCarloSimulation(
-      accountsWithOverrides,
+      activeAccounts,
       numSimulations,
       globalVolatilityOverride,
-      assetVolatilityOverrides,
+      assetOverridesForSimulation,
       projectionYearsOverride ?? undefined
     );
-  }, [accountsWithOverrides, numSimulations, globalVolatilityOverride, assetVolatilityOverrides, projectionYearsOverride]);
+  }, [activeAccounts, numSimulations, globalVolatilityOverride, assetOverridesForSimulation, projectionYearsOverride]);
 
   // Get final values for histogram
   const finalValues = useMemo(() => {

@@ -72,41 +72,30 @@ export function GraphPanel({ title, data, columns, children, headerControls }: G
           <h3>{title}</h3>
           <div className="graph-controls">
             {headerControls}
+            {/* Data/Graph toggle button - prominent in header */}
+            <button
+              className={`data-toggle-btn ${showTable ? 'active' : ''}`}
+              onClick={() => setShowTable(!showTable)}
+              title={showTable ? 'Show graph' : 'Show data'}
+            >
+              {showTable ? (
+                <>
+                  <LineChart size={14} />
+                  Graph
+                </>
+              ) : (
+                <>
+                  <Table size={14} />
+                  Data
+                </>
+              )}
+            </button>
           </div>
         </div>
 
-        {/* Content: Chart */}
-        <div className="graph-container">
-          {children}
-        </div>
-      </div>
-
-      {/* Right-side tray */}
-      <div className={`graph-tray ${showTable ? 'show-table' : 'collapsed'}`}>
-        {/* Tray actions */}
-        <div className="tray-actions">
-          {/* Download button */}
-          <button
-            className="tray-button"
-            onClick={() => downloadCSV(data, columns, filename)}
-            title="Download data as CSV"
-          >
-            <Download size={16} />
-          </button>
-
-          {/* Table/Chart toggle */}
-          <button
-            className={`tray-button ${showTable ? 'active' : ''}`}
-            onClick={() => setShowTable(!showTable)}
-            title={showTable ? 'Show chart' : 'Show table'}
-          >
-            {showTable ? <LineChart size={16} /> : <Table size={16} />}
-          </button>
-        </div>
-
-        {/* Data table (only when expanded) */}
-        {showTable && (
-          <div className="data-table-container">
+        {/* Content: Chart or Table */}
+        {showTable ? (
+          <div className="data-table-container graph-data-table">
             <table className="data-table">
               <thead>
                 <tr>
@@ -130,7 +119,26 @@ export function GraphPanel({ title, data, columns, children, headerControls }: G
               </tbody>
             </table>
           </div>
+        ) : (
+          <div className="graph-container">
+            {children}
+          </div>
         )}
+      </div>
+
+      {/* Right-side tray - download only */}
+      <div className="graph-tray collapsed">
+        {/* Tray actions */}
+        <div className="tray-actions">
+          {/* Download button */}
+          <button
+            className="tray-button"
+            onClick={() => downloadCSV(data, columns, filename)}
+            title="Download data as CSV"
+          >
+            <Download size={16} />
+          </button>
+        </div>
       </div>
     </div>
   );

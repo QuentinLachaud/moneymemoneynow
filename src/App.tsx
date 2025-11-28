@@ -28,11 +28,8 @@ import { useState, useRef } from 'react';
 import { Plus, Check, X, ChevronDown, ChevronUp } from 'lucide-react';
 import { getLocaleCurrency } from './utils/format';
 import { AccountForm } from './components/AccountForm';
-import { ProjectionChart, getProjectionData, getProjectionColumns } from './components/ProjectionChart';
-import { CashFlowChart, getCashFlowData, getCashFlowColumns } from './components/CashFlowChart';
-import { GraphPanel } from './components/GraphPanel';
-import { ProjectionsPanel } from './components/ProjectionsPanel';
-import { PortfolioPanel } from './components/PortfolioPanel';
+import { ProjectionsPanelV2 } from './components/ProjectionsPanelV2';
+import { PortfolioPanel as PortfolioPanelV2 } from './components/PortfolioPanelV2';
 import { getColorForId } from './utils/colors';
 import Sparkline from './components/Sparkline';
 
@@ -93,9 +90,6 @@ export default function App() {
   
   /** Ref to left panel for scroll-into-view */
   const leftTrayRef = useRef<HTMLDivElement | null>(null);
-
-  /** Toggle between log and linear scale on projection chart */
-  const [projectionLogScale, setProjectionLogScale] = useState(false);
 
   /** Modal open state for adding/editing account from strip */
   const [showAccountModal, setShowAccountModal] = useState(false);
@@ -181,26 +175,18 @@ export default function App() {
         <h1 className="app-title">Finance Portfolio Tracker</h1>
       </header>
 
-      {/* ─── TAB TOGGLE: Glass-style slider (3 tabs) ─────────────────── */}
+      {/* ─── TAB TOGGLE: Glass-style slider (2 tabs) ─────────────────── */}
       <div className="tab-container">
-        <div className="tab-toggle three-tabs">
+        <div className="tab-toggle two-tabs">
           <div 
             className="tab-slider" 
             style={{ 
-              width: '33.333%',
-              transform: tab === 'assets' 
+              width: '50%',
+              transform: tab === 'projections' 
                 ? 'translateX(0)' 
-                : tab === 'projections' 
-                  ? 'translateX(100%)' 
-                  : 'translateX(200%)' 
+                : 'translateX(100%)' 
             }} 
           />
-          <button
-            onClick={() => setTab('assets')}
-            className={`tab-button ${tab === 'assets' ? 'active' : ''}`}
-          >
-            Assets
-          </button>
           <button
             onClick={() => setTab('projections')}
             className={`tab-button ${tab === 'projections' ? 'active' : ''}`}
@@ -228,7 +214,7 @@ export default function App() {
             className="panel-toggle-header"
             onClick={() => setLeftPanelCollapsed(!leftPanelCollapsed)}
           >
-            <h2 className="panel-title">{editingId ? 'Edit Account' : 'Add Account'}</h2>
+            <h2 className="panel-title">{editingId ? 'Edit Cash Flow' : 'Add Cash Flow'}</h2>
             {leftPanelCollapsed ? <ChevronDown size={20} /> : <ChevronUp size={20} />}
           </button>
           
@@ -244,7 +230,7 @@ export default function App() {
                 setLeftPanelCollapsed(true); // Collapse after submit on mobile
               }}
               initialData={editingId ? accounts.find((a) => a.id === editingId) : undefined}
-              submitLabel={editingId ? 'Update Account' : 'Add Account'}
+              submitLabel={editingId ? 'Update Cash Flow' : 'Add Cash Flow'}
               existingAccounts={accounts}
             />
             {editingId && (
@@ -257,43 +243,11 @@ export default function App() {
 
         {/* Right Content: Tab-specific content */}
         <div className="content-area">
-          {tab === 'assets' ? (
-            <>
-              {/* Graph 1: Net Worth Projection with log/linear toggle */}
-              <GraphPanel
-                title="Net Worth Projection"
-                data={getProjectionData(accounts)}
-                columns={getProjectionColumns(accounts)}
-                headerControls={
-                  <button
-                    className={`scale-toggle ${projectionLogScale ? 'active' : ''}`}
-                    onClick={() => setProjectionLogScale(!projectionLogScale)}
-                    title={projectionLogScale ? 'Switch to linear scale' : 'Switch to log scale'}
-                  >
-                    {projectionLogScale ? 'Log' : 'Linear'}
-                  </button>
-                }
-              >
-                <ProjectionChart 
-                  accounts={accounts} 
-                  isLogScale={projectionLogScale}
-                />
-              </GraphPanel>
-
-              {/* Graph 2: Cash Flow */}
-              <GraphPanel
-                title="Cash Flow"
-                data={getCashFlowData(accounts)}
-                columns={getCashFlowColumns(accounts)}
-              >
-                <CashFlowChart accounts={accounts} />
-              </GraphPanel>
-            </>
-          ) : tab === 'projections' ? (
+          {tab === 'projections' ? (
             /* Projections Tab: Monte Carlo Simulation */
             <div className="projections-tab-content">
               {projectionAccount ? (
-                <ProjectionsPanel account={projectionAccount} />
+                <ProjectionsPanelV2 account={projectionAccount} />
               ) : (
                 <div className="empty-projection-state card">
                   <div className="empty-state-content">
@@ -306,7 +260,7 @@ export default function App() {
           ) : (
             /* Portfolio Tab: Combined Monte Carlo Simulation */
             <div className="portfolio-tab-content">
-              <PortfolioPanel 
+              <PortfolioPanelV2 
                 accounts={accounts} 
                 selectedAccountIds={portfolioSelectedIds}
               />
@@ -384,11 +338,11 @@ export default function App() {
                 })
               ) : null}
 
-              {/* Add Account Button - always at the end */}
+              {/* Add Cash Flow Button - always at the end */}
               <button 
                 className="add-account-btn"
                 onClick={openAddModal}
-                title="Add new account"
+                title="Add new cash flow"
               >
                 <Plus size={24} />
               </button>
@@ -397,12 +351,12 @@ export default function App() {
         </div>
       </div>
 
-      {/* Add/Edit Account Modal */}
+      {/* Add/Edit Cash Flow Modal */}
       {showAccountModal && (
         <div className="modal-overlay" onClick={closeAccountModal}>
           <div className="modal-content" onClick={(e) => e.stopPropagation()}>
             <div className="modal-header">
-              <h2>{editingAccountId ? 'Edit Account' : 'Add Account'}</h2>
+              <h2>{editingAccountId ? 'Edit Cash Flow' : 'Add Cash Flow'}</h2>
               <button 
                 className="modal-close"
                 onClick={closeAccountModal}
@@ -423,7 +377,7 @@ export default function App() {
                 transactionType: editingAccount.transactionType,
                 transactionAmount: editingAccount.transactionAmount,
               } : undefined}
-              submitLabel={editingAccountId ? 'Save Changes' : 'Add Account'}
+              submitLabel={editingAccountId ? 'Save Changes' : 'Add Cash Flow'}
               existingAccounts={accounts}
               onSubmit={(account) => {
                 if (editingAccountId) {

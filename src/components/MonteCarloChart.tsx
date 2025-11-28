@@ -42,7 +42,7 @@ const PERCENTILE_CONFIGS: PercentileConfig[] = [
   { key: 90, label: '90th Percentile', color: '#4ade80', defaultVisible: true },
   { key: 75, label: '75th Percentile', color: '#86efac', defaultVisible: true },
   { key: 50, label: 'Median (50th)', color: '#fbbf24', defaultVisible: true },
-  { key: 25, label: '25th Percentile', color: '#f87171', defaultVisible: false },
+  { key: 25, label: '25th Percentile', color: '#f87171', defaultVisible: true },
   { key: 10, label: '10th Percentile', color: '#ef4444', defaultVisible: false },
   { key: 1, label: '1st Percentile', color: '#dc2626', defaultVisible: false },
 ];

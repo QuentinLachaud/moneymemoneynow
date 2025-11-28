@@ -1,13 +1,14 @@
 /**
  * Portfolio Monte Carlo Simulation Engine
  * 
- * Runs Monte Carlo simulations for an entire portfolio of accounts,
- * consolidating same-name accounts and aggregating results.
+ * Runs Monte Carlo simulations for an entire portfolio treated as a SINGLE UNIFIED VALUE.
+ * All accounts contribute to one portfolio balance - deposits add, withdrawals subtract.
  * 
  * KEY FEATURES:
- * - Consolidates accounts by name (deposit + drawdown = single asset)
- * - Runs correlated simulations across all assets
- * - Computes portfolio-level statistics and survival rates
+ * - Single portfolio balance (not per-account tracking)
+ * - Returns applied to entire portfolio value each year
+ * - Cash flows from all accounts aggregate into net annual flow
+ * - Survival = portfolio stays above zero
  */
 
 import { Account } from '../App';
@@ -17,7 +18,7 @@ import { SimulationPath, SimulationResult, SimulationStats } from './monteCarlo'
 export interface PortfolioSimulationResult extends SimulationResult {
   /** Individual account results for breakdown */
   accountResults: Map<string, SimulationResult>;
-  /** Consolidated account groups */
+  /** Consolidated account groups (for display) */
   consolidatedAccounts: ConsolidatedAccount[];
 }
 
@@ -28,9 +29,9 @@ export interface ConsolidatedAccount {
   accounts: Account[];
   /** Net initial value (sum of all deposits at their start) */
   initialValue: number;
-  /** Weighted average expected return (used for gap periods) */
+  /** Weighted average expected return */
   weightedReturn: number;
-  /** Weighted average volatility (used for gap periods) */
+  /** Weighted average volatility */
   weightedVolatility: number;
   /** Start year (earliest account) */
   startYear: number;
@@ -38,7 +39,6 @@ export interface ConsolidatedAccount {
   endYear: number;
   /** 
    * Per-year cash flow data: maps year -> net cash flow for that year
-   * Years not in this map are "gap years" where returns apply but no cash flow
    */
   yearlyData: Map<number, YearlyAccountData>;
 }
@@ -109,10 +109,10 @@ export function consolidateAccounts(accounts: Account[]): ConsolidatedAccount[] 
     const name = accs[0].name; // Use original casing from first account
     
     // Calculate initial value
-    // For deposits: use the amount field (current balance)
-    // For drawdowns: also use the amount field (starting value for that drawdown)
-    // This allows drawdowns to have a "pot" they draw from
-    const initialValue = accs.reduce((sum, a) => sum + (a.amount || 0), 0);
+    // CRITICAL FIX: Only DEPOSITS contribute to initial value
+    // Drawdowns represent WITHDRAWALS from the existing pot, not additional capital
+    const depositAccounts = accs.filter(a => a.transactionType === 'deposit');
+    const initialValue = depositAccounts.reduce((sum, a) => sum + (a.amount || 0), 0);
     
     // Date range - from earliest start to latest end
     const startYear = Math.min(...accs.map(a => new Date(a.date).getFullYear()));
@@ -122,8 +122,8 @@ export function consolidateAccounts(accounts: Account[]): ConsolidatedAccount[] 
     const yearlyData = new Map<number, YearlyAccountData>();
     
     // Calculate weighted return and volatility for gap periods
-    // Weight by amount (initial value contribution)
-    const accountsWithAmount = accs.filter(a => a.amount > 0);
+    // Weight by amount (only from deposits since they define the capital base)
+    const accountsWithAmount = depositAccounts.filter(a => a.amount > 0);
     const totalAmount = accountsWithAmount.reduce((sum, a) => sum + a.amount, 0);
     
     const weightedReturn = totalAmount > 0
@@ -201,174 +201,137 @@ export function consolidateAccounts(accounts: Account[]): ConsolidatedAccount[] 
 /**
  * Run portfolio-wide Monte Carlo simulation
  * 
+ * CRITICAL: This simulates the portfolio as ONE UNIFIED VALUE.
+ * - All deposits contribute to starting value
+ * - All cash flows (deposits & withdrawals) apply to the single portfolio
+ * - Returns apply to total portfolio value
+ * - Death = portfolio hits zero
+ * 
  * @param accounts - All accounts to simulate
  * @param numSimulations - Number of simulation paths
- * @param globalVolatilityOverride - Default volatility override for all assets (0-100%)
- * @param assetVolatilityOverrides - Per-asset volatility overrides (asset name -> 0-100%)
- * @param projectionYears - Override projection length (years from start). If undefined, uses account end dates.
+ * @param globalVolatilityOverride - Volatility override (0-100%)
+ * @param assetOverrides - Per-asset return/volatility overrides (for weighted calculation)
+ * @param projectionYears - Override projection length (years from start)
  */
 export function runPortfolioMonteCarloSimulation(
   accounts: Account[],
   numSimulations: number,
   globalVolatilityOverride?: number,
-  assetVolatilityOverrides?: Map<string, number | null>,
+  assetOverrides?: Map<string, { returnOverride: number | null; volatilityOverride: number | null }>,
   projectionYears?: number
 ): PortfolioSimulationResult {
   if (accounts.length === 0) {
     return createEmptyResult();
   }
 
-  // Consolidate same-name accounts
+  // Consolidate accounts for display (but simulation uses unified approach)
   const consolidated = consolidateAccounts(accounts);
   
   // Determine simulation time range
-  const startYear = Math.min(...consolidated.map(c => c.startYear));
-  // Use projectionYears override if provided, otherwise use natural end dates
-  const naturalEndYear = Math.max(...consolidated.map(c => c.endYear));
+  const startYear = Math.min(...accounts.map(a => new Date(a.date).getFullYear()));
+  const naturalEndYear = Math.max(...accounts.map(a => {
+    const start = new Date(a.date).getFullYear();
+    return start + a.timeHorizon;
+  }));
   const endYear = projectionYears !== undefined 
     ? startYear + projectionYears 
     : naturalEndYear;
+  
   const years: number[] = [];
   for (let y = startYear; y <= endYear; y++) {
     years.push(y);
   }
 
-  // Build per-asset volatility map
-  // Priority: asset-specific override > global override > default 15%
-  const defaultSigma = globalVolatilityOverride !== undefined 
-    ? globalVolatilityOverride / 100 
-    : 0.15; // Default 15%
+  // Calculate TOTAL initial value (sum of all deposit amounts)
+  const totalInitialValue = accounts
+    .filter(a => a.transactionType === 'deposit')
+    .reduce((sum, a) => sum + (a.amount || 0), 0);
 
-  const assetVolatility = new Map<string, number>();
-  consolidated.forEach(c => {
-    const key = c.name.toLowerCase().trim();
-    const assetOverride = assetVolatilityOverrides?.get(key);
-    if (assetOverride !== undefined && assetOverride !== null) {
-      assetVolatility.set(c.name, assetOverride / 100);
-    } else {
-      assetVolatility.set(c.name, defaultSigma);
+  // Build unified yearly cash flow map
+  const yearlyCashFlow = new Map<number, number>();
+  for (let y = startYear; y <= endYear; y++) {
+    yearlyCashFlow.set(y, 0);
+  }
+  
+  // Aggregate cash flows from ALL accounts
+  accounts.forEach(acc => {
+    const accStart = new Date(acc.date).getFullYear();
+    const accEnd = accStart + acc.timeHorizon;
+    
+    const annualCashFlow = acc.frequency === 'monthly' 
+      ? acc.transactionAmount * 12 
+      : acc.transactionAmount;
+    const signedCashFlow = acc.transactionType === 'withdraw' ? -annualCashFlow : annualCashFlow;
+    
+    for (let y = accStart; y < accEnd && y <= endYear; y++) {
+      const current = yearlyCashFlow.get(y) || 0;
+      yearlyCashFlow.set(y, current + signedCashFlow);
     }
   });
+
+  // Calculate weighted average return from deposit accounts
+  const depositAccounts = accounts.filter(a => a.transactionType === 'deposit' && a.amount > 0);
+  const totalDepositAmount = depositAccounts.reduce((sum, a) => sum + a.amount, 0);
+  const weightedReturn = totalDepositAmount > 0
+    ? depositAccounts.reduce((sum, a) => sum + (a.expectedReturn * a.amount), 0) / totalDepositAmount
+    : 7; // Default 7%
+
+  // Use global volatility override or calculate weighted average
+  const sigma = globalVolatilityOverride !== undefined 
+    ? globalVolatilityOverride / 100 
+    : 0.15;
+  
+  const mu = weightedReturn / 100;
 
   // Run simulations
   const portfolioPaths: SimulationPath[] = [];
-  const accountResults = new Map<string, SimulationResult>();
-
-  // Initialize per-account tracking
-  const accountPaths: Map<string, SimulationPath[]> = new Map();
-  consolidated.forEach(c => {
-    accountPaths.set(c.name, []);
-  });
 
   for (let sim = 0; sim < numSimulations; sim++) {
-    const portfolioValues: number[] = [];
-    let portfolioDied = false;
-    let portfolioDeathYear = -1;
-    
-    // Track per-account values for this simulation
-    const simAccountValues: Map<string, number[]> = new Map();
-    const simAccountDied: Map<string, boolean> = new Map();
-    const simAccountDeathYear: Map<string, number> = new Map();
-    
-    consolidated.forEach(c => {
-      simAccountValues.set(c.name, []);
-      simAccountDied.set(c.name, false);
-      simAccountDeathYear.set(c.name, -1);
-    });
+    const values: number[] = [totalInitialValue];
+    let currentValue = totalInitialValue;
+    let everDied = false;
+    let deathYear = -1;
 
-    // Initialize starting values
-    let portfolioTotal = 0;
-    consolidated.forEach(c => {
-      simAccountValues.get(c.name)!.push(c.initialValue);
-      portfolioTotal += c.initialValue;
-    });
-    portfolioValues.push(portfolioTotal);
-
-    // Simulate each year
     for (let yearIdx = 1; yearIdx < years.length; yearIdx++) {
-      const currentYear = years[yearIdx];
-      portfolioTotal = 0;
-
-      consolidated.forEach(c => {
-        const accValues = simAccountValues.get(c.name)!;
-        const accDied = simAccountDied.get(c.name)!;
-        const prevValue = accValues[accValues.length - 1];
-
-        // Account is dead - stays at 0
-        if (accDied) {
-          accValues.push(0);
-          return;
-        }
-
-        // Before account starts - value is 0
-        if (currentYear < c.startYear) {
-          accValues.push(0);
-          return;
-        }
-
-        // Get year-specific data (or use defaults for gap years after account range)
-        const yearData = c.yearlyData.get(currentYear);
-        
-        // Determine return and cash flow for this year
-        // Key insight: even in gap years or after explicit horizon, 
-        // the asset continues to grow with returns (just no new cash flow)
-        const mu = yearData 
-          ? yearData.expectedReturn / 100 
-          : c.weightedReturn / 100;
-        const cashFlow = yearData ? yearData.netCashFlow : 0;
-
-        // Get volatility for this specific asset
-        const sigma = assetVolatility.get(c.name) ?? defaultSigma;
-
-        // Generate random return using GBM
-        const Z = boxMullerRandom();
-        const drift = mu - (sigma * sigma) / 2;
-        const randomReturn = Math.exp(drift + sigma * Z);
-
-        // Apply return and cash flow
-        let newValue = prevValue * randomReturn + cashFlow;
-
-        // Check for death
-        if (newValue <= 0) {
-          newValue = 0;
-          simAccountDied.set(c.name, true);
-          simAccountDeathYear.set(c.name, currentYear);
-        }
-
-        accValues.push(newValue);
-        portfolioTotal += newValue;
-      });
-
-      // Check portfolio death
-      if (portfolioTotal <= 0 && !portfolioDied) {
-        portfolioDied = true;
-        portfolioDeathYear = currentYear;
+      if (everDied) {
+        values.push(0);
+        continue;
       }
 
-      portfolioValues.push(portfolioTotal);
+      const currentYear = years[yearIdx];
+      
+      // Generate random return using GBM
+      const Z = boxMullerRandom();
+      const drift = mu - (sigma * sigma) / 2;
+      const randomReturn = Math.exp(drift + sigma * Z);
+      
+      // Apply return to portfolio value
+      let newValue = currentValue * randomReturn;
+      
+      // Apply net cash flow for this year (deposits - withdrawals)
+      const netCashFlow = yearlyCashFlow.get(currentYear) || 0;
+      newValue += netCashFlow;
+
+      // Check for death
+      if (newValue <= 0) {
+        newValue = 0;
+        everDied = true;
+        deathYear = currentYear;
+      }
+
+      currentValue = newValue;
+      values.push(currentValue);
     }
 
-    // Store portfolio path
     portfolioPaths.push({
-      values: portfolioValues,
-      died: portfolioDied,
-      deathYear: portfolioDeathYear,
-      finalValue: portfolioValues[portfolioValues.length - 1],
-    });
-
-    // Store per-account paths
-    consolidated.forEach(c => {
-      const accValues = simAccountValues.get(c.name)!;
-      accountPaths.get(c.name)!.push({
-        values: accValues,
-        died: simAccountDied.get(c.name)!,
-        deathYear: simAccountDeathYear.get(c.name)!,
-        finalValue: accValues[accValues.length - 1],
-      });
+      values,
+      died: everDied,
+      deathYear,
+      finalValue: values[values.length - 1],
     });
   }
 
-  // Calculate portfolio percentiles
+  // Calculate percentiles
   const percentileKeys = [1, 10, 25, 50, 75, 90, 99];
   const percentiles: Record<number, number[]> = {};
   for (const p of percentileKeys) {
@@ -382,7 +345,7 @@ export function runPortfolioMonteCarloSimulation(
     }
   }
 
-  // Calculate portfolio statistics
+  // Calculate statistics
   const finalValues = portfolioPaths.map(p => p.finalValue).sort((a, b) => a - b);
   const survivedCount = portfolioPaths.filter(p => !p.died).length;
 
@@ -394,8 +357,8 @@ export function runPortfolioMonteCarloSimulation(
       mean: finalValues.reduce((a, b) => a + b, 0) / finalValues.length,
       median: percentile(finalValues, 50),
       stdDev: standardDeviation(finalValues),
-      min: finalValues[0],
-      max: finalValues[finalValues.length - 1],
+      min: finalValues[0] || 0,
+      max: finalValues[finalValues.length - 1] || 0,
       percentile1: percentile(finalValues, 1),
       percentile10: percentile(finalValues, 10),
       percentile25: percentile(finalValues, 25),
@@ -406,56 +369,12 @@ export function runPortfolioMonteCarloSimulation(
     },
   };
 
-  // Build per-account results
-  consolidated.forEach(c => {
-    const paths = accountPaths.get(c.name)!;
-    const accFinalValues = paths.map(p => p.finalValue).sort((a, b) => a - b);
-    const accSurvived = paths.filter(p => !p.died).length;
-
-    const accPercentiles: Record<number, number[]> = {};
-    for (const p of percentileKeys) {
-      accPercentiles[p] = [];
-    }
-
-    for (let yearIdx = 0; yearIdx < years.length; yearIdx++) {
-      const yearValues = paths.map(path => path.values[yearIdx]).sort((a, b) => a - b);
-      for (const p of percentileKeys) {
-        accPercentiles[p].push(percentile(yearValues, p));
-      }
-    }
-
-    accountResults.set(c.name, {
-      paths,
-      years,
-      percentiles: accPercentiles,
-      stats: {
-        survivedCount: accSurvived,
-        totalCount: numSimulations,
-        survivalRate: (accSurvived / numSimulations) * 100,
-        finalValues: {
-          mean: accFinalValues.reduce((a, b) => a + b, 0) / accFinalValues.length,
-          median: percentile(accFinalValues, 50),
-          stdDev: standardDeviation(accFinalValues),
-          min: accFinalValues[0] || 0,
-          max: accFinalValues[accFinalValues.length - 1] || 0,
-          percentile1: percentile(accFinalValues, 1),
-          percentile10: percentile(accFinalValues, 10),
-          percentile25: percentile(accFinalValues, 25),
-          percentile50: percentile(accFinalValues, 50),
-          percentile75: percentile(accFinalValues, 75),
-          percentile90: percentile(accFinalValues, 90),
-          percentile99: percentile(accFinalValues, 99),
-        },
-      },
-    });
-  });
-
   return {
     paths: portfolioPaths,
     years,
     percentiles,
     stats,
-    accountResults,
+    accountResults: new Map(),
     consolidatedAccounts: consolidated,
   };
 }
