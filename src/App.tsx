@@ -21,6 +21,7 @@
  */
 
 import { useState, useRef } from 'react';
+import { Plus } from 'lucide-react';
 import { getLocaleCurrency } from './utils/format';
 import { AccountForm } from './components/AccountForm';
 import { ProjectionChart, getProjectionData, getProjectionColumns } from './components/ProjectionChart';
@@ -73,7 +74,34 @@ export default function App() {
   /** Toggle between log and linear scale on projection chart */
   const [projectionLogScale, setProjectionLogScale] = useState(false);
 
-  /* ─── ACCOUNT CRUD ───────────────────────────────────────────────── */
+  /** Modal open state for adding/editing account from strip */
+  const [showAccountModal, setShowAccountModal] = useState(false);
+
+  /** Account being edited in modal (null = adding new) */
+  const [editingAccountId, setEditingAccountId] = useState<string | null>(null);
+
+  /** Get the account being edited in modal */
+  const editingAccount = editingAccountId ? accounts.find(a => a.id === editingAccountId) : null;
+
+  /** Open modal for adding new account */
+  const openAddModal = () => {
+    setEditingAccountId(null);
+    setShowAccountModal(true);
+  };
+
+  /** Open modal for editing existing account */
+  const openEditModal = (id: string) => {
+    setEditingAccountId(id);
+    setShowAccountModal(true);
+  };
+
+  /** Close the account modal */
+  const closeAccountModal = () => {
+    setShowAccountModal(false);
+    setEditingAccountId(null);
+  };
+
+  /* ─── ACCOUNT CRUD ─────────────────────────────────────────────────── */
 
   /** Add a new account and auto-select it for projections */
   const addAccount = (account: Omit<Account, 'id'>) => {
@@ -224,9 +252,9 @@ export default function App() {
 
           {/* Accounts Strip */}
           <div className="accounts-strip card">
-            {accounts.length > 0 ? (
-              <div className="accounts-scroll">
-                {(selectedIds.size === 0 ? accounts : accounts.filter((a) => selectedIds.has(a.id))).map((acct) => {
+            <div className="accounts-scroll">
+              {accounts.length > 0 ? (
+                (selectedIds.size === 0 ? accounts : accounts.filter((a) => selectedIds.has(a.id))).map((acct) => {
                   const startYear = new Date(acct.date).getFullYear();
                   const duration = `${acct.timeHorizon}y`;
                   const sign = acct.transactionType === 'withdraw' ? '-' : '+';
@@ -238,57 +266,91 @@ export default function App() {
 
                   return (
                     <div className="account-card" key={acct.id}>
-                      {inlineEditingId === acct.id ? (
-                        <TicketEditor
-                          account={acct}
-                          onSave={(data) => saveInlineEdit(acct.id, data)}
-                          onCancel={cancelInlineEdit}
-                        />
-                      ) : (
-                        <>
-                          {/* Card header */}
-                          <div className="account-card-header">
-                            <div className="account-card-title">
-                              <div 
-                                className="account-dot" 
-                                style={{ background: color }} 
-                              />
-                              <span className="account-name">{acct.name}</span>
-                            </div>
-                            <Sparkline account={acct} years={Math.min(acct.timeHorizon, 10)} color={color} />
-                          </div>
+                      {/* Card header */}
+                      <div className="account-card-header">
+                        <div className="account-card-title">
+                          <div 
+                            className="account-dot" 
+                            style={{ background: color }} 
+                          />
+                          <span className="account-name">{acct.name}</span>
+                        </div>
+                        <Sparkline account={acct} years={Math.min(acct.timeHorizon, 10)} color={color} />
+                      </div>
 
-                          {/* Card body */}
-                          <div className="account-card-meta">
-                            {startYear} · {duration} · {acct.frequency}
-                          </div>
+                      {/* Card body */}
+                      <div className="account-card-meta">
+                        {startYear} · {duration} · {acct.frequency}
+                      </div>
 
-                          {/* Card amount */}
-                          <div className={`account-card-amount ${acct.transactionType}`}>
-                            <span>{sign}{formattedAmt}</span>
-                            <span className="per-period">/{acct.frequency === 'monthly' ? 'mo' : 'yr'}</span>
-                          </div>
+                      {/* Card amount */}
+                      <div className={`account-card-amount ${acct.transactionType}`}>
+                        <span>{sign}{formattedAmt}</span>
+                        <span className="per-period">/{acct.frequency === 'monthly' ? 'mo' : 'yr'}</span>
+                      </div>
 
-                          {/* Card actions */}
-                          <div className="account-card-actions">
-                            <button onClick={() => startInlineEdit(acct.id)} className="btn-sm">Edit</button>
-                            <button onClick={() => deleteAccount(acct.id)} className="btn-sm btn-danger">Delete</button>
-                          </div>
-                        </>
-                      )}
+                      {/* Card actions */}
+                      <div className="account-card-actions">
+                        <button onClick={() => openEditModal(acct.id)} className="btn-sm">Edit</button>
+                        <button onClick={() => deleteAccount(acct.id)} className="btn-sm btn-danger">Delete</button>
+                      </div>
                     </div>
                   );
-                })}
-              </div>
-            ) : (
-              <div className="empty-state">
-                <span className="empty-title">No accounts yet</span>
-                <span className="empty-desc">Add accounts to see them here and in projections.</span>
-              </div>
-            )}
+                })
+              ) : null}
+
+              {/* Add Account Button - always at the end */}
+              <button 
+                className="add-account-btn"
+                onClick={openAddModal}
+                title="Add new account"
+              >
+                <Plus size={24} />
+              </button>
+            </div>
           </div>
         </div>
       </div>
+
+      {/* Add/Edit Account Modal */}
+      {showAccountModal && (
+        <div className="modal-overlay" onClick={closeAccountModal}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <h2>{editingAccountId ? 'Edit Account' : 'Add Account'}</h2>
+              <button 
+                className="modal-close"
+                onClick={closeAccountModal}
+              >
+                ×
+              </button>
+            </div>
+            <AccountForm 
+              key={editingAccountId || 'new'}
+              initialData={editingAccount ? {
+                name: editingAccount.name,
+                amount: editingAccount.amount,
+                date: editingAccount.date,
+                expectedReturn: editingAccount.expectedReturn,
+                volatility: editingAccount.volatility,
+                timeHorizon: editingAccount.timeHorizon,
+                frequency: editingAccount.frequency,
+                transactionType: editingAccount.transactionType,
+                transactionAmount: editingAccount.transactionAmount,
+              } : undefined}
+              submitLabel={editingAccountId ? 'Save Changes' : 'Add Account'}
+              onSubmit={(account) => {
+                if (editingAccountId) {
+                  updateAccount(editingAccountId, account);
+                } else {
+                  addAccount(account);
+                }
+                closeAccountModal();
+              }} 
+            />
+          </div>
+        </div>
+      )}
     </div>
   );
 }
