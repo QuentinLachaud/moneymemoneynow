@@ -1,21 +1,16 @@
 /**
- * CashFlowChart — Line chart showing cumulative cash flow over time
+ * CashFlowChart — Line chart showing annual cash flow rates per account
  *
  * DISPLAYS:
- * - One line per account showing its contribution/withdrawal impact
- * - Total line (sum of all accounts) showing net cash flow
- * - X-axis: time periods (months or years based on account frequency)
- * - Y-axis: cumulative cash flow amount
+ * - Flat horizontal lines for each account showing their annual cash flow
+ * - Deposits are positive (above zero), withdrawals are negative (below zero)
+ * - Lines span only the duration of each account's time horizon
+ * - Total line showing net annual cash flow across all accounts
  *
  * CALCULATION:
- * For each account, at each time point:
- *   - Deposits add transactionAmount to the running total
- *   - Withdrawals subtract transactionAmount from the running total
- * The chart shows how much money flows in/out over the projection period.
- *
- * CUSTOMIZATION:
- * - To change line colors: modify getColorForId() in utils/colors.ts
- * - To change Total line style: modify the last <Line> element
+ * - Monthly accounts: transactionAmount × 12 (annualized)
+ * - Annual accounts: transactionAmount as-is
+ * - Lines are flat for each account's active period
  */
 
 import { Account } from '../App';
@@ -36,209 +31,215 @@ interface CashFlowChartProps {
   accounts: Account[];
 }
 
+interface CashFlowDataPoint {
+  year: number;
+  Total: number;
+  [accountId: string]: number | string;
+}
+
 /**
  * Calculate cash flow data for the chart
- * Returns an array of data points with cumulative cash flow per account
+ * Returns flat horizontal lines per account showing annual cash flow rate
  */
-function calculateCashFlow(accounts: Account[]): Array<Record<string, number | string>> {
+function calculateCashFlowData(accounts: Account[]): CashFlowDataPoint[] {
   if (accounts.length === 0) return [];
 
-  // Determine the maximum time horizon across all accounts
-  const maxHorizon = Math.max(...accounts.map((acc) => acc.timeHorizon));
-  
-  // Find the earliest start date to use as base year
-  const baseYear = Math.min(
-    ...accounts.map((a) => new Date(a.date).getFullYear())
-  );
+  // Find year range across all accounts
+  const startYears = accounts.map(a => new Date(a.date).getFullYear());
+  const endYears = accounts.map(a => new Date(a.date).getFullYear() + a.timeHorizon);
+  const minYear = Math.min(...startYears);
+  const maxYear = Math.max(...endYears);
 
-  // We'll calculate monthly to get smooth curves, then aggregate
-  const totalMonths = maxHorizon * 12;
-  const data: Array<Record<string, number | string>> = [];
+  const data: CashFlowDataPoint[] = [];
 
-  // Track cumulative totals per account
-  const cumulativeByAccount: Record<string, number> = {};
-  accounts.forEach((acc) => {
-    cumulativeByAccount[acc.id] = 0;
-  });
+  for (let year = minYear; year <= maxYear; year++) {
+    const row: CashFlowDataPoint = { year, Total: 0 };
 
-  for (let month = 0; month <= totalMonths; month++) {
-    const year = baseYear + Math.floor(month / 12);
-    const monthInYear = month % 12;
-    
-    // Create label (show year for Jan, otherwise month abbreviation)
-    const label = monthInYear === 0 
-      ? `${year}` 
-      : month % 3 === 0 
-        ? `${['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'][monthInYear]}` 
-        : '';
-
-    const row: Record<string, number | string> = { 
-      month,
-      label: month % 12 === 0 ? `${year}` : '',
-      year,
-    };
-
-    let total = 0;
-
-    accounts.forEach((acc) => {
+    accounts.forEach(acc => {
       const accStartYear = new Date(acc.date).getFullYear();
-      const accStartMonth = new Date(acc.date).getMonth();
-      const accStartMonthIndex = (accStartYear - baseYear) * 12 + accStartMonth;
-      const accEndMonthIndex = accStartMonthIndex + acc.timeHorizon * 12;
+      const accEndYear = accStartYear + acc.timeHorizon;
 
-      // Only apply transactions if we're within this account's active period
-      if (month >= accStartMonthIndex && month < accEndMonthIndex) {
-        const monthsSinceStart = month - accStartMonthIndex;
+      // Check if this account is active during this year
+      if (year >= accStartYear && year < accEndYear) {
+        // Calculate annual cash flow
+        // Monthly: multiply by 12 to annualize
+        // Annual: use as-is
+        const annualAmount = acc.frequency === 'monthly' 
+          ? acc.transactionAmount * 12 
+          : acc.transactionAmount;
         
-        // Determine if a transaction occurs this month
-        let transactionThisMonth = false;
-        if (acc.frequency === 'monthly') {
-          transactionThisMonth = true;
-        } else if (acc.frequency === 'annual') {
-          // Annual transactions happen every 12 months from start
-          transactionThisMonth = monthsSinceStart % 12 === 0;
-        }
+        // Apply sign based on transaction type
+        const signedAmount = acc.transactionType === 'withdraw' 
+          ? -Math.abs(annualAmount) 
+          : Math.abs(annualAmount);
 
-        if (transactionThisMonth) {
-          const amount = acc.transactionType === 'withdraw' 
-            ? -Math.abs(acc.transactionAmount) 
-            : Math.abs(acc.transactionAmount);
-          cumulativeByAccount[acc.id] += amount;
-        }
+        row[acc.id] = signedAmount;
+        row.Total += signedAmount;
+      } else {
+        // Account not active this year
+        row[acc.id] = 0;
       }
-
-      row[acc.id] = cumulativeByAccount[acc.id];
-      total += cumulativeByAccount[acc.id];
     });
 
-    row.Total = total;
-    
-    // Only include data points at yearly intervals for cleaner chart
-    // (or quarterly for short horizons)
-    if (month % 12 === 0 || maxHorizon <= 3) {
-      data.push(row);
-    }
+    data.push(row);
   }
 
   return data;
+}
+
+/**
+ * Generate table columns from accounts
+ */
+export function getCashFlowColumns(accounts: Account[]) {
+  const formatCurrency = (val: number | string) => {
+    const num = Number(val);
+    if (isNaN(num)) return String(val);
+    return num.toLocaleString('en-GB', {
+      style: 'currency',
+      currency: 'GBP',
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0,
+    });
+  };
+
+  return [
+    { key: 'year', label: 'Year', format: (v: number | string) => String(v) },
+    ...accounts.map(acc => ({
+      key: acc.id,
+      label: acc.name,
+      format: formatCurrency,
+    })),
+    { key: 'Total', label: 'Net Cash Flow', format: formatCurrency },
+  ];
+}
+
+/**
+ * Export data calculation for use by parent component
+ */
+export function getCashFlowData(accounts: Account[]) {
+  return calculateCashFlowData(accounts);
 }
 
 export function CashFlowChart({ accounts }: CashFlowChartProps) {
   // Empty state
   if (accounts.length === 0) {
     return (
-      <div className="flex items-center justify-center h-full text-gray-500">
+      <div className="flex items-center justify-center h-full text-muted-foreground">
         Add accounts to see cash flow
       </div>
     );
   }
 
-  const data = calculateCashFlow(accounts);
+  const data = calculateCashFlowData(accounts);
 
-  // Check if all values are zero
-  const hasData = data.some(row => 
-    accounts.some(acc => Math.abs(Number(row[acc.id]) || 0) > 0)
-  );
+  // Check if all transaction amounts are zero
+  const hasData = accounts.some(acc => acc.transactionAmount > 0);
 
   if (!hasData) {
     return (
-      <div className="flex items-center justify-center h-full text-gray-500">
+      <div className="flex items-center justify-center h-full text-muted-foreground">
         Add transaction amounts to see cash flow
       </div>
     );
   }
 
   return (
-    <div className="h-full flex flex-col">
-      <div className="flex-1 min-h-0 py-2">
-        <ResponsiveContainer width="100%" height="100%">
-          <LineChart data={data}>
-            <CartesianGrid strokeDasharray="3 3" opacity={0.3} />
+    <ResponsiveContainer width="100%" height="100%">
+      <LineChart data={data} margin={{ top: 20, right: 20, left: 20, bottom: 20 }}>
+        <CartesianGrid strokeDasharray="3 3" opacity={0.2} />
 
-            {/* X-Axis: Years */}
-            <XAxis
-              dataKey="year"
-              tick={{ fontSize: 12 }}
-              tickLine={false}
-              axisLine={{ stroke: 'rgba(255,255,255,0.1)' }}
-            />
+        {/* X-Axis: Years */}
+        <XAxis
+          dataKey="year"
+          tick={{ fontSize: 11, fill: 'rgba(255,255,255,0.6)' }}
+          tickLine={false}
+          axisLine={{ stroke: 'rgba(255,255,255,0.1)' }}
+        />
 
-            {/* Y-Axis: Dollar values */}
-            <YAxis
-              tickFormatter={(value) => {
-                if (Math.abs(value) >= 1000000) {
-                  return `£${(value / 1000000).toFixed(1)}M`;
-                }
-                if (Math.abs(value) >= 1000) {
-                  return `£${(value / 1000).toFixed(0)}k`;
-                }
-                return `£${value}`;
-              }}
-              tick={{ fontSize: 12 }}
-              tickLine={false}
-              axisLine={{ stroke: 'rgba(255,255,255,0.1)' }}
-            />
+        {/* Y-Axis: Annual cash flow amount */}
+        <YAxis
+          tickFormatter={(value) => {
+            if (Math.abs(value) >= 1000000) {
+              return `£${(value / 1000000).toFixed(1)}M`;
+            }
+            if (Math.abs(value) >= 1000) {
+              return `£${(value / 1000).toFixed(0)}k`;
+            }
+            return `£${value}`;
+          }}
+          tick={{ fontSize: 11, fill: 'rgba(255,255,255,0.6)' }}
+          tickLine={false}
+          axisLine={{ stroke: 'rgba(255,255,255,0.1)' }}
+        />
 
-            {/* Zero reference line */}
-            <ReferenceLine y={0} stroke="rgba(255,255,255,0.3)" strokeDasharray="3 3" />
+        {/* Zero reference line */}
+        <ReferenceLine 
+          y={0} 
+          stroke="rgba(255,255,255,0.3)" 
+          strokeWidth={1}
+        />
 
-            {/* Tooltip */}
-            <Tooltip
-              contentStyle={{
-                backgroundColor: 'rgba(18, 22, 24, 0.95)',
-                border: '1px solid rgba(255,255,255,0.1)',
-                borderRadius: '8px',
-                padding: '12px',
-              }}
-              labelStyle={{ color: 'rgba(255,255,255,0.7)', marginBottom: '8px' }}
-              formatter={(value: number, name: string) => {
-                const formatted = value.toLocaleString('en-GB', {
-                  style: 'currency',
-                  currency: 'GBP',
-                  minimumFractionDigits: 0,
-                  maximumFractionDigits: 0,
-                });
-                return [formatted, name === 'Total' ? 'Net Cash Flow' : name];
-              }}
-              labelFormatter={(label) => `Year ${label}`}
-            />
+        {/* Tooltip */}
+        <Tooltip
+          contentStyle={{
+            backgroundColor: 'rgba(18, 22, 24, 0.95)',
+            border: '1px solid rgba(255,255,255,0.1)',
+            borderRadius: '8px',
+            padding: '12px',
+          }}
+          labelStyle={{ color: 'rgba(255,255,255,0.7)', marginBottom: '8px' }}
+          formatter={(value: number, name: string) => {
+            const formatted = value.toLocaleString('en-GB', {
+              style: 'currency',
+              currency: 'GBP',
+              minimumFractionDigits: 0,
+              maximumFractionDigits: 0,
+            });
+            return [formatted, name === 'Total' ? 'Net Cash Flow' : name];
+          }}
+          labelFormatter={(label) => `Year ${label}`}
+        />
 
-            <Legend 
-              wrapperStyle={{ paddingTop: '16px' }}
-              formatter={(value) => (
-                <span style={{ color: 'rgba(255,255,255,0.8)', fontSize: '12px' }}>
-                  {value === 'Total' ? 'Net Cash Flow' : value}
-                </span>
-              )}
-            />
+        {/* Legend at top-right */}
+        <Legend 
+          verticalAlign="top"
+          align="right"
+          wrapperStyle={{ 
+            paddingBottom: '8px',
+            fontSize: '11px',
+          }}
+          formatter={(value) => (
+            <span style={{ color: 'rgba(255,255,255,0.7)' }}>
+              {value === 'Total' ? 'Net Cash Flow' : value}
+            </span>
+          )}
+        />
 
-            {/* Individual account lines */}
-            {accounts.map((account) => (
-              <Line
-                key={account.id}
-                type="monotone"
-                dataKey={account.id}
-                name={account.name}
-                stroke={getColorForId(account.id)}
-                strokeWidth={2}
-                dot={false}
-                activeDot={{ r: 4, strokeWidth: 0 }}
-              />
-            ))}
+        {/* Individual account lines - step type for flat horizontal lines */}
+        {accounts.map((account) => (
+          <Line
+            key={account.id}
+            type="stepAfter"
+            dataKey={account.id}
+            name={account.name}
+            stroke={getColorForId(account.id)}
+            strokeWidth={2}
+            dot={false}
+            connectNulls={false}
+          />
+        ))}
 
-            {/* Total line (net cash flow) */}
-            <Line
-              type="monotone"
-              dataKey="Total"
-              name="Total"
-              stroke="#f7f5ee"
-              strokeWidth={3}
-              dot={false}
-              activeDot={{ r: 5, strokeWidth: 0 }}
-            />
-          </LineChart>
-        </ResponsiveContainer>
-      </div>
-    </div>
+        {/* Total line (net cash flow) */}
+        <Line
+          type="stepAfter"
+          dataKey="Total"
+          name="Total"
+          stroke="#f7f5ee"
+          strokeWidth={2.5}
+          dot={false}
+          strokeDasharray="4 2"
+        />
+      </LineChart>
+    </ResponsiveContainer>
   );
 }

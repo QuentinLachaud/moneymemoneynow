@@ -23,8 +23,9 @@
 import { useState, useRef } from 'react';
 import { getLocaleCurrency } from './utils/format';
 import { AccountForm } from './components/AccountForm';
-import { ProjectionChart } from './components/ProjectionChart';
-import { CashFlowChart } from './components/CashFlowChart';
+import { ProjectionChart, getProjectionData, getProjectionColumns } from './components/ProjectionChart';
+import { CashFlowChart, getCashFlowData, getCashFlowColumns } from './components/CashFlowChart';
+import { GraphPanel } from './components/GraphPanel';
 import { getColorForId } from './utils/colors';
 import Sparkline from './components/Sparkline';
 import TicketEditor from './components/TicketEditor';
@@ -69,7 +70,10 @@ export default function App() {
   /** Ref to left panel for scroll-into-view */
   const leftTrayRef = useRef<HTMLDivElement | null>(null);
 
-  /* ─── ACCOUNT CRUD ──────────────────────────────────────────────── */
+  /** Toggle between log and linear scale on projection chart */
+  const [projectionLogScale, setProjectionLogScale] = useState(false);
+
+  /* ─── ACCOUNT CRUD ───────────────────────────────────────────────── */
 
   /** Add a new account and auto-select it for projections */
   const addAccount = (account: Omit<Account, 'id'>) => {
@@ -188,21 +192,35 @@ export default function App() {
 
         {/* Right Content: Graphs stacked vertically */}
         <div className="content-area">
-          {/* Graph 1: Net Worth Projection */}
-          <div className="graph-panel card">
-            <h2 className="panel-title">Net Worth Projection</h2>
-            <div className="graph-container">
-              <ProjectionChart accounts={tab === 'assets' ? accounts : filteredAccounts} />
-            </div>
-          </div>
+          {/* Graph 1: Net Worth Projection with log/linear toggle */}
+          <GraphPanel
+            title="Net Worth Projection"
+            data={getProjectionData(tab === 'assets' ? accounts : filteredAccounts)}
+            columns={getProjectionColumns(tab === 'assets' ? accounts : filteredAccounts)}
+            headerControls={
+              <button
+                className={`scale-toggle ${projectionLogScale ? 'active' : ''}`}
+                onClick={() => setProjectionLogScale(!projectionLogScale)}
+                title={projectionLogScale ? 'Switch to linear scale' : 'Switch to log scale'}
+              >
+                {projectionLogScale ? 'Log' : 'Linear'}
+              </button>
+            }
+          >
+            <ProjectionChart 
+              accounts={tab === 'assets' ? accounts : filteredAccounts} 
+              isLogScale={projectionLogScale}
+            />
+          </GraphPanel>
 
           {/* Graph 2: Cash Flow */}
-          <div className="graph-panel card">
-            <h2 className="panel-title">Cash Flow</h2>
-            <div className="graph-container">
-              <CashFlowChart accounts={tab === 'assets' ? accounts : filteredAccounts} />
-            </div>
-          </div>
+          <GraphPanel
+            title="Cash Flow"
+            data={getCashFlowData(tab === 'assets' ? accounts : filteredAccounts)}
+            columns={getCashFlowColumns(tab === 'assets' ? accounts : filteredAccounts)}
+          >
+            <CashFlowChart accounts={tab === 'assets' ? accounts : filteredAccounts} />
+          </GraphPanel>
 
           {/* Accounts Strip */}
           <div className="accounts-strip card">

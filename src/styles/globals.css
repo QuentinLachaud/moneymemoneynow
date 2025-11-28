@@ -516,6 +516,167 @@ input, textarea, select {
   min-height: 0;
 }
 
+/* Graph Panel Wrapper — Contains graph and right-side tray */
+.graph-panel-wrapper {
+  flex: 1;
+  display: flex;
+  min-height: 200px;
+  gap: 0;
+}
+
+.graph-panel-main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  padding: 20px;
+  min-width: 0;
+  transition: flex 300ms ease;
+}
+
+.graph-panel-main.with-table {
+  flex: 0 0 40%;
+}
+
+/* Graph Header with title and controls */
+.graph-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.graph-header h3 {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--foreground);
+  opacity: 0.9;
+}
+
+.graph-controls {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+/* Scale Toggle Button (Log/Linear) */
+.scale-toggle {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.6);
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 200ms ease;
+}
+
+.scale-toggle:hover {
+  background: rgba(255, 255, 255, 0.08);
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.scale-toggle.active {
+  background: linear-gradient(180deg, rgba(212, 175, 55, 0.2), rgba(212, 175, 55, 0.1));
+  border-color: rgba(212, 175, 55, 0.3);
+  color: #d4af37;
+}
+
+/* Right Side Tray */
+.graph-tray {
+  display: flex;
+  flex-direction: column;
+  background: rgba(255, 255, 255, 0.02);
+  border-left: 1px solid rgba(255, 255, 255, 0.06);
+  transition: width 300ms ease;
+  overflow: hidden;
+}
+
+.graph-tray.collapsed {
+  width: 48px;
+}
+
+.graph-tray.expanded {
+  width: 48px;
+}
+
+.graph-tray.show-table {
+  flex: 0 0 60%;
+}
+
+.tray-actions {
+  display: flex;
+  flex-direction: column;
+  padding: 8px;
+  gap: 8px;
+}
+
+.tray-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 6px;
+  color: rgba(255, 255, 255, 0.6);
+  cursor: pointer;
+  transition: all 200ms ease;
+}
+
+.tray-button:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.tray-button.active {
+  background: linear-gradient(180deg, rgba(212, 175, 55, 0.2), rgba(212, 175, 55, 0.1));
+  border-color: rgba(212, 175, 55, 0.3);
+  color: #d4af37;
+}
+
+/* Data Table in Tray */
+.data-table-container {
+  flex: 1;
+  overflow: auto;
+  padding: 0 12px 12px;
+}
+
+.data-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.75rem;
+}
+
+.data-table th,
+.data-table td {
+  padding: 8px 12px;
+  text-align: left;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  white-space: nowrap;
+}
+
+.data-table th {
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.7);
+  background: rgba(255, 255, 255, 0.03);
+  position: sticky;
+  top: 0;
+}
+
+.data-table td {
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.data-table tbody tr:hover {
+  background: rgba(255, 255, 255, 0.03);
+}
+
 /* Accounts Strip — Horizontal scrollable list */
 .accounts-strip {
   flex-shrink: 0;
