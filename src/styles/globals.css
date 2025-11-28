@@ -1917,24 +1917,36 @@ html {
   display: flex;
   flex-direction: column;
   gap: 8px;
-  max-height: 200px;
+  max-height: 300px;
   overflow-y: auto;
 }
 
 .consolidated-account-item {
   display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 10px 12px;
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px;
   background: rgba(255, 255, 255, 0.02);
   border: 1px solid rgba(255, 255, 255, 0.04);
   border-radius: 8px;
+}
+
+.consolidated-account-item .account-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
 }
 
 .consolidated-account-item .account-name {
   font-size: 0.85rem;
   font-weight: 500;
   color: var(--foreground);
+}
+
+.consolidated-account-item .account-summary {
+  display: flex;
+  gap: 12px;
+  font-size: 0.75rem;
 }
 
 .consolidated-account-item .account-details {
@@ -1957,4 +1969,68 @@ html {
 
 .consolidated-account-item .cash-flow.negative {
   color: #f87171;
+}
+
+/* Per-Asset Override Controls */
+.account-overrides {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding-top: 8px;
+  border-top: 1px solid rgba(255, 255, 255, 0.04);
+}
+
+.override-control {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.override-control label {
+  font-size: 0.7rem;
+  color: rgba(255, 255, 255, 0.5);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.override-input-group {
+  display: flex;
+  align-items: center;
+  background: rgba(0, 0, 0, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.override-input {
+  width: 50px;
+  padding: 4px 6px;
+  background: transparent;
+  border: none;
+  color: var(--foreground);
+  font-size: 0.75rem;
+  text-align: right;
+}
+
+.override-input:focus {
+  outline: none;
+}
+
+.override-unit {
+  padding: 4px 6px;
+  font-size: 0.7rem;
+  color: rgba(255, 255, 255, 0.4);
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.override-info {
+  display: flex;
+  gap: 8px;
+  font-size: 0.7rem;
+  color: rgba(255, 255, 255, 0.4);
+}
+
+.year-range {
+  font-variant-numeric: tabular-nums;
 }

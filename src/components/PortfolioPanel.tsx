@@ -25,29 +25,64 @@ interface PortfolioPanelProps {
   selectedAccountIds: Set<string>;
 }
 
+/** Per-asset override settings */
+interface AssetOverride {
+  returnOverride: number | null;
+  globalVolatilityOverride: number | null;
+}
+
 const SIMULATION_COUNTS = [10, 100, 1000] as const;
 
 export function PortfolioPanel({ accounts, selectedAccountIds }: PortfolioPanelProps) {
   // Simulation settings
   const [numSimulations, setNumSimulations] = useState<number>(100);
-  const [volatilityOverride, setVolatilityOverride] = useState<number>(15);
+  const [globalVolatilityOverride, setGlobalVolatilityOverride] = useState<number>(15);
   const [histogramBins, setHistogramBins] = useState(20);
   const [showHistogram, setShowHistogram] = useState(true);
   const [showDataTable, setShowDataTable] = useState(false);
+  
+  // Per-asset overrides: Map<assetName, AssetOverride>
+  const [assetOverrides, setAssetOverrides] = useState<Map<string, AssetOverride>>(new Map());
 
   // Filter accounts based on selection
   const activeAccounts = useMemo(() => {
     return accounts.filter(acc => selectedAccountIds.has(acc.id));
   }, [accounts, selectedAccountIds]);
 
+  // Apply per-asset return overrides to accounts before simulation
+  const accountsWithOverrides = useMemo(() => {
+    return activeAccounts.map(acc => {
+      const override = assetOverrides.get(acc.name.toLowerCase().trim());
+      if (!override) return acc;
+      
+      return {
+        ...acc,
+        expectedReturn: override.returnOverride ?? acc.expectedReturn,
+        // Volatility is handled separately via assetVolatilityOverrides
+      };
+    });
+  }, [activeAccounts, assetOverrides]);
+
+  // Build per-asset volatility overrides map for simulation
+  const assetVolatilityOverrides = useMemo(() => {
+    const map = new Map<string, number | null>();
+    assetOverrides.forEach((override, key) => {
+      if (override.globalVolatilityOverride !== null) {
+        map.set(key, override.globalVolatilityOverride);
+      }
+    });
+    return map;
+  }, [assetOverrides]);
+
   // Run portfolio simulation
   const simulation: PortfolioSimulationResult = useMemo(() => {
     return runPortfolioMonteCarloSimulation(
-      activeAccounts,
+      accountsWithOverrides,
       numSimulations,
-      volatilityOverride
+      globalVolatilityOverride,
+      assetVolatilityOverrides
     );
-  }, [activeAccounts, numSimulations, volatilityOverride]);
+  }, [accountsWithOverrides, numSimulations, globalVolatilityOverride, assetVolatilityOverrides]);
 
   // Get final values for histogram
   const finalValues = useMemo(() => {
@@ -65,8 +100,28 @@ export function PortfolioPanel({ accounts, selectedAccountIds }: PortfolioPanelP
     return simulation.years[simulation.years.length - 1] - simulation.years[0];
   }, [simulation]);
 
-  const handleVolatilityChange = useCallback((value: number) => {
-    setVolatilityOverride(value);
+  const handleGlobalVolatilityChange = useCallback((value: number) => {
+    setGlobalVolatilityOverride(value);
+  }, []);
+
+  const handleAssetReturnOverride = useCallback((assetName: string, value: number | null) => {
+    setAssetOverrides(prev => {
+      const next = new Map(prev);
+      const key = assetName.toLowerCase().trim();
+      const existing = next.get(key) || { returnOverride: null, globalVolatilityOverride: null };
+      next.set(key, { ...existing, returnOverride: value });
+      return next;
+    });
+  }, []);
+
+  const handleAssetVolatilityOverride = useCallback((assetName: string, value: number | null) => {
+    setAssetOverrides(prev => {
+      const next = new Map(prev);
+      const key = assetName.toLowerCase().trim();
+      const existing = next.get(key) || { returnOverride: null, globalVolatilityOverride: null };
+      next.set(key, { ...existing, globalVolatilityOverride: value });
+      return next;
+    });
   }, []);
 
   if (activeAccounts.length === 0) {
@@ -118,7 +173,7 @@ export function PortfolioPanel({ accounts, selectedAccountIds }: PortfolioPanelP
         {/* Volatility Slider */}
         <div className="control-group volatility-control">
           <label>
-            Volatility: <span className="value-display">{volatilityOverride}%</span>
+            Volatility: <span className="value-display">{globalVolatilityOverride}%</span>
           </label>
           <div className="volatility-slider-container">
             <input
@@ -126,8 +181,8 @@ export function PortfolioPanel({ accounts, selectedAccountIds }: PortfolioPanelP
               min="0"
               max="50"
               step="1"
-              value={volatilityOverride}
-              onChange={(e) => handleVolatilityChange(parseInt(e.target.value))}
+              value={globalVolatilityOverride}
+              onChange={(e) => handleGlobalVolatilityChange(parseInt(e.target.value))}
               className="volatility-slider"
             />
             <div className="volatility-marks">
@@ -143,8 +198,8 @@ export function PortfolioPanel({ accounts, selectedAccountIds }: PortfolioPanelP
             {[0, 5, 10, 15, 20, 25, 30].map(v => (
               <button
                 key={v}
-                className={`preset-btn ${volatilityOverride === v ? 'active' : ''}`}
-                onClick={() => handleVolatilityChange(v)}
+                className={`preset-btn ${globalVolatilityOverride === v ? 'active' : ''}`}
+                onClick={() => handleGlobalVolatilityChange(v)}
               >
                 {v}%
               </button>
@@ -165,7 +220,7 @@ export function PortfolioPanel({ accounts, selectedAccountIds }: PortfolioPanelP
                 Portfolio Monte Carlo Projection
               </h3>
               <div className="section-meta">
-                {numSimulations.toLocaleString()} simulations · {volatilityOverride}% volatility · {timeHorizon} year horizon
+                {numSimulations.toLocaleString()} simulations · {globalVolatilityOverride}% volatility · {timeHorizon} year horizon
               </div>
             </div>
             <div className="chart-container">
@@ -239,25 +294,79 @@ export function PortfolioPanel({ accounts, selectedAccountIds }: PortfolioPanelP
             />
           </div>
 
-          {/* Consolidated Accounts Breakdown */}
+          {/* Consolidated Accounts Breakdown with Per-Asset Overrides */}
           <div className="consolidated-accounts-section card">
             <div className="section-header">
-              <h4>Asset Breakdown</h4>
+              <h4>Asset Settings</h4>
             </div>
             <div className="consolidated-accounts-list">
-              {simulation.consolidatedAccounts.map(c => (
-                <div key={c.name} className="consolidated-account-item">
-                  <div className="account-name">{c.name}</div>
-                  <div className="account-details">
-                    <span className="initial-value">
-                      {c.initialValue.toLocaleString('en-GB', { style: 'currency', currency: 'GBP', maximumFractionDigits: 0 })}
-                    </span>
-                    <span className={`cash-flow ${c.netAnnualCashFlow >= 0 ? 'positive' : 'negative'}`}>
-                      {c.netAnnualCashFlow >= 0 ? '+' : ''}{c.netAnnualCashFlow.toLocaleString('en-GB', { style: 'currency', currency: 'GBP', maximumFractionDigits: 0 })}/yr
-                    </span>
+              {simulation.consolidatedAccounts.map(c => {
+                // Calculate average annual cash flow from yearly data
+                let totalCashFlow = 0;
+                let activeYears = 0;
+                c.yearlyData.forEach((data) => {
+                  if (data.hasActiveData) {
+                    totalCashFlow += data.netCashFlow;
+                    activeYears++;
+                  }
+                });
+                const avgCashFlow = activeYears > 0 ? totalCashFlow / activeYears : 0;
+                const assetKey = c.name.toLowerCase().trim();
+                const override = assetOverrides.get(assetKey);
+                const currentReturn = override?.returnOverride ?? c.weightedReturn;
+                const currentVolatility = override?.globalVolatilityOverride ?? globalVolatilityOverride;
+                
+                return (
+                  <div key={c.name} className="consolidated-account-item expandable">
+                    <div className="account-header">
+                      <div className="account-name">{c.name}</div>
+                      <div className="account-summary">
+                        <span className="initial-value">
+                          {c.initialValue.toLocaleString('en-GB', { style: 'currency', currency: 'GBP', maximumFractionDigits: 0 })}
+                        </span>
+                        <span className={`cash-flow ${avgCashFlow >= 0 ? 'positive' : 'negative'}`}>
+                          {avgCashFlow >= 0 ? '+' : ''}{avgCashFlow.toLocaleString('en-GB', { style: 'currency', currency: 'GBP', maximumFractionDigits: 0 })}/yr
+                        </span>
+                      </div>
+                    </div>
+                    <div className="account-overrides">
+                      <div className="override-control">
+                        <label>Return</label>
+                        <div className="override-input-group">
+                          <input
+                            type="number"
+                            min="0"
+                            max="50"
+                            step="0.5"
+                            value={currentReturn}
+                            onChange={(e) => handleAssetReturnOverride(c.name, parseFloat(e.target.value) || null)}
+                            className="override-input"
+                          />
+                          <span className="override-unit">%</span>
+                        </div>
+                      </div>
+                      <div className="override-control">
+                        <label>σ</label>
+                        <div className="override-input-group">
+                          <input
+                            type="number"
+                            min="0"
+                            max="100"
+                            step="1"
+                            value={currentVolatility}
+                            onChange={(e) => handleAssetVolatilityOverride(c.name, parseFloat(e.target.value) || null)}
+                            className="override-input"
+                          />
+                          <span className="override-unit">%</span>
+                        </div>
+                      </div>
+                      <div className="override-info">
+                        <span className="year-range">{c.startYear}–{c.endYear}</span>
+                      </div>
+                    </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </div>
 

@@ -26,16 +26,31 @@ export interface ConsolidatedAccount {
   name: string;
   /** All individual accounts contributing to this consolidated account */
   accounts: Account[];
-  /** Net initial value (sum of all deposits) */
+  /** Net initial value (sum of all deposits at their start) */
   initialValue: number;
-  /** Net annual cash flow (deposits - withdrawals) */
-  netAnnualCashFlow: number;
-  /** Weighted average expected return */
+  /** Weighted average expected return (used for gap periods) */
   weightedReturn: number;
+  /** Weighted average volatility (used for gap periods) */
+  weightedVolatility: number;
   /** Start year (earliest account) */
   startYear: number;
   /** End year (latest end date) */
   endYear: number;
+  /** 
+   * Per-year cash flow data: maps year -> net cash flow for that year
+   * Years not in this map are "gap years" where returns apply but no cash flow
+   */
+  yearlyData: Map<number, YearlyAccountData>;
+}
+
+/** Data for a specific year within an account */
+export interface YearlyAccountData {
+  /** Net cash flow for this year (deposits - withdrawals) */
+  netCashFlow: number;
+  /** Expected return for this year (weighted by active accounts) */
+  expectedReturn: number;
+  /** Is there active account data for this year? */
+  hasActiveData: boolean;
 }
 
 /**
@@ -73,6 +88,7 @@ function standardDeviation(arr: number[]): number {
 /**
  * Consolidate accounts by name
  * Same-name accounts are treated as a single logical asset
+ * Builds per-year data to handle gap periods correctly
  */
 export function consolidateAccounts(accounts: Account[]): ConsolidatedAccount[] {
   const groups = new Map<string, Account[]>();
@@ -92,42 +108,87 @@ export function consolidateAccounts(accounts: Account[]): ConsolidatedAccount[] 
   groups.forEach((accs, _key) => {
     const name = accs[0].name; // Use original casing from first account
     
-    // Calculate initial value (sum of deposits only)
+    // Calculate initial value (sum of deposits at their start dates)
     const initialValue = accs
       .filter(a => a.transactionType === 'deposit')
       .reduce((sum, a) => sum + a.amount, 0);
     
-    // Calculate net annual cash flow
-    const netAnnualCashFlow = accs.reduce((sum, acc) => {
-      const annualAmount = acc.frequency === 'monthly' 
-        ? acc.transactionAmount * 12 
-        : acc.transactionAmount;
-      return sum + (acc.transactionType === 'withdraw' ? -annualAmount : annualAmount);
-    }, 0);
-    
-    // Weighted average return (by initial amount for deposits)
-    const totalDeposits = accs
-      .filter(a => a.transactionType === 'deposit')
-      .reduce((sum, a) => sum + a.amount, 0);
-    
-    const weightedReturn = totalDeposits > 0
-      ? accs
-          .filter(a => a.transactionType === 'deposit')
-          .reduce((sum, a) => sum + (a.expectedReturn * a.amount), 0) / totalDeposits
-      : accs[0].expectedReturn;
-    
-    // Date range
+    // Date range - from earliest start to latest end
     const startYear = Math.min(...accs.map(a => new Date(a.date).getFullYear()));
     const endYear = Math.max(...accs.map(a => new Date(a.date).getFullYear() + a.timeHorizon));
+    
+    // Build yearly data map
+    const yearlyData = new Map<number, YearlyAccountData>();
+    
+    // Calculate weighted return and volatility for gap periods
+    const depositAccounts = accs.filter(a => a.transactionType === 'deposit');
+    const totalDeposits = depositAccounts.reduce((sum, a) => sum + a.amount, 0);
+    
+    const weightedReturn = totalDeposits > 0
+      ? depositAccounts.reduce((sum, a) => sum + (a.expectedReturn * a.amount), 0) / totalDeposits
+      : accs[0].expectedReturn;
+    
+    // Get volatility from accounts (convert label to number)
+    const volMap: Record<string, number> = { 'low': 5, 'medium': 15, 'high': 25 };
+    const weightedVolatility = totalDeposits > 0
+      ? depositAccounts.reduce((sum, a) => {
+          const vol = a.volatility ? (volMap[a.volatility] || 15) : 15;
+          return sum + (vol * a.amount);
+        }, 0) / totalDeposits
+      : 15;
+    
+    // For each year in the range, determine what accounts are active
+    for (let year = startYear; year <= endYear; year++) {
+      let netCashFlow = 0;
+      let yearReturn = weightedReturn; // Default to weighted average
+      let hasActiveData = false;
+      let activeAmount = 0;
+      let weightedYearReturn = 0;
+      
+      accs.forEach(acc => {
+        const accStart = new Date(acc.date).getFullYear();
+        const accEnd = accStart + acc.timeHorizon;
+        
+        // Check if this account is active in this year
+        if (year >= accStart && year < accEnd) {
+          hasActiveData = true;
+          
+          // Calculate annual cash flow contribution
+          const annualAmount = acc.frequency === 'monthly' 
+            ? acc.transactionAmount * 12 
+            : acc.transactionAmount;
+          const signedAmount = acc.transactionType === 'withdraw' ? -annualAmount : annualAmount;
+          netCashFlow += signedAmount;
+          
+          // Track for weighted return calculation
+          if (acc.transactionType === 'deposit') {
+            activeAmount += acc.amount;
+            weightedYearReturn += acc.expectedReturn * acc.amount;
+          }
+        }
+      });
+      
+      // Use active accounts' weighted return if available
+      if (activeAmount > 0) {
+        yearReturn = weightedYearReturn / activeAmount;
+      }
+      
+      yearlyData.set(year, {
+        netCashFlow,
+        expectedReturn: yearReturn,
+        hasActiveData,
+      });
+    }
     
     consolidated.push({
       name,
       accounts: accs,
       initialValue,
-      netAnnualCashFlow,
       weightedReturn,
+      weightedVolatility,
       startYear,
       endYear,
+      yearlyData,
     });
   });
 
@@ -139,12 +200,14 @@ export function consolidateAccounts(accounts: Account[]): ConsolidatedAccount[] 
  * 
  * @param accounts - All accounts to simulate
  * @param numSimulations - Number of simulation paths
- * @param volatilityOverride - Optional volatility override (0-100%)
+ * @param globalVolatilityOverride - Default volatility override for all assets (0-100%)
+ * @param assetVolatilityOverrides - Per-asset volatility overrides (asset name -> 0-100%)
  */
 export function runPortfolioMonteCarloSimulation(
   accounts: Account[],
   numSimulations: number,
-  volatilityOverride?: number
+  globalVolatilityOverride?: number,
+  assetVolatilityOverrides?: Map<string, number | null>
 ): PortfolioSimulationResult {
   if (accounts.length === 0) {
     return createEmptyResult();
@@ -161,10 +224,22 @@ export function runPortfolioMonteCarloSimulation(
     years.push(y);
   }
 
-  // Get volatility
-  const sigma = volatilityOverride !== undefined 
-    ? volatilityOverride / 100 
+  // Build per-asset volatility map
+  // Priority: asset-specific override > global override > default 15%
+  const defaultSigma = globalVolatilityOverride !== undefined 
+    ? globalVolatilityOverride / 100 
     : 0.15; // Default 15%
+
+  const assetVolatility = new Map<string, number>();
+  consolidated.forEach(c => {
+    const key = c.name.toLowerCase().trim();
+    const assetOverride = assetVolatilityOverrides?.get(key);
+    if (assetOverride !== undefined && assetOverride !== null) {
+      assetVolatility.set(c.name, assetOverride / 100);
+    } else {
+      assetVolatility.set(c.name, defaultSigma);
+    }
+  });
 
   // Run simulations
   const portfolioPaths: SimulationPath[] = [];
@@ -210,24 +285,39 @@ export function runPortfolioMonteCarloSimulation(
         const accDied = simAccountDied.get(c.name)!;
         const prevValue = accValues[accValues.length - 1];
 
-        // Check if this account is active in this year
-        const isActive = currentYear >= c.startYear && currentYear <= c.endYear;
-
-        if (accDied || !isActive) {
-          // Account is dead or not yet started/ended
-          accValues.push(isActive ? 0 : prevValue);
-          portfolioTotal += isActive ? 0 : prevValue;
+        // Account is dead - stays at 0
+        if (accDied) {
+          accValues.push(0);
           return;
         }
 
+        // Before account starts - value is 0
+        if (currentYear < c.startYear) {
+          accValues.push(0);
+          return;
+        }
+
+        // Get year-specific data (or use defaults for gap years after account range)
+        const yearData = c.yearlyData.get(currentYear);
+        
+        // Determine return and cash flow for this year
+        // Key insight: even in gap years or after explicit horizon, 
+        // the asset continues to grow with returns (just no new cash flow)
+        const mu = yearData 
+          ? yearData.expectedReturn / 100 
+          : c.weightedReturn / 100;
+        const cashFlow = yearData ? yearData.netCashFlow : 0;
+
+        // Get volatility for this specific asset
+        const sigma = assetVolatility.get(c.name) ?? defaultSigma;
+
         // Generate random return using GBM
-        const mu = c.weightedReturn / 100;
         const Z = boxMullerRandom();
         const drift = mu - (sigma * sigma) / 2;
         const randomReturn = Math.exp(drift + sigma * Z);
 
         // Apply return and cash flow
-        let newValue = prevValue * randomReturn + c.netAnnualCashFlow;
+        let newValue = prevValue * randomReturn + cashFlow;
 
         // Check for death
         if (newValue <= 0) {

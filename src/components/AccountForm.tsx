@@ -81,13 +81,13 @@ export function AccountForm({ onSubmit, initialData, submitLabel = 'Add Account'
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    // For drawdowns, amount is not required
-    if (!name || (transactionType === 'deposit' && !amount)) return;
+    // Amount is required for both types now
+    if (!name || !amount) return;
 
     onSubmit({
       name,
-      // For drawdowns, set amount to 0 since it's not relevant
-      amount: transactionType === 'withdraw' ? 0 : parseFloat(amount),
+      // Use amount for both deposit and drawdown types
+      amount: parseFloat(amount) || 0,
       date,
       expectedReturn: parseFloat(expectedReturn),
       volatility: volatility || undefined,
@@ -149,21 +149,21 @@ export function AccountForm({ onSubmit, initialData, submitLabel = 'Add Account'
         />
       </div>
 
-      {/* Current Amount - Only shown for deposits */}
-      {transactionType === 'deposit' && (
-        <div>
-          <label className="block text-sm text-gray-700 mb-1">Current Amount ($)</label>
-          <input
-            type="number"
-            value={amount}
-            onChange={(e) => setAmount(e.target.value)}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-            placeholder="10000"
-            step="0.01"
-            required
-          />
-        </div>
-      )}
+      {/* Current Amount - Shown for both types */}
+      <div>
+        <label className="block text-sm text-gray-700 mb-1">
+          {transactionType === 'deposit' ? 'Current Amount ($)' : 'Starting Value ($)'}
+        </label>
+        <input
+          type="number"
+          value={amount}
+          onChange={(e) => setAmount(e.target.value)}
+          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+          placeholder={transactionType === 'deposit' ? '10000' : 'Auto-populated from existing asset'}
+          step="0.01"
+          required
+        />
+      </div>
 
       <div>
         <label className="block text-sm text-gray-700 mb-1">Date</label>
