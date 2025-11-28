@@ -9,21 +9,20 @@ const volatilityValues: Record<string, number> = {
 export function calculateProjections(accounts: Account[], maxYears: number) {
   const projections: Array<Record<string, number | string>> = [];
 
+  // Use earliest account start year as the base calendar year for rows
+  const baseYear = accounts.length ? Math.min(...accounts.map(a => new Date(a.date).getFullYear())) : new Date().getFullYear();
+
   for (let year = 0; year <= maxYears; year++) {
-    const row: Record<string, number | string> = { year };
+    const calendarYear = baseYear + year;
+    const row: Record<string, number | string> = { year: calendarYear };
     let total = 0;
 
     accounts.forEach(account => {
-      if (year <= account.timeHorizon) {
-        const value = calculateAccountValue(account, year);
-        row[account.name] = value;
-        total += value;
-      } else {
-        // Keep the final value after time horizon
-        const finalValue = calculateAccountValue(account, account.timeHorizon);
-        row[account.name] = finalValue;
-        total += finalValue;
-      }
+      const effectiveYears = Math.min(year, account.timeHorizon);
+      const value = calculateAccountValue(account, effectiveYears);
+      // Use account.id so multiple scenarios with same name don't collide
+      row[account.id] = value;
+      total += value;
     });
 
     row.Total = total;
@@ -33,7 +32,7 @@ export function calculateProjections(accounts: Account[], maxYears: number) {
   return projections;
 }
 
-function calculateAccountValue(account: Account, years: number): number {
+export function calculateAccountValue(account: Account, years: number): number {
   const {
     amount,
     expectedReturn,

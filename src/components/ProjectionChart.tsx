@@ -1,6 +1,7 @@
 import { Account } from '../App';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import { calculateProjections } from '../utils/calculations';
+import { getColorForId } from '../utils/colors';
 
 interface ProjectionChartProps {
   accounts: Account[];
@@ -38,12 +39,13 @@ export function ProjectionChart({ accounts }: ProjectionChartProps) {
               formatter={(value: number) => `$${value.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
             />
             <Legend />
-            {accounts.map((account, index) => (
+            {accounts.map((account) => (
               <Line
                 key={account.id}
                 type="monotone"
-                dataKey={account.name}
-                stroke={colors[index % colors.length]}
+                dataKey={account.id}
+                name={account.name}
+                stroke={getColorForId(account.id)}
                 strokeWidth={2}
                 dot={false}
               />

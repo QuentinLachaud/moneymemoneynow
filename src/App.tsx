@@ -1,11 +1,13 @@
 import { useState, useRef, useLayoutEffect } from 'react';
 import { setLocaleCurrency, getLocaleCurrency } from './utils/format';
 import { AccountForm } from './components/AccountForm';
-import { AccountsList } from './components/AccountsList';
 import { DataTable } from './components/DataTable';
 import { ProjectionChart } from './components/ProjectionChart';
 import { CompositionChart } from './components/CompositionChart';
 import { ResizablePanel } from './components/ResizablePanel';
+import { getColorForId } from './utils/colors';
+import Sparkline from './components/Sparkline';
+import TicketEditor from './components/TicketEditor';
 
 export interface Account {
   id: string;
@@ -65,6 +67,35 @@ export default function App() {
     });
   };
 
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [inlineEditingId, setInlineEditingId] = useState<string | null>(null);
+
+  const startEdit = (id: string) => {
+    setEditingId(id);
+    // bring left tray into view on small screens
+    const el = leftTrayRef.current;
+    if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  };
+
+  const startInlineEdit = (id: string) => {
+    setInlineEditingId(id);
+  };
+
+  const cancelInlineEdit = () => setInlineEditingId(null);
+
+  const saveInlineEdit = (id: string, data: Omit<Account, 'id'>) => {
+    updateAccount(id, data);
+    setInlineEditingId(null);
+  };
+
+  const cancelEdit = () => setEditingId(null);
+
+  const openAddTray = () => {
+    setEditingId(null);
+    const el = leftTrayRef.current;
+    if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  };
+
   const updateAccount = (id: string, account: Omit<Account, 'id'>) => {
     setAccounts(accounts.map(acc => acc.id === id ? { ...account, id } : acc));
   };
@@ -108,26 +139,25 @@ export default function App() {
             <aside className="left-tray" ref={el => (leftTrayRef.current = el as HTMLDivElement)}>
               <div className="bg-white rounded-lg shadow-sm p-6 h-full overflow-auto">
                 <h2 className="mb-4 text-gray-900">Add Account</h2>
-                <AccountForm onSubmit={addAccount} />
+                <AccountForm
+                  onSubmit={(data) => {
+                    if (editingId) {
+                      updateAccount(editingId, data);
+                      cancelEdit();
+                    } else {
+                      addAccount(data);
+                    }
+                  }}
+                  initialData={editingId ? accounts.find(a => a.id === editingId) : undefined}
+                  submitLabel={editingId ? 'Update Account' : 'Add Account'}
+                />
               </div>
             </aside>
 
             {/* Main content shifted right to make room for the fixed tray */}
             <div style={{ marginLeft: '392px' }}>
               <div className="flex gap-6 mb-6">
-                {/* Accounts list panel sits immediately to the right of the add-account tray */}
-                <div style={{ width: '360px' }}>
-                  <div className="bg-white rounded-lg shadow-sm p-6 h-full overflow-auto">
-                    <h3 className="mb-4 text-gray-900">Accounts</h3>
-                    <AccountsList
-                      accounts={accounts}
-                      onUpdate={updateAccount}
-                      onDelete={deleteAccount}
-                    />
-                  </div>
-                </div>
-
-                {/* Charts and projections take remaining space */}
+                {/* Charts and projections take full remaining space */}
                 <div className="flex-1 flex flex-col gap-6">
                   <ResizablePanel defaultHeight={300} minHeight={200} direction="vertical">
                     <div className="bg-white rounded-lg shadow-sm p-6 h-full">
@@ -147,42 +177,7 @@ export default function App() {
             </div>
           </div>
         ) : (
-          <div className="flex gap-6">
-            {/* Left sidebar: account toggles */}
-            <aside className="proj-sidebar w-56">
-              <div className="p-3">
-                <h3 className="mb-3 text-gray-900">Accounts</h3>
-                <div className="flex flex-col gap-2">
-                  {accounts.length === 0 && (
-                    <div className="text-sm text-gray-500">No accounts</div>
-                  )}
-                  {accounts.map(acc => {
-                    const on = selectedIds.size === 0 ? true : selectedIds.has(acc.id);
-                    return (
-                      <button
-                        key={acc.id}
-                        onClick={() => setSelectedIds(prev => {
-                          const s = new Set(prev);
-                          // if size 0 (implicit all selected), initialize with all ids
-                          if (prev.size === 0) {
-                            accounts.forEach(a => s.add(a.id));
-                          }
-                          if (s.has(acc.id)) s.delete(acc.id); else s.add(acc.id);
-                          return s;
-                        })}
-                        className={`account-toggle ${on ? 'on' : 'off'}`}
-                        aria-pressed={on}
-                      >
-                        <div className="truncate text-sm">{acc.name}</div>
-                        <div className="text-xs text-muted">${Math.abs(acc.amount).toLocaleString()}</div>
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-            </aside>
-
-            <main className="flex-1 space-y-6">
+          <main className="space-y-6">
               <ResizablePanel defaultHeight={360} minHeight={200} direction="vertical">
                 <div className="bg-white rounded-lg shadow-sm p-6 h-full">
                   <h2 className="mb-4 text-gray-900">Net Worth Projection</h2>
@@ -197,24 +192,52 @@ export default function App() {
                 </div>
               </ResizablePanel>
             </main>
-          </div>
         )}
       </div>
       {/* Bottom selected-accounts strip. Shows selected accounts horizontally and avoids overlapping left-tray */}
       <div className="bottom-accounts" role="region" aria-label="Selected accounts" style={bottomLeft != null ? { left: `${bottomLeft}px` } : undefined}>
         {accounts && accounts.length > 0 ? (
-          Array.from(selectedIds).map(id => {
-            const acct = accounts.find(a => a.id === id);
-            if (!acct) return null;
+          (selectedIds.size === 0 ? accounts : accounts.filter(a => selectedIds.has(a.id))).map(acct => {
+            const startYear = new Date(acct.date).getFullYear();
+            const duration = `${acct.timeHorizon}y`;
+            const sign = acct.transactionType === 'withdraw' ? '-' : '+';
+            const color = getColorForId(acct.id);
+            const formattedAmt = acct.transactionAmount?.toLocaleString(undefined, { style: 'currency', currency: getLocaleCurrency().currency }) || (0).toLocaleString(undefined, { style: 'currency', currency: getLocaleCurrency().currency });
             return (
               <div className="acct" key={acct.id}>
-                <div style={{ fontWeight: 600 }}>{acct.name}</div>
-                <div style={{ fontSize: '0.9rem', color: 'var(--muted-foreground)' }}>{acct.date}</div>
-                <div style={{ marginTop: 6, fontWeight: 700 }}>{acct.transactionType === 'withdraw' ? '-' : ''}{acct.amount.toLocaleString(undefined, { style: 'currency', currency: getLocaleCurrency().currency })}</div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+                    <div style={{ width: 12, height: 12, borderRadius: 3, background: color }} aria-hidden />
+                    <div style={{ fontWeight: 600 }}>{acct.name}</div>
+                    <div style={{ marginLeft: 8 }}><Sparkline account={acct} years={Math.min(acct.timeHorizon, 10)} color={color} /></div>
+                  </div>
+                  <div style={{ display: 'flex', gap: 8 }}>
+                    <button onClick={() => startInlineEdit(acct.id)} className="btn" title="Edit">Edit</button>
+                    <button onClick={() => deleteAccount(acct.id)} className="btn" title="Delete">Delete</button>
+                  </div>
+                </div>
+                <div style={{ fontSize: '0.9rem', color: 'var(--muted-foreground)', marginTop: 6 }}>{startYear} · {duration}</div>
+                <div style={{ marginTop: 8, fontWeight: 700 }}> 
+                  <span style={{ color: acct.transactionType === 'withdraw' ? '#ef4444' : '#10b981', marginRight: 8 }}>{sign}</span>
+                  <span style={{ color: acct.transactionType === 'withdraw' ? '#ef4444' : '#10b981' }}>{formattedAmt}</span>
+                </div>
+                {inlineEditingId === acct.id ? (
+                  <div style={{ marginTop: 8 }}>
+                    <TicketEditor account={acct} onSave={(data) => saveInlineEdit(acct.id, data)} onCancel={cancelInlineEdit} />
+                  </div>
+                ) : null}
               </div>
             );
           })
-        ) : null}
+        ) : (
+          <div className="acct" style={{ minWidth: 340, display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: 8 }}>
+            <div style={{ fontWeight: 700 }}>No accounts yet</div>
+            <div style={{ color: 'var(--muted-foreground)' }}>Add accounts to see them here and in projections.</div>
+            <div style={{ marginTop: 8 }}>
+              <button onClick={openAddTray} className="btn-primary">+ Add Account</button>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
