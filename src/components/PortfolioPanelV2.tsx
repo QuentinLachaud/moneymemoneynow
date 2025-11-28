@@ -9,9 +9,10 @@
  * - Cash flow visualization with data/graph toggle
  * - Survival rate vs starting balance scatter chart
  * - Histogram of final value distribution
+ * - Resizable two-column layout (70/30 split)
  */
 
-import { useState, useMemo, useCallback } from 'react';
+import { useState, useMemo, useCallback, useRef, useEffect } from 'react';
 import { Account } from '../store/useAppStore';
 import { runPortfolioMonteCarloSimulation, PortfolioSimulationResult } from '../utils/portfolioMonteCarlo';
 import { MonteCarloChart } from './MonteCarloChart';
@@ -65,6 +66,49 @@ export function PortfolioPanel({ accounts, selectedAccountIds }: PortfolioPanelP
   
   // Per-asset overrides
   const [assetOverrides, setAssetOverrides] = useState<Map<string, AssetOverride>>(new Map());
+
+  // Resizable panel state (percentage-based for responsiveness)
+  const [chartColumnWidth, setChartColumnWidth] = useState(70); // Default 70% width
+  const splitPaneRef = useRef<HTMLDivElement>(null);
+  const isDraggingRef = useRef(false);
+
+  // Handle resize drag
+  const handleMouseDown = useCallback((e: React.MouseEvent) => {
+    e.preventDefault();
+    isDraggingRef.current = true;
+    document.body.style.cursor = 'col-resize';
+    document.body.style.userSelect = 'none';
+  }, []);
+
+  useEffect(() => {
+    const handleMouseMove = (e: MouseEvent) => {
+      if (!isDraggingRef.current || !splitPaneRef.current) return;
+      
+      const container = splitPaneRef.current;
+      const rect = container.getBoundingClientRect();
+      const newWidth = ((e.clientX - rect.left) / rect.width) * 100;
+      
+      // Clamp between 50% and 85%
+      const clampedWidth = Math.min(85, Math.max(50, newWidth));
+      setChartColumnWidth(clampedWidth);
+    };
+
+    const handleMouseUp = () => {
+      if (isDraggingRef.current) {
+        isDraggingRef.current = false;
+        document.body.style.cursor = '';
+        document.body.style.userSelect = '';
+      }
+    };
+
+    document.addEventListener('mousemove', handleMouseMove);
+    document.addEventListener('mouseup', handleMouseUp);
+
+    return () => {
+      document.removeEventListener('mousemove', handleMouseMove);
+      document.removeEventListener('mouseup', handleMouseUp);
+    };
+  }, []);
 
   // Filter accounts based on selection
   const activeAccounts = useMemo(() => {
@@ -432,10 +476,13 @@ export function PortfolioPanel({ accounts, selectedAccountIds }: PortfolioPanelP
         </div>
       </div>
 
-      {/* Main Content */}
-      <div className="portfolio-content no-slider">
-        {/* Charts */}
-        <div className="portfolio-charts">
+      {/* Main Content - Resizable Two-Column Layout */}
+      <div className="portfolio-content-resizable" ref={splitPaneRef}>
+        {/* Left Column: Charts */}
+        <div 
+          className="portfolio-charts-column"
+          style={{ width: `${chartColumnWidth}%` }}
+        >
           {/* Monte Carlo / Projection Chart */}
           <div className="chart-section card">
             <div className="section-header">
@@ -450,13 +497,13 @@ export function PortfolioPanel({ accounts, selectedAccountIds }: PortfolioPanelP
                 {adjustForInflation && ' · Real values'}
               </div>
             </div>
-            <div className="chart-container large">
+            <div className="chart-container monte-carlo-chart">
               <MonteCarloChart simulation={adjustedSimulation} useLogScale={useLogScale} />
             </div>
           </div>
 
           {/* Cash Flow Chart */}
-          <div className="chart-section card">
+          <div className="chart-section card cashflow-section">
             <div className="section-header">
               <h3>Portfolio Cash Flow</h3>
               <div className="header-actions">
@@ -476,7 +523,7 @@ export function PortfolioPanel({ accounts, selectedAccountIds }: PortfolioPanelP
                 </button>
               </div>
             </div>
-            <div className="chart-container cashflow-tall">
+            <div className="chart-container cashflow-extra-tall">
               {showCashFlowTable ? (
                 <div className="data-table-container">
                   <table className="data-table">
@@ -509,8 +556,19 @@ export function PortfolioPanel({ accounts, selectedAccountIds }: PortfolioPanelP
           </div>
         </div>
 
-        {/* Right: Analysis Panels */}
-        <div className="portfolio-side-panel">
+        {/* Resize Handle */}
+        <div 
+          className="resize-handle"
+          onMouseDown={handleMouseDown}
+        >
+          <div className="resize-handle-inner" />
+        </div>
+
+        {/* Right Column: Analysis Panels */}
+        <div 
+          className="portfolio-side-column"
+          style={{ width: `${100 - chartColumnWidth}%` }}
+        >
           {/* Toggle Buttons */}
           <div className="side-panel-toggles">
             {!isDeterministic && (

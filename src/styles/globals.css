@@ -2740,20 +2740,21 @@ html {
 .portfolio-controls-bar {
   display: flex;
   justify-content: space-between;
-  align-items: flex-start;
+  align-items: center;
   flex-wrap: wrap;
-  gap: 12px;
-  padding: 12px 16px;
+  gap: 8px;
+  padding: 8px 12px;
   background: linear-gradient(135deg, rgba(15, 23, 42, 0.95), rgba(30, 41, 59, 0.9));
-  border-radius: 12px;
+  border-radius: 10px;
   border: 1px solid rgba(255, 255, 255, 0.08);
+  margin-bottom: 12px;
 }
 
 .controls-left {
   display: flex;
   align-items: center;
   flex-wrap: wrap;
-  gap: 16px;
+  gap: 12px;
 }
 
 .controls-right {
@@ -2763,28 +2764,30 @@ html {
 
 .controls-divider {
   width: 1px;
-  height: 32px;
+  height: 24px;
   background: rgba(255, 255, 255, 0.1);
 }
 
-/* Control Groups */
+/* Control Groups - Compact inline layout */
 .control-group {
   display: flex;
-  flex-direction: column;
-  gap: 4px;
+  flex-direction: row;
+  align-items: center;
+  gap: 6px;
 }
 
 .control-group label {
-  font-size: 0.65rem;
+  font-size: 0.6rem;
   text-transform: uppercase;
-  letter-spacing: 1px;
+  letter-spacing: 0.5px;
   color: rgba(255, 255, 255, 0.5);
   display: flex;
   align-items: center;
   gap: 4px;
+  white-space: nowrap;
 }
 
-/* Mode Toggle */
+/* Mode Toggle - Compact */
 .mode-toggle {
   flex-direction: row;
   gap: 0;
@@ -2793,22 +2796,22 @@ html {
 .mode-btn {
   display: flex;
   align-items: center;
-  gap: 6px;
-  padding: 8px 12px;
+  gap: 4px;
+  padding: 6px 10px;
   border: none;
   background: rgba(0, 0, 0, 0.2);
   color: rgba(255, 255, 255, 0.5);
-  font-size: 0.75rem;
+  font-size: 0.7rem;
   cursor: pointer;
   transition: all 0.15s ease;
 }
 
 .mode-btn:first-child {
-  border-radius: 6px 0 0 6px;
+  border-radius: 5px 0 0 5px;
 }
 
 .mode-btn:last-child {
-  border-radius: 0 6px 6px 0;
+  border-radius: 0 5px 5px 0;
 }
 
 .mode-btn.active {
@@ -2821,18 +2824,18 @@ html {
   color: rgba(255, 255, 255, 0.7);
 }
 
-/* Simulations Button Group */
+/* Simulations Button Group - Compact */
 .btn-group-sm {
   display: flex;
   gap: 2px;
 }
 
 .btn-sm {
-  padding: 6px 12px;
+  padding: 4px 8px;
   border: none;
   background: rgba(0, 0, 0, 0.2);
   color: rgba(255, 255, 255, 0.5);
-  font-size: 0.75rem;
+  font-size: 0.65rem;
   cursor: pointer;
   border-radius: 4px;
   transition: all 0.15s ease;
@@ -2850,7 +2853,7 @@ html {
 
 /* Volatility Control Compact */
 .volatility-control-compact {
-  min-width: 140px;
+  min-width: 120px;
 }
 
 .slider-with-presets {
@@ -2915,14 +2918,15 @@ html {
   color: #a5b4fc;
 }
 
-/* Projection Control */
+/* Projection Control - Compact */
 .projection-control {
-  min-width: 180px;
+  min-width: 120px;
+  max-width: 150px;
 }
 
 .projection-slider-wide {
   width: 100%;
-  height: 4px;
+  height: 3px;
   -webkit-appearance: none;
   appearance: none;
   background: linear-gradient(to right, rgba(99, 102, 241, 0.3), rgba(168, 85, 247, 0.3));
@@ -2933,8 +2937,8 @@ html {
 .projection-slider-wide::-webkit-slider-thumb {
   -webkit-appearance: none;
   appearance: none;
-  width: 14px;
-  height: 14px;
+  width: 12px;
+  height: 12px;
   background: linear-gradient(135deg, #6366f1, #a855f7);
   border-radius: 50%;
   cursor: pointer;
@@ -2983,18 +2987,18 @@ html {
   color: #4ade80;
 }
 
-/* Toggle Slider - NEW preferred style */
+/* Toggle Slider - Compact preferred style */
 .toggle-slider-group {
   flex-direction: row;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
 }
 
 .toggle-slider {
   position: relative;
   display: flex;
   background: rgba(0, 0, 0, 0.3);
-  border-radius: 6px;
+  border-radius: 5px;
   padding: 2px;
   border: 1px solid rgba(255, 255, 255, 0.08);
 }
@@ -3002,14 +3006,14 @@ html {
 .toggle-option {
   position: relative;
   z-index: 1;
-  padding: 6px 12px;
+  padding: 4px 10px;
   border: none;
   background: transparent;
   color: rgba(255, 255, 255, 0.5);
-  font-size: 0.7rem;
+  font-size: 0.65rem;
   cursor: pointer;
   transition: color 0.2s ease;
-  min-width: 60px;
+  min-width: 50px;
   text-align: center;
 }
 
@@ -3063,7 +3067,7 @@ html {
   flex-direction: row;
 }
 
-/* Main Content Layout */
+/* Main Content Layout - Legacy grid (kept for compatibility) */
 .portfolio-content {
   display: grid;
   grid-template-columns: 50px 1fr 380px;
@@ -3075,6 +3079,78 @@ html {
 /* Portfolio content without slider (2-column) */
 .portfolio-content.no-slider {
   grid-template-columns: 1fr 380px;
+}
+
+/* New Resizable Two-Column Layout */
+.portfolio-content-resizable {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+  gap: 0;
+  position: relative;
+  overflow: hidden;
+}
+
+.portfolio-charts-column {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  min-width: 400px;
+  overflow: hidden;
+  padding-right: 8px;
+}
+
+.portfolio-side-column {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-width: 280px;
+  overflow-y: auto;
+  padding-left: 8px;
+}
+
+/* Resize Handle */
+.resize-handle {
+  width: 12px;
+  cursor: col-resize;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  position: relative;
+  z-index: 10;
+}
+
+.resize-handle:hover .resize-handle-inner,
+.resize-handle:active .resize-handle-inner {
+  background: rgba(99, 102, 241, 0.6);
+  box-shadow: 0 0 8px rgba(99, 102, 241, 0.4);
+}
+
+.resize-handle-inner {
+  width: 4px;
+  height: 60px;
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 4px;
+  transition: all 0.2s ease;
+}
+
+/* Monte Carlo Chart - fixed height */
+.chart-container.monte-carlo-chart {
+  min-height: 320px;
+  height: 320px;
+}
+
+/* Cash Flow Chart - extra tall (2x normal) */
+.chart-container.cashflow-extra-tall {
+  min-height: 480px;
+  height: 480px;
+}
+
+/* Cash Flow Section - ensure it expands */
+.chart-section.cashflow-section {
+  flex: 1;
+  min-height: 500px;
 }
 
 /* Starting Value Slider */
