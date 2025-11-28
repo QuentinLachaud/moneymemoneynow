@@ -147,13 +147,16 @@ export function ProjectionChart({ accounts, isLogScale = false }: ProjectionChar
           labelFormatter={(label) => `Year ${label}`}
         />
 
-        {/* Legend at top-right */}
+        {/* Legend at top-right, vertical layout */}
         <Legend 
           verticalAlign="top"
           align="right"
+          layout="vertical"
           wrapperStyle={{ 
-            paddingBottom: '8px',
+            paddingLeft: '20px',
             fontSize: '11px',
+            maxHeight: '80%',
+            overflowY: 'auto',
           }}
           formatter={(value) => (
             <span style={{ color: 'rgba(255,255,255,0.7)' }}>

@@ -210,6 +210,7 @@ export default function App() {
             }}
             initialData={editingId ? accounts.find((a) => a.id === editingId) : undefined}
             submitLabel={editingId ? 'Update Account' : 'Add Account'}
+            existingAccounts={accounts}
           />
           {editingId && (
             <button onClick={cancelEdit} className="btn cancel-btn">
@@ -339,6 +340,7 @@ export default function App() {
                 transactionAmount: editingAccount.transactionAmount,
               } : undefined}
               submitLabel={editingAccountId ? 'Save Changes' : 'Add Account'}
+              existingAccounts={accounts}
               onSubmit={(account) => {
                 if (editingAccountId) {
                   updateAccount(editingAccountId, account);

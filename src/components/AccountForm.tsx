@@ -6,14 +6,14 @@
  * - Edit mode: called with initialData and custom submitLabel
  *
  * FORM FIELDS:
+ * - transactionType: Toggle slider (deposit green / drawdown red)
  * - name: Account display name
- * - amount: Current balance
+ * - amount: Current balance (shown only for deposits, auto-populated from existing asset)
  * - date: Start date for projections
  * - expectedReturn: Annual return percentage
  * - volatility: Risk level (optional)
  * - timeHorizon: Investment period in years (slider)
  * - frequency: Transaction frequency (monthly/annual)
- * - transactionType: Deposit or withdraw
  * - transactionAmount: Recurring transaction amount
  *
  * CUSTOMIZATION:
@@ -22,17 +22,20 @@
  * - To change slider range: modify min/max on the range input
  */
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Account } from '../App';
-import { Plus } from 'lucide-react';
+import { Plus, Check } from 'lucide-react';
 
 interface AccountFormProps {
   onSubmit: (account: Omit<Account, 'id'>) => void;
   initialData?: Omit<Account, 'id'>;
   submitLabel?: string;
+  /** All existing accounts for auto-populating amount */
+  existingAccounts?: Account[];
 }
 
-export function AccountForm({ onSubmit, initialData, submitLabel = 'Add Account' }: AccountFormProps) {
+export function AccountForm({ onSubmit, initialData, submitLabel = 'Add Account', existingAccounts = [] }: AccountFormProps) {
+  const [transactionType, setTransactionType] = useState<'deposit' | 'withdraw'>(initialData?.transactionType || 'deposit');
   const [name, setName] = useState(initialData?.name || '');
   const [amount, setAmount] = useState(initialData?.amount?.toString() || '');
   const [date, setDate] = useState(initialData?.date || new Date().toISOString().split('T')[0]);
@@ -40,16 +43,31 @@ export function AccountForm({ onSubmit, initialData, submitLabel = 'Add Account'
   const [volatility, setVolatility] = useState(initialData?.volatility || '');
   const [timeHorizon, setTimeHorizon] = useState(initialData?.timeHorizon || 10);
   const [frequency, setFrequency] = useState<'monthly' | 'annual'>(initialData?.frequency || 'annual');
-  const [transactionType, setTransactionType] = useState<'deposit' | 'withdraw'>(initialData?.transactionType || 'deposit');
   const [transactionAmount, setTransactionAmount] = useState(initialData?.transactionAmount?.toString() || '0');
+
+  // Auto-populate amount from existing account with same name
+  useEffect(() => {
+    if (name && date && transactionType === 'deposit') {
+      const matchingAccount = existingAccounts.find(
+        acc => acc.name.toLowerCase() === name.toLowerCase()
+      );
+      if (matchingAccount) {
+        // For now, just use the existing amount
+        // In a more sophisticated version, you could calculate value at the specified date
+        setAmount(matchingAccount.amount.toString());
+      }
+    }
+  }, [name, date, existingAccounts, transactionType]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!name || !amount) return;
+    // For drawdowns, amount is not required
+    if (!name || (transactionType === 'deposit' && !amount)) return;
 
     onSubmit({
       name,
-      amount: parseFloat(amount),
+      // For drawdowns, set amount to 0 since it's not relevant
+      amount: transactionType === 'withdraw' ? 0 : parseFloat(amount),
       date,
       expectedReturn: parseFloat(expectedReturn),
       volatility: volatility || undefined,
@@ -76,6 +94,29 @@ export function AccountForm({ onSubmit, initialData, submitLabel = 'Add Account'
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
+      {/* Transaction Type Toggle - First element */}
+      <div className="transaction-type-toggle-container">
+        <label className="block text-sm text-gray-700 mb-2">Type</label>
+        <div className="transaction-type-toggle">
+          <button
+            type="button"
+            className={`toggle-option deposit ${transactionType === 'deposit' ? 'active' : ''}`}
+            onClick={() => setTransactionType('deposit')}
+          >
+            {transactionType === 'deposit' && <Check size={14} />}
+            Deposit
+          </button>
+          <button
+            type="button"
+            className={`toggle-option withdraw ${transactionType === 'withdraw' ? 'active' : ''}`}
+            onClick={() => setTransactionType('withdraw')}
+          >
+            {transactionType === 'withdraw' && <Check size={14} />}
+            Drawdown
+          </button>
+        </div>
+      </div>
+
       <div>
         <label className="block text-sm text-gray-700 mb-1">Account Name</label>
         <input
@@ -88,18 +129,21 @@ export function AccountForm({ onSubmit, initialData, submitLabel = 'Add Account'
         />
       </div>
 
-      <div>
-        <label className="block text-sm text-gray-700 mb-1">Current Amount ($)</label>
-        <input
-          type="number"
-          value={amount}
-          onChange={(e) => setAmount(e.target.value)}
-          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-          placeholder="10000"
-          step="0.01"
-          required
-        />
-      </div>
+      {/* Current Amount - Only shown for deposits */}
+      {transactionType === 'deposit' && (
+        <div>
+          <label className="block text-sm text-gray-700 mb-1">Current Amount ($)</label>
+          <input
+            type="number"
+            value={amount}
+            onChange={(e) => setAmount(e.target.value)}
+            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            placeholder="10000"
+            step="0.01"
+            required
+          />
+        </div>
+      )}
 
       <div>
         <label className="block text-sm text-gray-700 mb-1">Date</label>
@@ -162,17 +206,9 @@ export function AccountForm({ onSubmit, initialData, submitLabel = 'Add Account'
           <option value="annual">Annual</option>
         </select>
 
-        <label className="block text-sm text-gray-700 mb-1">Transaction Type</label>
-        <select
-          value={transactionType}
-          onChange={(e) => setTransactionType(e.target.value as 'deposit' | 'withdraw')}
-          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 mb-3"
-        >
-          <option value="deposit">Deposit</option>
-          <option value="withdraw">Withdraw</option>
-        </select>
-
-        <label className="block text-sm text-gray-700 mb-1">Transaction Amount ($)</label>
+        <label className="block text-sm text-gray-700 mb-1">
+          {transactionType === 'deposit' ? 'Deposit' : 'Drawdown'} Amount ($)
+        </label>
         <input
           type="number"
           value={transactionAmount}
