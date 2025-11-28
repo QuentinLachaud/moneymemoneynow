@@ -15,6 +15,7 @@ import { runMonteCarloSimulation, SimulationResult } from '../utils/monteCarlo';
 import { MonteCarloChart } from './MonteCarloChart';
 import { HistogramChart } from './HistogramChart';
 import { SimulationSummary } from './SimulationSummary';
+import { CashFlowChart } from './CashFlowChart';
 import { BarChart3, Table, Settings2 } from 'lucide-react';
 
 interface ProjectionsPanelProps {
@@ -122,16 +123,29 @@ export function ProjectionsPanel({ account }: ProjectionsPanelProps) {
 
       {/* Main Content */}
       <div className="projections-content">
-        {/* Monte Carlo Chart Section */}
-        <div className="projections-chart-section card">
-          <div className="section-header">
-            <h3>Monte Carlo Projection: {account.name}</h3>
-            <div className="section-meta">
-              {numSimulations.toLocaleString()} simulations · {effectiveVolatility}% volatility · {account.timeHorizon} year horizon
+        {/* Left Column: Monte Carlo + Cash Flow */}
+        <div className="projections-left-column">
+          {/* Monte Carlo Chart Section */}
+          <div className="projections-chart-section card">
+            <div className="section-header">
+              <h3>Monte Carlo Projection: {account.name}</h3>
+              <div className="section-meta">
+                {numSimulations.toLocaleString()} simulations · {effectiveVolatility}% volatility · {account.timeHorizon} year horizon
+              </div>
+            </div>
+            <div className="chart-container">
+              <MonteCarloChart simulation={simulation} />
             </div>
           </div>
-          <div className="chart-container">
-            <MonteCarloChart simulation={simulation} />
+
+          {/* Cash Flow Chart Section */}
+          <div className="cash-flow-section card">
+            <div className="section-header">
+              <h3>Cash Flow: {account.name}</h3>
+            </div>
+            <div className="chart-container compact">
+              <CashFlowChart accounts={[account]} />
+            </div>
           </div>
         </div>
 

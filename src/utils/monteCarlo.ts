@@ -148,23 +148,15 @@ export function runMonteCarloSimulation(
 
   for (let sim = 0; sim < numSimulations; sim++) {
     const values: number[] = [account.amount]; // Start with initial amount
-    let died = false;
+    let everDied = false; // Track if simulation ever hit zero
     let deathYear = -1;
     let currentValue = account.amount;
 
     for (let yearIdx = 1; yearIdx < years.length; yearIdx++) {
-      if (died) {
-        // If simulation died, check if deposit brings it back
-        const potentialValue = currentValue + signedCashFlow;
-        if (potentialValue > 0 && signedCashFlow > 0) {
-          // Deposit brings it back to life
-          currentValue = potentialValue;
-          died = false;
-          deathYear = -1;
-        } else {
-          values.push(0);
-          continue;
-        }
+      // If simulation has already died, it stays dead (no resurrection)
+      if (everDied) {
+        values.push(0);
+        continue;
       }
 
       // Generate random return using GBM
@@ -179,10 +171,10 @@ export function runMonteCarloSimulation(
       // Add cash flow (deposit or withdrawal)
       newValue += signedCashFlow;
 
-      // Check for death
+      // Check for death - once dead, always dead
       if (newValue <= 0) {
         newValue = 0;
-        died = true;
+        everDied = true;
         deathYear = years[yearIdx];
       }
 
@@ -192,7 +184,7 @@ export function runMonteCarloSimulation(
 
     paths.push({
       values,
-      died: currentValue === 0 || (died && deathYear !== -1),
+      died: everDied,
       deathYear,
       finalValue: values[values.length - 1],
     });

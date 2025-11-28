@@ -33,6 +33,30 @@ import Sparkline from './components/Sparkline';
 import TicketEditor from './components/TicketEditor';
 
 /**
+ * SelectionToggle — Toggle button showing grey tick (off) → green tick (on) → X on hover
+ */
+function SelectionToggle({ isSelected, onToggle }: { isSelected: boolean; onToggle: () => void }) {
+  const [isHovered, setIsHovered] = useState(false);
+
+  const showX = isSelected && isHovered;
+  const showGreenCheck = isSelected && !isHovered;
+  const showGreyCheck = !isSelected;
+
+  return (
+    <button
+      className={`account-select-toggle ${isSelected ? 'selected' : ''} ${showX ? 'show-x' : ''}`}
+      onClick={onToggle}
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
+      title={isSelected ? 'Click to deselect' : 'Click to select for projection'}
+    >
+      {showX && <X size={16} />}
+      {(showGreenCheck || showGreyCheck) && <Check size={16} />}
+    </button>
+  );
+}
+
+/**
  * Account — represents a single financial account/asset.
  * Used throughout the app for projections, charts, and the accounts list.
  *
@@ -305,13 +329,10 @@ export default function App() {
                     >
                       {/* Selection toggle for projections tab */}
                       {tab === 'projections' && (
-                        <button
-                          className={`account-select-toggle ${isSelectedForProjection ? 'selected' : ''}`}
-                          onClick={() => toggleProjectionAccount(acct.id)}
-                          title={isSelectedForProjection ? 'Deselect for projection' : 'Select for projection'}
-                        >
-                          {isSelectedForProjection ? <Check size={16} /> : <X size={16} />}
-                        </button>
+                        <SelectionToggle
+                          isSelected={isSelectedForProjection}
+                          onToggle={() => toggleProjectionAccount(acct.id)}
+                        />
                       )}
 
                       {/* Card header */}

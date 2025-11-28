@@ -25,6 +25,7 @@
 import { useState, useEffect } from 'react';
 import { Account } from '../App';
 import { Plus, Check } from 'lucide-react';
+import { calculateAccountValue } from '../utils/calculations';
 
 interface AccountFormProps {
   onSubmit: (account: Omit<Account, 'id'>) => void;
@@ -45,16 +46,26 @@ export function AccountForm({ onSubmit, initialData, submitLabel = 'Add Account'
   const [frequency, setFrequency] = useState<'monthly' | 'annual'>(initialData?.frequency || 'annual');
   const [transactionAmount, setTransactionAmount] = useState(initialData?.transactionAmount?.toString() || '0');
 
-  // Auto-populate amount from existing account with same name
+  // Auto-populate amount from existing account with same name (at specified date)
   useEffect(() => {
     if (name && date && transactionType === 'deposit') {
       const matchingAccount = existingAccounts.find(
         acc => acc.name.toLowerCase() === name.toLowerCase()
       );
       if (matchingAccount) {
-        // For now, just use the existing amount
-        // In a more sophisticated version, you could calculate value at the specified date
-        setAmount(matchingAccount.amount.toString());
+        // Calculate the projected value at the selected date
+        const accountStartDate = new Date(matchingAccount.date);
+        const selectedDate = new Date(date);
+        const yearsDiff = (selectedDate.getTime() - accountStartDate.getTime()) / (1000 * 60 * 60 * 24 * 365.25);
+        
+        // Only calculate forward projection if selected date is after account start
+        if (yearsDiff > 0) {
+          const projectedValue = calculateAccountValue(matchingAccount, yearsDiff);
+          setAmount(Math.round(projectedValue).toString());
+        } else {
+          // If same date or earlier, use original amount
+          setAmount(matchingAccount.amount.toString());
+        }
       }
     }
   }, [name, date, existingAccounts, transactionType]);

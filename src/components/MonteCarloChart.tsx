@@ -162,7 +162,8 @@ export function MonteCarloChart({ simulation, showPaths = false }: MonteCarloCha
                   name={`p${config.key}`}
                   stroke={config.color}
                   strokeWidth={config.key === 50 ? 3 : 2}
-                  dot={false}
+                  dot={{ r: 3, fill: config.color, strokeWidth: 0 }}
+                  activeDot={{ r: 5, fill: config.color, strokeWidth: 0 }}
                   strokeDasharray={config.key === 50 ? undefined : '5 3'}
                 />
               )
