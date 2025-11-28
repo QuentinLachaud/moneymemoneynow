@@ -30,6 +30,7 @@ import { getLocaleCurrency } from './utils/format';
 import { AccountForm } from './components/AccountForm';
 import { ProjectionsPanelV2 } from './components/ProjectionsPanelV2';
 import { PortfolioPanel as PortfolioPanelV2 } from './components/PortfolioPanelV2';
+import { ProjectionPortfolioPanel } from './components/ProjectionPortfolioPanel';
 import { getColorForId } from './utils/colors';
 import Sparkline from './components/Sparkline';
 
@@ -175,16 +176,18 @@ export default function App() {
         <h1 className="app-title">Finance Portfolio Tracker</h1>
       </header>
 
-      {/* ─── TAB TOGGLE: Glass-style slider (2 tabs) ─────────────────── */}
+      {/* ─── TAB TOGGLE: Glass-style slider (3 tabs) ─────────────────── */}
       <div className="tab-container">
-        <div className="tab-toggle two-tabs">
+        <div className="tab-toggle three-tabs">
           <div 
             className="tab-slider" 
             style={{ 
-              width: '50%',
+              width: '33.333%',
               transform: tab === 'projections' 
                 ? 'translateX(0)' 
-                : 'translateX(100%)' 
+                : tab === 'portfolio'
+                ? 'translateX(100%)' 
+                : 'translateX(200%)'
             }} 
           />
           <button
@@ -198,6 +201,12 @@ export default function App() {
             className={`tab-button ${tab === 'portfolio' ? 'active' : ''}`}
           >
             Portfolio
+          </button>
+          <button
+            onClick={() => setTab('projection-portfolio')}
+            className={`tab-button ${tab === 'projection-portfolio' ? 'active' : ''}`}
+          >
+            Projection Portfolio
           </button>
         </div>
       </div>
@@ -257,13 +266,18 @@ export default function App() {
                 </div>
               )}
             </div>
-          ) : (
+          ) : tab === 'portfolio' ? (
             /* Portfolio Tab: Combined Monte Carlo Simulation */
             <div className="portfolio-tab-content">
               <PortfolioPanelV2 
                 accounts={accounts} 
                 selectedAccountIds={portfolioSelectedIds}
               />
+            </div>
+          ) : (
+            /* Projection Portfolio Tab: Combined with ribbon and crash support */
+            <div className="projection-portfolio-tab-content">
+              <ProjectionPortfolioPanel accounts={accounts} />
             </div>
           )}
 
@@ -285,7 +299,7 @@ export default function App() {
 
                   return (
                     <div 
-                      className={`account-card ${tab === 'projections' && isSelectedForProjection ? 'selected' : ''} ${tab === 'portfolio' && isSelectedForPortfolio ? 'selected' : ''}`} 
+                      className={`account-card ${tab === 'projections' && isSelectedForProjection ? 'selected' : ''} ${(tab === 'portfolio' || tab === 'projection-portfolio') && isSelectedForPortfolio ? 'selected' : ''}`} 
                       key={acct.id}
                     >
                       {/* Selection toggle for projections tab (single select) */}
@@ -296,8 +310,8 @@ export default function App() {
                         />
                       )}
 
-                      {/* Selection toggle for portfolio tab (multi select) */}
-                      {tab === 'portfolio' && (
+                      {/* Selection toggle for portfolio/projection-portfolio tabs (multi select) */}
+                      {(tab === 'portfolio' || tab === 'projection-portfolio') && (
                         <SelectionToggle
                           isSelected={isSelectedForPortfolio}
                           onToggle={() => togglePortfolioAccount(acct.id)}

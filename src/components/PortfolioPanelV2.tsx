@@ -476,7 +476,7 @@ export function PortfolioPanel({ accounts, selectedAccountIds }: PortfolioPanelP
                 </button>
               </div>
             </div>
-            <div className="chart-container compact">
+            <div className="chart-container cashflow-tall">
               {showCashFlowTable ? (
                 <div className="data-table-container">
                   <table className="data-table">

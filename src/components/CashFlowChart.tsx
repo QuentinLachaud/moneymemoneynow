@@ -39,7 +39,7 @@ interface CashFlowDataPoint {
 
 /**
  * Calculate cash flow data for the chart
- * Returns flat horizontal lines per account showing annual cash flow rate
+ * Returns annual cash flow per account, with annual increase applied if configured
  */
 function calculateCashFlowData(accounts: Account[]): CashFlowDataPoint[] {
   if (accounts.length === 0) return [];
@@ -61,17 +61,23 @@ function calculateCashFlowData(accounts: Account[]): CashFlowDataPoint[] {
 
       // Check if this account is active during this year
       if (year >= accStartYear && year < accEndYear) {
-        // Calculate annual cash flow
+        // Calculate base annual cash flow
         // Monthly: multiply by 12 to annualize
         // Annual: use as-is
-        const annualAmount = acc.frequency === 'monthly' 
+        const baseAnnualAmount = acc.frequency === 'monthly' 
           ? acc.transactionAmount * 12 
           : acc.transactionAmount;
         
+        // Apply annual increase rate if configured
+        // C(n) = C0 * (1 + r)^n
+        const yearsElapsed = year - accStartYear;
+        const annualIncreaseRate = (acc.annualIncreaseRate || 0) / 100;
+        const adjustedAmount = baseAnnualAmount * Math.pow(1 + annualIncreaseRate, yearsElapsed);
+        
         // Apply sign based on transaction type
         const signedAmount = acc.transactionType === 'withdraw' 
-          ? -Math.abs(annualAmount) 
-          : Math.abs(annualAmount);
+          ? -Math.abs(adjustedAmount) 
+          : Math.abs(adjustedAmount);
 
         row[acc.id] = signedAmount;
         row.Total += signedAmount;
@@ -218,11 +224,11 @@ export function CashFlowChart({ accounts }: CashFlowChartProps) {
           )}
         />
 
-        {/* Individual account lines - step type for flat horizontal lines */}
+        {/* Individual account lines - linear to show contribution increases */}
         {accounts.map((account) => (
           <Line
             key={account.id}
-            type="stepAfter"
+            type="linear"
             dataKey={account.id}
             name={account.name}
             stroke={getColorForId(account.id)}
@@ -235,7 +241,7 @@ export function CashFlowChart({ accounts }: CashFlowChartProps) {
 
         {/* Total line (net cash flow) */}
         <Line
-          type="stepAfter"
+          type="linear"
           dataKey="Total"
           name="Total"
           stroke="#f7f5ee"

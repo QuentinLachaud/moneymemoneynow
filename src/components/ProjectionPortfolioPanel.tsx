@@ -1,85 +1,193 @@
 /**
- * ProjectionsPanelV2 — Redesigned projections panel matching Portfolio tab design
+ * ProjectionPortfolioPanel — Combined portfolio projection with cash flow ribbon
  * 
  * FEATURES:
- * - Starting value slider on left
- * - Simulation summary widget in header
- * - Nominal/Real toggle (proper slider style)
- * - Linear/Log toggle (proper slider style)
- * - Projection years slider
- * - Volatility slider with presets
- * - Monte Carlo / Deterministic toggle
- * - Cash flow chart with Data/Graph toggle
- * - Distribution chart with Data toggle
+ * - Portfolio Monte Carlo simulation with market crash support
+ * - Cash flow ribbon (deposits, drawdowns, market crashes)
+ * - Crash year slider under the Monte Carlo chart
+ * - Toggle individual cash flows and crash scenarios
  */
 
-import { useState, useMemo, useCallback } from 'react';
-import { Account } from '../store/useAppStore';
-import { runMonteCarloSimulation, SimulationResult } from '../utils/monteCarlo';
+import { useState, useMemo, useCallback, useEffect } from 'react';
+import { Account, useAppStore } from '../store/useAppStore';
+import { useMarketCrashStore, getCrashFactor } from '../store/useMarketCrashStore';
+import { runPortfolioMonteCarloSimulation, PortfolioSimulationResult } from '../utils/portfolioMonteCarlo';
 import { MonteCarloChart } from './MonteCarloChart';
 import { HistogramChart } from './HistogramChart';
 import { CashFlowChart, getCashFlowData, getCashFlowColumns } from './CashFlowChart';
-import { StartingValueSlider } from './StartingValueSlider';
-import { SurvivalScatterChart } from './SurvivalScatterChart';
+import { PortfolioSummary } from './PortfolioSummary';
+import { CashFlowRibbon } from './CashFlowRibbon';
+import { CrashYearSlider } from './CrashYearSlider';
 import { 
   BarChart3, 
   Table, 
   TrendingUp, 
+  Shield, 
   LineChart, 
   Download,
   Info,
   Zap,
-  Activity,
-  Target
+  Activity
 } from 'lucide-react';
 
-interface ProjectionsPanelV2Props {
-  account: Account;
+interface ProjectionPortfolioPanelProps {
+  accounts: Account[];
+}
+
+interface AssetOverride {
+  returnOverride: number | null;
+  globalVolatilityOverride: number | null;
 }
 
 const SIMULATION_COUNTS = [10, 100, 1000] as const;
 const DEFAULT_INFLATION_RATE = 2.5;
 
-export function ProjectionsPanelV2({ account }: ProjectionsPanelV2Props) {
+export function ProjectionPortfolioPanel({ accounts }: ProjectionPortfolioPanelProps) {
+  // Portfolio selection from store
+  const portfolioSelectedIds = useAppStore((state) => state.portfolioSelectedIds);
+  const togglePortfolioAccount = useAppStore((state) => state.togglePortfolioAccount);
+  
+  // Market crash store
+  const { crashes, activeCrashId } = useMarketCrashStore();
+  const enabledCrashes = useMemo(() => crashes.filter(c => c.isEnabled), [crashes]);
+
   // Mode toggle: deterministic vs stochastic
   const [isDeterministic, setIsDeterministic] = useState(false);
   
   // Simulation settings
   const [numSimulations, setNumSimulations] = useState<number>(100);
-  const [volatilityOverride, setVolatilityOverride] = useState<number>(15);
+  const [globalVolatilityOverride, setGlobalVolatilityOverride] = useState<number>(15);
   const [histogramBins, setHistogramBins] = useState(20);
   const [showHistogram, setShowHistogram] = useState(true);
-  const [showSurvivalScatter, setShowSurvivalScatter] = useState(false);
   const [showDataTable, setShowDataTable] = useState(false);
   const [showCashFlowTable, setShowCashFlowTable] = useState(false);
   const [useLogScale, setUseLogScale] = useState(false);
   const [projectionYearsOverride, setProjectionYearsOverride] = useState<number | null>(null);
   const [adjustForInflation, setAdjustForInflation] = useState(false);
   
-  // Starting value override
-  const [startingValueOverride, setStartingValueOverride] = useState<number | null>(null);
+  // Per-asset overrides
+  const [assetOverrides, setAssetOverrides] = useState<Map<string, AssetOverride>>(new Map());
+
+  // Add deposit/drawdown modal state
+  const [showAddModal, setShowAddModal] = useState<'deposit' | 'drawdown' | null>(null);
+
+  // Filter accounts based on selection
+  const activeAccounts = useMemo(() => {
+    return accounts.filter(acc => portfolioSelectedIds.has(acc.id));
+  }, [accounts, portfolioSelectedIds]);
+
+  // Build per-asset overrides map for simulation
+  const assetOverridesForSimulation = useMemo(() => {
+    const map = new Map<string, { returnOverride: number | null; volatilityOverride: number | null }>();
+    assetOverrides.forEach((override, key) => {
+      map.set(key, {
+        returnOverride: override.returnOverride,
+        volatilityOverride: override.globalVolatilityOverride,
+      });
+    });
+    return map;
+  }, [assetOverrides]);
+
+  // Calculate natural values from accounts
+  const naturalValues = useMemo(() => {
+    if (activeAccounts.length === 0) return { initialValue: 0, timeHorizon: 30, startYear: new Date().getFullYear() };
+    
+    const depositAccounts = activeAccounts.filter(a => a.transactionType === 'deposit');
+    const initialValue = depositAccounts.reduce((sum, a) => sum + (a.amount || 0), 0);
+    
+    const startYear = Math.min(...activeAccounts.map(a => new Date(a.date).getFullYear()));
+    const endYear = Math.max(...activeAccounts.map(a => new Date(a.date).getFullYear() + a.timeHorizon));
+    const timeHorizon = endYear - startYear;
+    
+    return { initialValue, timeHorizon, startYear };
+  }, [activeAccounts]);
 
   // Effective values
-  const effectiveStartingValue = startingValueOverride ?? account.amount;
-  const effectiveProjectionYears = projectionYearsOverride ?? account.timeHorizon;
-  const effectiveVolatility = isDeterministic ? 0 : volatilityOverride;
+  const effectiveProjectionYears = projectionYearsOverride ?? naturalValues.timeHorizon;
+
+  // Effective volatility for simulation
+  const effectiveVolatility = isDeterministic ? 0 : globalVolatilityOverride;
   const effectiveSimulations = isDeterministic ? 1 : numSimulations;
 
-  // Create modified account for simulation
-  const modifiedAccount = useMemo(() => ({
-    ...account,
-    amount: effectiveStartingValue,
-    timeHorizon: effectiveProjectionYears,
-  }), [account, effectiveStartingValue, effectiveProjectionYears]);
-
-  // Run simulation
-  const simulation: SimulationResult = useMemo(() => {
-    return runMonteCarloSimulation(
-      modifiedAccount,
+  // Run portfolio simulation
+  const baseSimulation: PortfolioSimulationResult = useMemo(() => {
+    return runPortfolioMonteCarloSimulation(
+      activeAccounts,
       effectiveSimulations,
-      effectiveVolatility
+      effectiveVolatility,
+      assetOverridesForSimulation,
+      projectionYearsOverride ?? undefined
     );
-  }, [modifiedAccount, effectiveSimulations, effectiveVolatility]);
+  }, [activeAccounts, effectiveSimulations, effectiveVolatility, assetOverridesForSimulation, projectionYearsOverride]);
+
+  // Apply market crashes to simulation results
+  const simulation = useMemo(() => {
+    if (enabledCrashes.length === 0) return baseSimulation;
+
+    // Apply crash factors to all paths and percentiles
+    const adjustedPaths = baseSimulation.paths.map(path => {
+      const adjustedValues = path.values.map((value, idx) => {
+        const year = baseSimulation.years[idx];
+        const crashFactor = getCrashFactor(year, enabledCrashes);
+        return value * crashFactor;
+      });
+      return {
+        ...path,
+        values: adjustedValues,
+        finalValue: adjustedValues[adjustedValues.length - 1],
+      };
+    });
+
+    // Recalculate percentiles with crash-adjusted values
+    const adjustedPercentiles: Record<number, number[]> = {};
+    Object.keys(baseSimulation.percentiles).forEach(p => {
+      const pNum = parseInt(p);
+      adjustedPercentiles[pNum] = baseSimulation.percentiles[pNum].map((value, idx) => {
+        const year = baseSimulation.years[idx];
+        const crashFactor = getCrashFactor(year, enabledCrashes);
+        return value * crashFactor;
+      });
+    });
+
+    // Recalculate stats with full structure
+    const finalValues = adjustedPaths.map(p => p.finalValue);
+    const sortedFinalValues = [...finalValues].sort((a, b) => a - b);
+    const mean = finalValues.reduce((a, b) => a + b, 0) / finalValues.length;
+    const squaredDiffs = finalValues.map(x => Math.pow(x - mean, 2));
+    const stdDev = Math.sqrt(squaredDiffs.reduce((a, b) => a + b, 0) / finalValues.length);
+    
+    const percentileFn = (p: number) => {
+      const index = (p / 100) * (sortedFinalValues.length - 1);
+      const lower = Math.floor(index);
+      const upper = Math.ceil(index);
+      if (lower === upper) return sortedFinalValues[lower];
+      return sortedFinalValues[lower] + (sortedFinalValues[upper] - sortedFinalValues[lower]) * (index - lower);
+    };
+    
+    return {
+      ...baseSimulation,
+      paths: adjustedPaths,
+      percentiles: adjustedPercentiles,
+      stats: {
+        ...baseSimulation.stats,
+        finalValues: {
+          min: Math.min(...finalValues),
+          max: Math.max(...finalValues),
+          mean,
+          median: percentileFn(50),
+          stdDev,
+          percentile1: percentileFn(1),
+          percentile10: percentileFn(10),
+          percentile25: percentileFn(25),
+          percentile50: percentileFn(50),
+          percentile75: percentileFn(75),
+          percentile90: percentileFn(90),
+          percentile99: percentileFn(99),
+        },
+        survivalRate: (adjustedPaths.filter(p => p.finalValue > 0).length / adjustedPaths.length) * 100,
+      },
+    };
+  }, [baseSimulation, enabledCrashes]);
 
   // Apply inflation adjustment
   const adjustedSimulation = useMemo(() => {
@@ -118,70 +226,39 @@ export function ProjectionsPanelV2({ account }: ProjectionsPanelV2Props) {
     return adjustedSimulation.paths.map(p => p.finalValue);
   }, [adjustedSimulation]);
 
-  // Calculate metrics
-  const metrics = useMemo(() => {
-    const initialValue = effectiveStartingValue;
-    const medianFinal = adjustedSimulation.stats.finalValues.median;
-    
-    const annualContribution = account.transactionType === 'deposit'
-      ? (account.frequency === 'monthly' ? account.transactionAmount * 12 : account.transactionAmount)
-      : 0;
-    const annualWithdrawal = account.transactionType === 'withdraw'
-      ? (account.frequency === 'monthly' ? account.transactionAmount * 12 : account.transactionAmount)
-      : 0;
-    
-    const totalContributions = annualContribution * effectiveProjectionYears;
-    const totalWithdrawals = annualWithdrawal * effectiveProjectionYears;
-    const netCashFlow = totalContributions - totalWithdrawals;
-    const growthFromReturns = medianFinal - initialValue - netCashFlow;
-    
-    return {
-      initialValue,
-      medianFinal,
-      totalContributions,
-      totalWithdrawals,
-      growthFromReturns,
-      survivalRate: simulation.stats.survivalRate,
-    };
-  }, [effectiveStartingValue, adjustedSimulation.stats, account, effectiveProjectionYears, simulation.stats.survivalRate]);
+  // Calculate totals
+  const totalInitialValue = naturalValues.initialValue;
+  const timeHorizon = simulation.years.length > 1 
+    ? simulation.years[simulation.years.length - 1] - simulation.years[0]
+    : 0;
 
-  // Cash flow data
-  const cashFlowData = useMemo(() => getCashFlowData([modifiedAccount]), [modifiedAccount]);
-  const cashFlowColumns = useMemo(() => getCashFlowColumns([modifiedAccount]), [modifiedAccount]);
+  // Cash flow totals
+  const cashFlowTotals = useMemo(() => {
+    let contributions = 0;
+    let withdrawals = 0;
+    
+    activeAccounts.forEach(acc => {
+      const annualAmount = acc.frequency === 'monthly' 
+        ? acc.transactionAmount * 12 
+        : acc.transactionAmount;
+      const totalAmount = annualAmount * acc.timeHorizon;
+      
+      if (acc.transactionType === 'deposit') {
+        contributions += totalAmount;
+      } else {
+        withdrawals += totalAmount;
+      }
+    });
+    
+    return { contributions, withdrawals };
+  }, [activeAccounts]);
 
-  // Generate survival rate vs starting balance data for scatter chart
-  const survivalScatterData = useMemo(() => {
-    if (isDeterministic) return [];
-    
-    const dataPoints: Array<{ startingBalance: number; survivalRate: number }> = [];
-    const steps = 20;
-    const maxValue = 1000000; // £1M max for consistency with slider
-    
-    for (let i = 1; i <= steps; i++) {
-      const startingBalance = (maxValue / steps) * i;
-      
-      const testAccount = {
-        ...modifiedAccount,
-        amount: startingBalance,
-      };
-      
-      const sim = runMonteCarloSimulation(
-        testAccount,
-        50, // Fewer simulations for performance
-        effectiveVolatility
-      );
-      
-      dataPoints.push({
-        startingBalance,
-        survivalRate: sim.stats.survivalRate,
-      });
-    }
-    
-    return dataPoints;
-  }, [modifiedAccount, effectiveVolatility, isDeterministic]);
+  // Cash flow data for table
+  const cashFlowData = useMemo(() => getCashFlowData(activeAccounts), [activeAccounts]);
+  const cashFlowColumns = useMemo(() => getCashFlowColumns(activeAccounts), [activeAccounts]);
 
-  const handleVolatilityChange = useCallback((value: number) => {
-    setVolatilityOverride(value);
+  const handleGlobalVolatilityChange = useCallback((value: number) => {
+    setGlobalVolatilityOverride(value);
   }, []);
 
   // Download CSV
@@ -207,24 +284,51 @@ export function ProjectionsPanelV2({ account }: ProjectionsPanelV2Props) {
     URL.revokeObjectURL(url);
   }, []);
 
-  const formatCurrency = (value: number) => {
-    if (Math.abs(value) >= 1000000) return `£${(value / 1000000).toFixed(2)}M`;
-    if (Math.abs(value) >= 1000) return `£${(value / 1000).toFixed(1)}k`;
-    return `£${value.toFixed(0)}`;
+  // Handle add deposit/drawdown
+  const handleAddDeposit = () => {
+    // This will be handled by the parent - open the existing modal with deposit type
+    setShowAddModal('deposit');
   };
 
+  const handleAddDrawdown = () => {
+    setShowAddModal('drawdown');
+  };
+
+  if (activeAccounts.length === 0) {
+    return (
+      <div className="empty-portfolio-state card">
+        <div className="empty-state-content">
+          <Shield size={48} className="empty-icon" />
+          <h3>No Assets Selected</h3>
+          <p>Toggle assets on from the ribbon below to see your combined portfolio projection.</p>
+        </div>
+        
+        <CashFlowRibbon
+          accounts={accounts}
+          onAddDeposit={handleAddDeposit}
+          onAddDrawdown={handleAddDrawdown}
+          onToggleAccount={togglePortfolioAccount}
+          enabledAccountIds={portfolioSelectedIds}
+        />
+      </div>
+    );
+  }
+
+  const startYear = simulation.years[0];
+  const endYear = simulation.years[simulation.years.length - 1];
+  const hasActiveCrash = activeCrashId !== null;
+
   return (
-    <div className="projections-panel-v2">
+    <div className="projection-portfolio-panel">
       {/* Top Controls Bar */}
-      <div className="projections-controls-bar">
-        {/* Left Section: Simulation Settings */}
+      <div className="portfolio-controls-bar">
         <div className="controls-left">
           {/* Mode Toggle */}
           <div className="control-group mode-toggle">
             <button
               className={`mode-btn ${isDeterministic ? '' : 'active'}`}
               onClick={() => setIsDeterministic(false)}
-              title="Monte Carlo simulation with randomized returns"
+              title="Monte Carlo simulation"
             >
               <Activity size={14} />
               Monte Carlo
@@ -232,7 +336,7 @@ export function ProjectionsPanelV2({ account }: ProjectionsPanelV2Props) {
             <button
               className={`mode-btn ${isDeterministic ? 'active' : ''}`}
               onClick={() => setIsDeterministic(true)}
-              title="Deterministic projection using expected returns only"
+              title="Deterministic projection"
             >
               <Zap size={14} />
               Deterministic
@@ -260,23 +364,23 @@ export function ProjectionsPanelV2({ account }: ProjectionsPanelV2Props) {
           {/* Volatility Control */}
           {!isDeterministic && (
             <div className="control-group volatility-control-compact">
-              <label>Volatility: {volatilityOverride}%</label>
+              <label>Volatility: {globalVolatilityOverride}%</label>
               <div className="slider-with-presets">
                 <input
                   type="range"
                   min="0"
                   max="50"
                   step="1"
-                  value={volatilityOverride}
-                  onChange={(e) => handleVolatilityChange(parseInt(e.target.value))}
+                  value={globalVolatilityOverride}
+                  onChange={(e) => handleGlobalVolatilityChange(parseInt(e.target.value))}
                   className="compact-slider"
                 />
                 <div className="preset-btns">
                   {[0, 10, 20, 30].map(v => (
                     <button
                       key={v}
-                      className={`preset-btn-sm ${volatilityOverride === v ? 'active' : ''}`}
-                      onClick={() => handleVolatilityChange(v)}
+                      className={`preset-btn-sm ${globalVolatilityOverride === v ? 'active' : ''}`}
+                      onClick={() => handleGlobalVolatilityChange(v)}
                     >
                       {v}
                     </button>
@@ -296,7 +400,7 @@ export function ProjectionsPanelV2({ account }: ProjectionsPanelV2Props) {
                 <button 
                   className="reset-btn-inline" 
                   onClick={() => setProjectionYearsOverride(null)}
-                  title="Reset to account default"
+                  title="Reset to natural horizon"
                 >
                   ↺
                 </button>
@@ -313,7 +417,7 @@ export function ProjectionsPanelV2({ account }: ProjectionsPanelV2Props) {
             />
           </div>
 
-          {/* Inflation Toggle - Slider Style */}
+          {/* Inflation Toggle */}
           <div className="control-group toggle-slider-group">
             <label>Values</label>
             <div className="toggle-slider">
@@ -337,14 +441,14 @@ export function ProjectionsPanelV2({ account }: ProjectionsPanelV2Props) {
             <button 
               className="info-btn" 
               title={adjustForInflation 
-                ? `Values adjusted for ${DEFAULT_INFLATION_RATE}% annual inflation (real purchasing power)` 
-                : 'Values shown in nominal terms (not adjusted for inflation)'}
+                ? `Values adjusted for ${DEFAULT_INFLATION_RATE}% annual inflation` 
+                : 'Values shown in nominal terms'}
             >
               <Info size={12} />
             </button>
           </div>
 
-          {/* Scale Toggle - Slider Style */}
+          {/* Scale Toggle */}
           <div className="control-group toggle-slider-group">
             <label>Scale</label>
             <div className="toggle-slider">
@@ -368,82 +472,38 @@ export function ProjectionsPanelV2({ account }: ProjectionsPanelV2Props) {
           </div>
         </div>
 
-        {/* Right Section: Summary Widget */}
+        {/* Portfolio Summary */}
         <div className="controls-right">
-          <div className="summary-widget">
-            <div className="summary-metrics">
-              <div className="metric-item initial">
-                <span className="metric-label">Initial</span>
-                <span className="metric-value">{formatCurrency(metrics.initialValue)}</span>
-              </div>
-              
-              <div className="metric-divider">→</div>
-              
-              <div className="metric-item final">
-                <span className="metric-label">
-                  {isDeterministic ? 'Final' : 'Median'}
-                  <span className="metric-sublabel">({effectiveProjectionYears}y)</span>
-                </span>
-                <span className="metric-value highlight">{formatCurrency(metrics.medianFinal)}</span>
-              </div>
-
-              <div className="metric-breakdown">
-                <div className="breakdown-item">
-                  <span className="breakdown-label">Returns</span>
-                  <span className={`breakdown-value ${metrics.growthFromReturns >= 0 ? 'positive' : 'negative'}`}>
-                    {metrics.growthFromReturns >= 0 ? '+' : ''}{formatCurrency(metrics.growthFromReturns)}
-                  </span>
-                </div>
-                {metrics.totalContributions > 0 && (
-                  <div className="breakdown-item">
-                    <span className="breakdown-label">Contrib</span>
-                    <span className="breakdown-value positive">+{formatCurrency(metrics.totalContributions)}</span>
-                  </div>
-                )}
-                {metrics.totalWithdrawals > 0 && (
-                  <div className="breakdown-item">
-                    <span className="breakdown-label">Withdraw</span>
-                    <span className="breakdown-value negative">-{formatCurrency(metrics.totalWithdrawals)}</span>
-                  </div>
-                )}
-              </div>
-
-              {!isDeterministic && (
-                <div className="metric-item survival">
-                  <span className="metric-label">Survival</span>
-                  <span className={`metric-value ${metrics.survivalRate >= 95 ? 'excellent' : metrics.survivalRate >= 80 ? 'good' : 'warning'}`}>
-                    {metrics.survivalRate.toFixed(1)}%
-                  </span>
-                </div>
-              )}
-            </div>
-          </div>
+          <PortfolioSummary
+            initialValue={totalInitialValue}
+            medianFinalValue={adjustedSimulation.stats.finalValues.median}
+            totalContributions={cashFlowTotals.contributions}
+            totalWithdrawals={cashFlowTotals.withdrawals}
+            survivalRate={simulation.stats.survivalRate}
+            timeHorizon={timeHorizon}
+            isDeterministic={isDeterministic}
+          />
         </div>
       </div>
 
       {/* Main Content */}
-      <div className="projections-content-v2">
-        {/* Left: Starting Value Slider */}
-        <div className="projections-left-slider">
-          <StartingValueSlider
-            value={effectiveStartingValue}
-            max={account.amount * 3}
-            onChange={setStartingValueOverride}
-          />
-        </div>
-
-        {/* Center: Charts */}
-        <div className="projections-charts">
+      <div className="portfolio-content no-slider">
+        <div className="portfolio-charts">
           {/* Monte Carlo Chart */}
           <div className="chart-section card">
             <div className="section-header">
               <h3>
                 <TrendingUp size={18} className="header-icon" />
-                {isDeterministic ? 'Projection' : 'Monte Carlo'}: {account.name}
+                {isDeterministic ? 'Portfolio Projection' : 'Monte Carlo Projection'}
+                {enabledCrashes.length > 0 && (
+                  <span className="crash-indicator">
+                    · {enabledCrashes.length} crash{enabledCrashes.length > 1 ? 'es' : ''}
+                  </span>
+                )}
               </h3>
               <div className="section-meta">
-                {!isDeterministic && `${numSimulations.toLocaleString()} sims · ${volatilityOverride}% vol · `}
-                {effectiveProjectionYears}y horizon
+                {!isDeterministic && `${numSimulations.toLocaleString()} sims · ${globalVolatilityOverride}% vol · `}
+                {timeHorizon}y horizon
                 {useLogScale && ' · Log'}
                 {adjustForInflation && ' · Real'}
               </div>
@@ -451,12 +511,17 @@ export function ProjectionsPanelV2({ account }: ProjectionsPanelV2Props) {
             <div className="chart-container large">
               <MonteCarloChart simulation={adjustedSimulation} useLogScale={useLogScale} />
             </div>
+            
+            {/* Crash Year Slider - only visible when a crash is selected */}
+            {hasActiveCrash && (
+              <CrashYearSlider startYear={startYear} endYear={endYear} />
+            )}
           </div>
 
           {/* Cash Flow Chart */}
           <div className="chart-section card">
             <div className="section-header">
-              <h3>Cash Flow: {account.name}</h3>
+              <h3>Portfolio Cash Flow</h3>
               <div className="header-actions">
                 <button
                   className={`data-toggle-btn ${showCashFlowTable ? 'active' : ''}`}
@@ -467,7 +532,7 @@ export function ProjectionsPanelV2({ account }: ProjectionsPanelV2Props) {
                 </button>
                 <button
                   className="download-btn"
-                  onClick={() => downloadCSV(cashFlowData, cashFlowColumns, `${account.name}-cash-flow`)}
+                  onClick={() => downloadCSV(cashFlowData, cashFlowColumns, 'portfolio-cash-flow')}
                   title="Download as CSV"
                 >
                   <Download size={14} />
@@ -501,32 +566,22 @@ export function ProjectionsPanelV2({ account }: ProjectionsPanelV2Props) {
                   </table>
                 </div>
               ) : (
-                <CashFlowChart accounts={[modifiedAccount]} />
+                <CashFlowChart accounts={activeAccounts} />
               )}
             </div>
           </div>
         </div>
 
-        {/* Right: Side Panel */}
-        <div className="projections-side-panel">
-          {/* Toggle Buttons */}
+        {/* Side Panel */}
+        <div className="portfolio-side-panel">
           <div className="side-panel-toggles">
             {!isDeterministic && (
               <button
                 className={`toggle-btn ${showHistogram ? 'active' : ''}`}
-                onClick={() => { setShowHistogram(true); setShowSurvivalScatter(false); }}
+                onClick={() => setShowHistogram(!showHistogram)}
               >
                 <BarChart3 size={16} />
                 Distribution
-              </button>
-            )}
-            {!isDeterministic && (
-              <button
-                className={`toggle-btn ${showSurvivalScatter ? 'active' : ''}`}
-                onClick={() => { setShowSurvivalScatter(true); setShowHistogram(false); }}
-              >
-                <Target size={16} />
-                Survival
               </button>
             )}
             <button
@@ -538,7 +593,7 @@ export function ProjectionsPanelV2({ account }: ProjectionsPanelV2Props) {
             </button>
           </div>
 
-          {/* Histogram Section */}
+          {/* Histogram */}
           {!isDeterministic && showHistogram && finalValues.length > 0 && (
             <div className="histogram-section card">
               <div className="section-header">
@@ -565,52 +620,11 @@ export function ProjectionsPanelV2({ account }: ProjectionsPanelV2Props) {
             </div>
           )}
 
-          {/* Survival Scatter Section */}
-          {!isDeterministic && showSurvivalScatter && (
-            <div className="survival-scatter-section card">
-              <div className="section-header">
-                <h4>Survival vs Starting Balance</h4>
-              </div>
-              <div className="scatter-container">
-                <SurvivalScatterChart data={survivalScatterData} />
-              </div>
-            </div>
-          )}
-
           {/* Data Table */}
           {showDataTable && (
             <div className="data-table-section card">
               <div className="section-header">
                 <h4>Percentile Data</h4>
-                <button
-                  className="download-btn"
-                  onClick={() => {
-                    const data = adjustedSimulation.years.map((year, idx) => ({
-                      year,
-                      p1: adjustedSimulation.percentiles[1][idx],
-                      p10: adjustedSimulation.percentiles[10][idx],
-                      p25: adjustedSimulation.percentiles[25][idx],
-                      p50: adjustedSimulation.percentiles[50][idx],
-                      p75: adjustedSimulation.percentiles[75][idx],
-                      p90: adjustedSimulation.percentiles[90][idx],
-                      p99: adjustedSimulation.percentiles[99][idx],
-                    }));
-                    const cols = [
-                      { key: 'year', label: 'Year' },
-                      { key: 'p1', label: '1st' },
-                      { key: 'p10', label: '10th' },
-                      { key: 'p25', label: '25th' },
-                      { key: 'p50', label: '50th' },
-                      { key: 'p75', label: '75th' },
-                      { key: 'p90', label: '90th' },
-                      { key: 'p99', label: '99th' },
-                    ];
-                    downloadCSV(data, cols, `${account.name}-percentiles`);
-                  }}
-                  title="Download as CSV"
-                >
-                  <Download size={14} />
-                </button>
               </div>
               <div className="percentile-table-container">
                 <table className="percentile-table">
@@ -630,13 +644,13 @@ export function ProjectionsPanelV2({ account }: ProjectionsPanelV2Props) {
                     {adjustedSimulation.years.map((year, idx) => (
                       <tr key={year}>
                         <td>{year}</td>
-                        {!isDeterministic && <td>{formatCurrency(adjustedSimulation.percentiles[1][idx])}</td>}
-                        {!isDeterministic && <td>{formatCurrency(adjustedSimulation.percentiles[10][idx])}</td>}
-                        <td>{formatCurrency(adjustedSimulation.percentiles[25][idx])}</td>
-                        <td className="highlight">{formatCurrency(adjustedSimulation.percentiles[50][idx])}</td>
-                        <td>{formatCurrency(adjustedSimulation.percentiles[75][idx])}</td>
-                        {!isDeterministic && <td>{formatCurrency(adjustedSimulation.percentiles[90][idx])}</td>}
-                        {!isDeterministic && <td>{formatCurrency(adjustedSimulation.percentiles[99][idx])}</td>}
+                        {!isDeterministic && <td>{formatValue(adjustedSimulation.percentiles[1][idx])}</td>}
+                        {!isDeterministic && <td>{formatValue(adjustedSimulation.percentiles[10][idx])}</td>}
+                        <td>{formatValue(adjustedSimulation.percentiles[25][idx])}</td>
+                        <td className="highlight">{formatValue(adjustedSimulation.percentiles[50][idx])}</td>
+                        <td>{formatValue(adjustedSimulation.percentiles[75][idx])}</td>
+                        {!isDeterministic && <td>{formatValue(adjustedSimulation.percentiles[90][idx])}</td>}
+                        {!isDeterministic && <td>{formatValue(adjustedSimulation.percentiles[99][idx])}</td>}
                       </tr>
                     ))}
                   </tbody>
@@ -646,6 +660,21 @@ export function ProjectionsPanelV2({ account }: ProjectionsPanelV2Props) {
           )}
         </div>
       </div>
+
+      {/* Cash Flow Ribbon at the bottom */}
+      <CashFlowRibbon
+        accounts={accounts}
+        onAddDeposit={handleAddDeposit}
+        onAddDrawdown={handleAddDrawdown}
+        onToggleAccount={togglePortfolioAccount}
+        enabledAccountIds={portfolioSelectedIds}
+      />
     </div>
   );
+}
+
+function formatValue(value: number): string {
+  if (value >= 1000000) return `£${(value / 1000000).toFixed(2)}M`;
+  if (value >= 1000) return `£${(value / 1000).toFixed(1)}k`;
+  return `£${value.toFixed(0)}`;
 }

@@ -2368,7 +2368,8 @@ html {
    PORTFOLIO TAB STYLES
    ═══════════════════════════════════════════════════════════════════════════ */
 
-.portfolio-tab-content {
+.portfolio-tab-content,
+.projection-portfolio-tab-content {
   display: flex;
   flex-direction: column;
   flex: 1;
@@ -2385,15 +2386,22 @@ html {
 
 .empty-portfolio-state {
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
   flex: 1;
   min-height: 300px;
+  gap: 24px;
 }
 
 .empty-portfolio-state .empty-state-content {
   text-align: center;
   max-width: 400px;
+}
+
+.empty-portfolio-state .cashflow-ribbon {
+  width: 100%;
+  margin-top: auto;
 }
 
 .empty-portfolio-state .empty-icon {
@@ -2707,12 +2715,25 @@ html {
    PORTFOLIO PANEL V2 — Redesigned Portfolio Tab
    ========================================================================== */
 
-.portfolio-panel-v2 {
+.portfolio-panel-v2,
+.projection-portfolio-panel {
   display: flex;
   flex-direction: column;
   gap: 16px;
   height: 100%;
   padding: 8px;
+}
+
+.projection-portfolio-panel .cashflow-ribbon {
+  margin-top: auto;
+}
+
+/* Crash indicator in header */
+.crash-indicator {
+  font-size: 0.7rem;
+  color: rgba(251, 191, 36, 0.8);
+  font-weight: 500;
+  margin-left: 8px;
 }
 
 /* Controls Bar */
@@ -4255,11 +4276,12 @@ html {
 /* Main Content Grid */
 .projections-content-v2 {
   display: grid;
-  grid-template-columns: 50px 1fr 380px;
-  gap: 16px;
+  grid-template-columns: 80px 1fr 380px;
+  gap: 12px;
   flex: 1;
   min-height: 0;
   overflow: hidden;
+  padding-left: 8px;
 }
 
 /* Left Slider */
@@ -4267,8 +4289,12 @@ html {
   display: flex;
   flex-direction: column;
   align-items: center;
+  justify-content: flex-start;
   gap: 16px;
-  padding: 20px 0;
+  padding: 20px 8px;
+  min-width: 70px;
+  flex-shrink: 0;
+  z-index: 10;
 }
 
 /* Center Charts */
@@ -4383,11 +4409,15 @@ html {
 }
 
 .chart-container.large {
-  min-height: 200px;
+  min-height: 280px;
 }
 
 .chart-container.compact {
-  min-height: 120px;
+  min-height: 360px;
+}
+
+.chart-container.cashflow-tall {
+  min-height: 400px;
 }
 
 /* Data Table Container */
@@ -4601,13 +4631,16 @@ html {
   }
   
   .projections-content-v2 {
-    grid-template-columns: 40px 1fr 280px;
+    grid-template-columns: 70px 1fr 280px;
+    gap: 10px;
+    padding-left: 4px;
   }
 }
 
 @media (max-width: 900px) {
   .projections-content-v2 {
     grid-template-columns: 1fr;
+    padding-left: 0;
   }
   
   .projections-left-slider {
@@ -4615,3 +4648,688 @@ html {
   }
 }
 
+/* ==========================================================================
+ * CASH FLOW RIBBON — Bottom ribbon with deposits, drawdowns, market crashes
+ * ========================================================================== */
+
+.cashflow-ribbon {
+  display: flex;
+  gap: 0;
+  padding: 12px 16px;
+  background: linear-gradient(180deg, rgba(12, 16, 22, 0.95), rgba(8, 11, 15, 0.98));
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 12px;
+  box-shadow: 
+    0 -4px 20px rgba(0, 0, 0, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.04);
+  margin-top: 16px;
+}
+
+.ribbon-section {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  flex: 1;
+  min-width: 0;
+  padding: 8px 12px;
+}
+
+.ribbon-section:not(:last-child) {
+  border-right: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.section-label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.65rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: rgba(255, 255, 255, 0.4);
+}
+
+.deposits-section .section-label {
+  color: rgba(74, 222, 128, 0.7);
+}
+
+.drawdowns-section .section-label {
+  color: rgba(248, 113, 113, 0.7);
+}
+
+.crashes-section .section-label {
+  color: rgba(251, 191, 36, 0.7);
+}
+
+.ribbon-tickets {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
+}
+
+/* Ribbon Ticket Base */
+.ribbon-ticket {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 10px;
+  font-size: 0.7rem;
+  font-weight: 500;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 150ms ease;
+  background: rgba(0, 0, 0, 0.3);
+}
+
+.ribbon-ticket .ticket-check {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  border-radius: 4px;
+  transition: all 150ms ease;
+}
+
+.ribbon-ticket .ticket-name {
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100px;
+}
+
+.ribbon-ticket .ticket-amount,
+.ribbon-ticket .ticket-meta {
+  font-size: 0.6rem;
+  opacity: 0.6;
+}
+
+.ribbon-ticket .ticket-icon {
+  display: flex;
+  align-items: center;
+  opacity: 0.5;
+}
+
+/* Deposit Ticket */
+.deposit-ticket {
+  background: rgba(74, 222, 128, 0.08);
+  border-color: rgba(74, 222, 128, 0.15);
+  color: rgba(74, 222, 128, 0.9);
+}
+
+.deposit-ticket.enabled {
+  background: rgba(74, 222, 128, 0.15);
+  border-color: rgba(74, 222, 128, 0.3);
+  box-shadow: 0 2px 8px rgba(74, 222, 128, 0.15);
+}
+
+.deposit-ticket.enabled .ticket-check {
+  background: rgba(74, 222, 128, 0.3);
+  color: #4ade80;
+}
+
+.deposit-ticket.disabled {
+  opacity: 0.5;
+}
+
+.deposit-ticket:hover {
+  background: rgba(74, 222, 128, 0.2);
+  border-color: rgba(74, 222, 128, 0.4);
+}
+
+/* Drawdown Ticket */
+.drawdown-ticket {
+  background: rgba(248, 113, 113, 0.08);
+  border-color: rgba(248, 113, 113, 0.15);
+  color: rgba(248, 113, 113, 0.9);
+}
+
+.drawdown-ticket.enabled {
+  background: rgba(248, 113, 113, 0.15);
+  border-color: rgba(248, 113, 113, 0.3);
+  box-shadow: 0 2px 8px rgba(248, 113, 113, 0.15);
+}
+
+.drawdown-ticket.enabled .ticket-check {
+  background: rgba(248, 113, 113, 0.3);
+  color: #f87171;
+}
+
+.drawdown-ticket.disabled {
+  opacity: 0.5;
+}
+
+.drawdown-ticket:hover {
+  background: rgba(248, 113, 113, 0.2);
+  border-color: rgba(248, 113, 113, 0.4);
+}
+
+/* Crash Ticket */
+.crash-ticket {
+  background: rgba(251, 191, 36, 0.08);
+  border-color: rgba(251, 191, 36, 0.15);
+  color: rgba(251, 191, 36, 0.9);
+}
+
+.crash-ticket.enabled {
+  background: rgba(251, 191, 36, 0.15);
+  border-color: rgba(251, 191, 36, 0.3);
+  box-shadow: 0 2px 8px rgba(251, 191, 36, 0.15);
+}
+
+.crash-ticket.enabled .ticket-check {
+  background: rgba(251, 191, 36, 0.3);
+  color: #fbbf24;
+}
+
+.crash-ticket.active {
+  border-color: rgba(251, 191, 36, 0.5);
+  box-shadow: 0 0 0 2px rgba(251, 191, 36, 0.2);
+}
+
+.crash-ticket.disabled {
+  opacity: 0.5;
+}
+
+.crash-ticket:hover {
+  background: rgba(251, 191, 36, 0.2);
+  border-color: rgba(251, 191, 36, 0.4);
+}
+
+/* Add Buttons */
+.ribbon-add-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 6px;
+  border: 1px dashed;
+  cursor: pointer;
+  transition: all 150ms ease;
+  background: transparent;
+}
+
+.deposit-add {
+  border-color: rgba(74, 222, 128, 0.3);
+  color: rgba(74, 222, 128, 0.6);
+}
+
+.deposit-add:hover {
+  background: rgba(74, 222, 128, 0.15);
+  border-color: rgba(74, 222, 128, 0.5);
+  color: #4ade80;
+}
+
+.drawdown-add {
+  border-color: rgba(248, 113, 113, 0.3);
+  color: rgba(248, 113, 113, 0.6);
+}
+
+.drawdown-add:hover {
+  background: rgba(248, 113, 113, 0.15);
+  border-color: rgba(248, 113, 113, 0.5);
+  color: #f87171;
+}
+
+.crash-add {
+  border-color: rgba(251, 191, 36, 0.3);
+  color: rgba(251, 191, 36, 0.6);
+}
+
+.crash-add:hover {
+  background: rgba(251, 191, 36, 0.15);
+  border-color: rgba(251, 191, 36, 0.5);
+  color: #fbbf24;
+}
+
+/* ==========================================================================
+ * CRASH YEAR SLIDER — Horizontal slider under Monte Carlo graph
+ * ========================================================================== */
+
+.crash-year-slider-container {
+  background: linear-gradient(180deg, rgba(251, 191, 36, 0.08), rgba(251, 191, 36, 0.04));
+  border: 1px solid rgba(251, 191, 36, 0.15);
+  border-radius: 10px;
+  padding: 12px 16px;
+  margin: 8px 0;
+}
+
+.crash-slider-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.crash-slider-label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: rgba(251, 191, 36, 0.9);
+}
+
+.crash-slider-label .crash-icon {
+  color: #fbbf24;
+}
+
+.crash-slider-label .crash-name {
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.crash-slider-value {
+  font-size: 0.75rem;
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.crash-slider-value strong {
+  color: #fbbf24;
+  font-weight: 600;
+}
+
+.crash-slider-value .year-offset {
+  margin-left: 6px;
+  font-size: 0.65rem;
+  color: rgba(255, 255, 255, 0.4);
+}
+
+.crash-slider-track {
+  position: relative;
+  padding-bottom: 24px;
+}
+
+.crash-year-input {
+  width: 100%;
+  height: 6px;
+  -webkit-appearance: none;
+  appearance: none;
+  background: linear-gradient(90deg, 
+    rgba(74, 222, 128, 0.2) 0%, 
+    rgba(251, 191, 36, 0.3) 50%, 
+    rgba(248, 113, 113, 0.2) 100%
+  );
+  border-radius: 3px;
+  cursor: pointer;
+}
+
+.crash-year-input::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 18px;
+  height: 18px;
+  background: linear-gradient(135deg, #fbbf24, #f59e0b);
+  border: 2px solid rgba(255, 255, 255, 0.2);
+  border-radius: 50%;
+  cursor: grab;
+  box-shadow: 0 2px 8px rgba(251, 191, 36, 0.4);
+  transition: transform 100ms ease;
+}
+
+.crash-year-input::-webkit-slider-thumb:hover {
+  transform: scale(1.1);
+}
+
+.crash-year-input::-webkit-slider-thumb:active {
+  cursor: grabbing;
+  transform: scale(0.95);
+}
+
+.crash-slider-ticks {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 20px;
+}
+
+.tick-mark {
+  position: absolute;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  transform: translateX(-50%);
+}
+
+.tick-line {
+  width: 1px;
+  height: 6px;
+  background: rgba(255, 255, 255, 0.15);
+}
+
+.tick-label {
+  font-size: 0.55rem;
+  color: rgba(255, 255, 255, 0.35);
+  margin-top: 2px;
+}
+
+.crash-slider-info {
+  display: flex;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.severity-badge,
+.recovery-badge {
+  font-size: 0.6rem;
+  font-weight: 500;
+  padding: 3px 8px;
+  border-radius: 4px;
+}
+
+.severity-badge {
+  background: rgba(248, 113, 113, 0.15);
+  color: rgba(248, 113, 113, 0.9);
+}
+
+.recovery-badge {
+  background: rgba(74, 222, 128, 0.15);
+  color: rgba(74, 222, 128, 0.9);
+}
+
+/* ==========================================================================
+ * MARKET CRASH MODAL — Styling for the crash creation modal
+ * ========================================================================== */
+
+.crash-modal {
+  max-width: 480px;
+}
+
+.crash-modal .modal-title-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.crash-modal .crash-icon {
+  color: #fbbf24;
+}
+
+.crash-form {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  padding: 20px;
+}
+
+.crash-form .form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.crash-form label {
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.crash-form .value-highlight {
+  color: #fbbf24;
+  font-weight: 600;
+}
+
+.crash-form .form-input {
+  padding: 10px 12px;
+  font-size: 0.85rem;
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  color: rgba(255, 255, 255, 0.9);
+  transition: all 150ms ease;
+}
+
+.crash-form .form-input:focus {
+  border-color: rgba(251, 191, 36, 0.5);
+  box-shadow: 0 0 0 3px rgba(251, 191, 36, 0.1);
+  outline: none;
+}
+
+.crash-form .slider-container {
+  padding: 8px 0;
+}
+
+.crash-form .form-slider {
+  width: 100%;
+  height: 6px;
+  -webkit-appearance: none;
+  appearance: none;
+  background: linear-gradient(90deg, rgba(74, 222, 128, 0.3), rgba(251, 191, 36, 0.3));
+  border-radius: 3px;
+  cursor: pointer;
+}
+
+.crash-form .form-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 16px;
+  height: 16px;
+  background: linear-gradient(135deg, #fbbf24, #f59e0b);
+  border-radius: 50%;
+  cursor: pointer;
+  box-shadow: 0 2px 6px rgba(251, 191, 36, 0.3);
+}
+
+.crash-form .slider-labels {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.6rem;
+  color: rgba(255, 255, 255, 0.4);
+  margin-top: 4px;
+}
+
+.severity-selector {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.severity-btn {
+  padding: 8px 12px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 6px;
+  color: rgba(255, 255, 255, 0.6);
+  cursor: pointer;
+  transition: all 150ms ease;
+}
+
+.severity-btn:hover {
+  background: rgba(248, 113, 113, 0.15);
+  border-color: rgba(248, 113, 113, 0.3);
+  color: rgba(248, 113, 113, 0.9);
+}
+
+.severity-btn.active {
+  background: rgba(248, 113, 113, 0.2);
+  border-color: rgba(248, 113, 113, 0.5);
+  color: #f87171;
+  box-shadow: 0 0 0 2px rgba(248, 113, 113, 0.15);
+}
+
+.crash-form .toggle-group {
+  display: flex;
+  gap: 8px;
+}
+
+.crash-form .toggle-group .toggle-btn {
+  flex: 1;
+  padding: 10px 16px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  color: rgba(255, 255, 255, 0.5);
+  cursor: pointer;
+  transition: all 150ms ease;
+}
+
+.crash-form .toggle-group .toggle-btn:hover:not(:disabled) {
+  background: rgba(99, 102, 241, 0.1);
+  border-color: rgba(99, 102, 241, 0.3);
+}
+
+.crash-form .toggle-group .toggle-btn.active {
+  background: rgba(99, 102, 241, 0.2);
+  border-color: rgba(99, 102, 241, 0.5);
+  color: #a5b4fc;
+}
+
+.crash-form .toggle-group .toggle-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.crash-form .form-hint {
+  font-size: 0.65rem;
+  color: rgba(255, 255, 255, 0.4);
+  font-style: italic;
+  margin-top: 4px;
+}
+
+.crash-form .form-actions {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-top: 12px;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+  margin-top: 8px;
+}
+
+.crash-form .actions-right {
+  display: flex;
+  gap: 10px;
+}
+
+.crash-form .btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 18px;
+  font-size: 0.8rem;
+  font-weight: 500;
+  border-radius: 8px;
+  border: none;
+  cursor: pointer;
+  transition: all 150ms ease;
+}
+
+.crash-form .btn-secondary {
+  background: rgba(255, 255, 255, 0.05);
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.crash-form .btn-secondary:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.crash-form .btn-primary {
+  background: linear-gradient(135deg, rgba(99, 102, 241, 0.8), rgba(139, 92, 246, 0.8));
+  color: white;
+}
+
+.crash-form .btn-primary:hover {
+  background: linear-gradient(135deg, rgba(99, 102, 241, 0.9), rgba(139, 92, 246, 0.9));
+  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+}
+
+.crash-form .btn-danger {
+  background: rgba(248, 113, 113, 0.15);
+  color: rgba(248, 113, 113, 0.9);
+}
+
+.crash-form .btn-danger:hover {
+  background: rgba(248, 113, 113, 0.25);
+}
+
+/* ==========================================================================
+ * RESIZABLE PANELS — Drag handles for resizing chart containers
+ * ========================================================================== */
+
+.resizable-panel {
+  position: relative;
+}
+
+.resize-handle {
+  position: absolute;
+  z-index: 10;
+  transition: background 150ms ease;
+}
+
+.resize-handle:hover {
+  background: rgba(99, 102, 241, 0.3);
+}
+
+.resize-handle-right {
+  right: -4px;
+  top: 0;
+  bottom: 0;
+  width: 8px;
+  cursor: ew-resize;
+}
+
+.resize-handle-bottom {
+  bottom: -4px;
+  left: 0;
+  right: 0;
+  height: 8px;
+  cursor: ns-resize;
+}
+
+.resize-handle-corner {
+  right: -4px;
+  bottom: -4px;
+  width: 12px;
+  height: 12px;
+  cursor: nwse-resize;
+  border-radius: 0 0 4px 0;
+}
+
+.resize-handle::after {
+  content: '';
+  position: absolute;
+}
+
+.resize-handle-right::after {
+  left: 3px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 2px;
+  height: 24px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 1px;
+}
+
+.resize-handle-bottom::after {
+  top: 3px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 24px;
+  height: 2px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 1px;
+}
+
+.resize-handle:hover::after {
+  background: rgba(99, 102, 241, 0.5);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .cashflow-ribbon {
+    flex-direction: column;
+    gap: 12px;
+  }
+  
+  .ribbon-section:not(:last-child) {
+    border-right: none;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+    padding-bottom: 12px;
+  }
+}
