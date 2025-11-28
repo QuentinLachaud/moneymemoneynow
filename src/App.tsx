@@ -25,7 +25,7 @@
  */
 
 import { useState, useRef } from 'react';
-import { Plus, Check, X } from 'lucide-react';
+import { Plus, Check, X, ChevronDown, ChevronUp } from 'lucide-react';
 import { getLocaleCurrency } from './utils/format';
 import { AccountForm } from './components/AccountForm';
 import { ProjectionChart, getProjectionData, getProjectionColumns } from './components/ProjectionChart';
@@ -111,6 +111,9 @@ export default function App() {
 
   /** ID of account being edited inline in bottom strip */
   const [inlineEditingId, setInlineEditingId] = useState<string | null>(null);
+
+  /** Left panel collapsed on mobile */
+  const [leftPanelCollapsed, setLeftPanelCollapsed] = useState(true);
 
   /* ─── LOCAL UI HANDLERS ─────────────────────────────────────────── */
 
@@ -215,30 +218,41 @@ export default function App() {
 
       {/* ─── MAIN LAYOUT: Left panel + Content area ─────────────────── */}
       <div className="main-grid">
-        {/* Left Panel: Add Account Form (full height) */}
+        {/* Left Panel: Add Account Form (collapsible on mobile) */}
         <aside 
-          className="left-panel card" 
+          className={`left-panel card ${leftPanelCollapsed ? 'collapsed' : ''}`}
           ref={(el) => { leftTrayRef.current = el as HTMLDivElement | null; }}
         >
-          <h2 className="panel-title">{editingId ? 'Edit Account' : 'Add Account'}</h2>
-          <AccountForm
-            onSubmit={(data) => {
-              if (editingId) {
-                updateAccount(editingId, data);
-                cancelEdit();
-              } else {
-                addAccount(data);
-              }
-            }}
-            initialData={editingId ? accounts.find((a) => a.id === editingId) : undefined}
-            submitLabel={editingId ? 'Update Account' : 'Add Account'}
-            existingAccounts={accounts}
-          />
-          {editingId && (
-            <button onClick={cancelEdit} className="btn cancel-btn">
-              Cancel Edit
-            </button>
-          )}
+          {/* Mobile toggle header */}
+          <button 
+            className="panel-toggle-header"
+            onClick={() => setLeftPanelCollapsed(!leftPanelCollapsed)}
+          >
+            <h2 className="panel-title">{editingId ? 'Edit Account' : 'Add Account'}</h2>
+            {leftPanelCollapsed ? <ChevronDown size={20} /> : <ChevronUp size={20} />}
+          </button>
+          
+          <div className="panel-content">
+            <AccountForm
+              onSubmit={(data) => {
+                if (editingId) {
+                  updateAccount(editingId, data);
+                  cancelEdit();
+                } else {
+                  addAccount(data);
+                }
+                setLeftPanelCollapsed(true); // Collapse after submit on mobile
+              }}
+              initialData={editingId ? accounts.find((a) => a.id === editingId) : undefined}
+              submitLabel={editingId ? 'Update Account' : 'Add Account'}
+              existingAccounts={accounts}
+            />
+            {editingId && (
+              <button onClick={cancelEdit} className="btn cancel-btn">
+                Cancel Edit
+              </button>
+            )}
+          </div>
         </aside>
 
         {/* Right Content: Tab-specific content */}

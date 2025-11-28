@@ -598,6 +598,36 @@ input:focus, textarea:focus, select:focus {
   background: linear-gradient(180deg, rgba(15, 19, 28, 0.95), rgba(12, 16, 22, 0.98));
 }
 
+/* Panel toggle header - visible only on mobile */
+.panel-toggle-header {
+  display: none;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: 0;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: rgba(255, 255, 255, 0.9);
+  -webkit-tap-highlight-color: transparent;
+}
+
+.panel-toggle-header .panel-title {
+  margin: 0;
+}
+
+.panel-toggle-header svg {
+  color: rgba(255, 255, 255, 0.5);
+  transition: transform 0.2s ease;
+}
+
+/* Panel content wrapper */
+.panel-content {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+}
+
 .panel-title {
   font-size: 1rem;
   font-weight: 700;
@@ -1019,30 +1049,381 @@ input:focus, textarea:focus, select:focus {
   color: rgba(255, 255, 255, 0.5);
 }
 
-/* Mobile: Stack layout vertically */
+/*
+ * ==========================================================================
+ * SECTION 5b: RESPONSIVE DESIGN — Mobile-first breakpoints
+ * ==========================================================================
+ * BREAKPOINTS:
+ * - Tablet: 900px and below
+ * - Mobile: 600px and below
+ * - Small Mobile: 480px and below
+ */
+
+/* Tablet: Stack layout, keep left panel as drawer-style */
 @media (max-width: 900px) {
-  .main-grid {
-    grid-template-columns: 1fr;
+  .app-container {
+    padding: 12px;
+    gap: 12px;
+  }
+
+  .app-header {
+    padding: 8px 0;
   }
   
+  .app-title {
+    font-size: 1.25rem;
+  }
+  
+  .main-grid {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+  
+  /* Collapsible left panel on tablet/mobile */
   .left-panel {
     order: -1;
     height: auto;
-    max-height: 50vh;
+    max-height: none;
+    overflow: visible;
+    padding: 16px;
+  }
+  
+  .panel-toggle-header {
+    display: flex;
+    padding-bottom: 12px;
+  }
+  
+  .left-panel .panel-content {
+    display: block;
+    max-height: 2000px;
+    overflow: hidden;
+    transition: max-height 0.3s ease, opacity 0.2s ease;
+    opacity: 1;
+  }
+  
+  .left-panel.collapsed .panel-content {
+    max-height: 0;
+    opacity: 0;
+    padding: 0;
+  }
+  
+  .left-panel.collapsed {
+    padding-bottom: 16px;
+  }
+  
+  .left-panel.collapsed .panel-toggle-header {
+    padding-bottom: 0;
+  }
+  
+  /* Hide panel title in collapsed header on desktop */
+  .left-panel:not(.collapsed) .panel-toggle-header .panel-title {
+    display: none;
+  }
+  
+  .content-area {
+    gap: 12px;
+  }
+  
+  .tab-toggle {
+    width: 100%;
+    max-width: 400px;
+  }
+  
+  .graph-panel {
+    min-height: 300px;
   }
   
   .accounts-strip {
     height: auto;
-    min-height: var(--accounts-strip-height);
+    min-height: 120px;
+    padding: 12px;
   }
   
   .accounts-scroll {
     flex-wrap: wrap;
+    gap: 8px;
   }
   
   .account-card {
-    min-width: calc(50% - 6px);
-    max-width: none;
+    min-width: calc(50% - 4px);
+    max-width: calc(50% - 4px);
+    flex-shrink: 0;
+  }
+  
+  /* Panel title responsive */
+  .panel-title {
+    font-size: 0.95rem;
+  }
+  
+  /* Form adjustments */
+  .account-form-grid {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+}
+
+/* Mobile: Fully stacked, larger touch targets */
+@media (max-width: 600px) {
+  .app-container {
+    padding: 8px;
+    gap: 10px;
+  }
+  
+  .app-title {
+    font-size: 1.1rem;
+  }
+  
+  .tab-toggle {
+    width: 100%;
+    padding: 3px;
+    border-radius: 8px;
+  }
+  
+  .tab-button {
+    padding: 10px 12px;
+    font-size: 0.75rem;
+  }
+  
+  /* Cards - bigger touch targets */
+  .card {
+    padding: 16px;
+    border-radius: 10px;
+  }
+  
+  .left-panel {
+    padding: 16px;
+  }
+  
+  /* Account cards in strip */
+  .account-card {
+    min-width: 100%;
+    max-width: 100%;
+    padding: 12px;
+  }
+  
+  .account-card-name {
+    font-size: 0.85rem;
+  }
+  
+  .account-card-balance {
+    font-size: 0.95rem;
+  }
+  
+  /* Inputs - bigger touch targets */
+  .input-label {
+    font-size: 0.75rem;
+  }
+  
+  .text-input,
+  .date-input,
+  .select-trigger,
+  .slider-input {
+    height: 44px;
+    font-size: 16px; /* Prevents iOS zoom on focus */
+  }
+  
+  /* Buttons - bigger touch targets */
+  .btn {
+    padding: 14px 20px;
+    font-size: 0.9rem;
+    min-height: 44px;
+  }
+  
+  /* Charts - ensure they're readable */
+  .graph-panel {
+    min-height: 280px;
+    padding: 12px;
+  }
+  
+  .graph-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+  
+  .graph-title {
+    font-size: 0.9rem;
+  }
+  
+  /* Toggle buttons for scales */
+  .scale-toggle,
+  .scale-toggle-group button {
+    padding: 8px 12px;
+    min-height: 40px;
+  }
+  
+  /* Projection controls */
+  .projection-controls {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+  }
+  
+  .projection-slider {
+    width: 100%;
+  }
+  
+  /* Frequency badge */
+  .frequency-badge {
+    padding: 4px 8px;
+    font-size: 0.7rem;
+  }
+  
+  /* Monte Carlo controls - stack vertically */
+  .monte-carlo-controls {
+    flex-direction: column;
+    gap: 12px;
+  }
+  
+  /* Override sliders for touch */
+  .override-slider {
+    width: 100%;
+    min-width: 150px;
+    height: 36px;
+  }
+  
+  /* Portfolio asset list - full width items */
+  .portfolio-asset-item {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+  }
+  
+  .portfolio-asset-controls {
+    flex-wrap: wrap;
+  }
+  
+  /* Accounts strip scrollable on mobile */
+  .accounts-strip {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  
+  .accounts-scroll {
+    flex-wrap: nowrap;
+    min-width: max-content;
+    padding-right: 16px;
+  }
+  
+  .account-card {
+    min-width: 200px;
+    max-width: 260px;
+  }
+}
+
+/* Small Mobile: Minimal padding, essential info only */
+@media (max-width: 480px) {
+  .app-container {
+    padding: 6px;
+    gap: 8px;
+  }
+  
+  .app-title {
+    font-size: 1rem;
+  }
+  
+  .tab-button {
+    padding: 8px 8px;
+    font-size: 0.7rem;
+  }
+  
+  .card {
+    padding: 12px;
+    border-radius: 8px;
+  }
+  
+  .graph-panel {
+    min-height: 250px;
+    padding: 10px;
+  }
+  
+  .panel-title {
+    font-size: 0.85rem;
+  }
+  
+  /* Sparkline smaller */
+  .account-card-sparkline {
+    height: 32px;
+  }
+  
+  /* Data table scrollable */
+  .data-table-container {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  
+  .data-table {
+    font-size: 0.75rem;
+    min-width: 400px;
+  }
+  
+  .data-table th,
+  .data-table td {
+    padding: 8px 6px;
+  }
+}
+
+/* Touch device optimizations */
+@media (hover: none) and (pointer: coarse) {
+  /* Bigger hit targets for touch */
+  .account-select-toggle {
+    width: 36px;
+    height: 36px;
+  }
+  
+  .account-card-actions button {
+    min-width: 44px;
+    min-height: 44px;
+  }
+  
+  /* Remove hover effects that don't work on touch */
+  .account-card:hover {
+    transform: none;
+    border-color: var(--border);
+  }
+  
+  .account-card.selected:hover {
+    border-color: var(--accent);
+  }
+  
+  /* Make scrollbars visible on touch devices */
+  .accounts-scroll::-webkit-scrollbar {
+    height: 4px;
+    display: block;
+  }
+  
+  .accounts-scroll::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.3);
+    border-radius: 2px;
+  }
+}
+
+/* Landscape mobile - use horizontal space better */
+@media (max-height: 500px) and (orientation: landscape) {
+  .app-header {
+    padding: 4px 0;
+  }
+  
+  .app-title {
+    font-size: 1rem;
+  }
+  
+  .main-grid {
+    grid-template-columns: 280px 1fr;
+    gap: 8px;
+  }
+  
+  .left-panel {
+    max-height: calc(100vh - 100px);
+    overflow-y: auto;
+  }
+  
+  .graph-panel {
+    min-height: 200px;
+  }
+  
+  .accounts-strip {
+    min-height: 100px;
   }
 }
 
