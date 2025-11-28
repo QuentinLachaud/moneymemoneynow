@@ -1,3 +1,22 @@
+/**
+ * ResizablePanel — Wrapper for re-resizable library
+ *
+ * PURPOSE:
+ * - Wraps content in a resizable container
+ * - Provides configurable resize handles
+ *
+ * PROPS:
+ * - children: Content to display
+ * - defaultWidth/defaultHeight: Initial size (default: 100%)
+ * - minWidth/minHeight: Minimum size (default: 200/150)
+ * - maxWidth/maxHeight: Maximum size
+ * - direction: Which directions to allow resize
+ *
+ * CUSTOMIZATION:
+ * - To change handle appearance: modify handleStyles
+ * - To change resize behavior: modify enable config
+ */
+
 import { Resizable } from 're-resizable';
 import { ReactNode } from 'react';
 
@@ -22,6 +41,7 @@ export function ResizablePanel({
   maxHeight,
   direction = 'both',
 }: ResizablePanelProps) {
+  // Configure which edges allow resizing based on direction prop
   const enable = {
     top: direction === 'vertical' || direction === 'both',
     right: direction === 'horizontal' || direction === 'both',

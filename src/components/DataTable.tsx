@@ -1,3 +1,18 @@
+/**
+ * DataTable — Tabular view of projection data
+ *
+ * DISPLAYS:
+ * - Year column (calendar years)
+ * - One column per account (showing projected value)
+ * - Total column (sum of all accounts)
+ *
+ * CUSTOMIZATION:
+ * - To add columns: modify the thead and tbody mapping
+ * - To change number formatting: modify the toLocaleString calls
+ * - To add sorting: wrap projections with a sort function
+ * - To add filtering: filter the projections array before mapping
+ */
+
 import { Account } from '../App';
 import { calculateProjections } from '../utils/calculations';
 
@@ -6,6 +21,7 @@ interface DataTableProps {
 }
 
 export function DataTable({ accounts }: DataTableProps) {
+  // Empty state
   if (accounts.length === 0) {
     return (
       <div className="text-center text-gray-500 py-8">
@@ -14,7 +30,8 @@ export function DataTable({ accounts }: DataTableProps) {
     );
   }
 
-  const maxHorizon = Math.max(...accounts.map(acc => acc.timeHorizon));
+  // Generate projection data
+  const maxHorizon = Math.max(...accounts.map((acc) => acc.timeHorizon));
   const projections = calculateProjections(accounts, maxHorizon);
 
   return (

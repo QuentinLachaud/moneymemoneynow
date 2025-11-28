@@ -1,3 +1,27 @@
+/**
+ * AccountForm — Form for adding or editing accounts
+ *
+ * USAGE:
+ * - Add mode: called without initialData
+ * - Edit mode: called with initialData and custom submitLabel
+ *
+ * FORM FIELDS:
+ * - name: Account display name
+ * - amount: Current balance
+ * - date: Start date for projections
+ * - expectedReturn: Annual return percentage
+ * - volatility: Risk level (optional)
+ * - timeHorizon: Investment period in years (slider)
+ * - frequency: Transaction frequency (monthly/annual)
+ * - transactionType: Deposit or withdraw
+ * - transactionAmount: Recurring transaction amount
+ *
+ * CUSTOMIZATION:
+ * - To add a field: add state, add input, include in handleSubmit
+ * - To change validation: modify the if check in handleSubmit
+ * - To change slider range: modify min/max on the range input
+ */
+
 import { useState } from 'react';
 import { Account } from '../App';
 import { Plus } from 'lucide-react';

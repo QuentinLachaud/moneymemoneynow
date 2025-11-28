@@ -1,36 +1,81 @@
+/**
+ * globals.css — Application-wide styles and CSS variables
+ *
+ * STRUCTURE:
+ * 1. CSS Variables (:root and .dark)
+ * 2. Decorative Background (gold gradient)
+ * 3. Component Base Styles (cards, buttons, inputs)
+ * 4. Dark Mode Overrides
+ * 5. Layout System (left tray, bottom strip, columns)
+ * 6. Tailwind Theme Extensions
+ * 7. Typography
+ *
+ * KEY CUSTOMIZATION POINTS:
+ * - Layout dimensions: --header-height, --left-tray-width, --bottom-strip-height
+ * - Colors: Modify variables in :root (light) or .dark (dark theme)
+ * - Gold accent: Search for "gold" to find accent color references
+ */
+
+/* Enable dark mode variant */
 @custom-variant dark (&:is(.dark *));
 
+/*
+ * ==========================================================================
+ * SECTION 1: CSS VARIABLES — Core design tokens
+ * ==========================================================================
+ * CUSTOMIZE: Change colors, spacing, and layout dimensions here
+ */
+
 :root {
+  /* Typography */
   --font-size: 16px;
+  --font-weight-medium: 500;
+  --font-weight-normal: 400;
+
+  /* Core Colors (Light Mode) */
   --background: #ffffff;
   --foreground: oklch(0.145 0 0);
   --card: #ffffff;
   --card-foreground: oklch(0.145 0 0);
   --popover: oklch(1 0 0);
   --popover-foreground: oklch(0.145 0 0);
+
+  /* Brand Colors */
   --primary: #030213;
   --primary-foreground: oklch(1 0 0);
   --secondary: oklch(0.95 0.0058 264.53);
   --secondary-foreground: #030213;
+
+  /* UI Colors */
   --muted: #ececf0;
   --muted-foreground: #717182;
   --accent: #e9ebef;
   --accent-foreground: #030213;
   --destructive: #d4183d;
   --destructive-foreground: #ffffff;
+
+  /* Form Elements */
   --border: rgba(0, 0, 0, 0.1);
   --input: transparent;
   --input-background: #f3f3f5;
   --switch-background: #cbced4;
-  --font-weight-medium: 500;
-  --font-weight-normal: 400;
   --ring: oklch(0.708 0 0);
+
+  /* Chart Colors */
   --chart-1: oklch(0.646 0.222 41.116);
   --chart-2: oklch(0.6 0.118 184.704);
   --chart-3: oklch(0.398 0.07 227.392);
   --chart-4: oklch(0.828 0.189 84.429);
   --chart-5: oklch(0.769 0.188 70.08);
+
+  /* Layout Dimensions — CUSTOMIZE THESE TO CHANGE LAYOUT */
   --radius: 0.625rem;
+  --header-height: 140px;        /* Height of header + tabs */
+  --left-tray-width: 360px;      /* Width of Add Account tray */
+  --bottom-strip-height: 112px;  /* Height of bottom accounts ribbon */
+  --page-gap: 24px;              /* Spacing between elements */
+
+  /* Sidebar (unused but defined for component library) */
   --sidebar: oklch(0.985 0 0);
   --sidebar-foreground: oklch(0.145 0 0);
   --sidebar-primary: #030213;
@@ -41,12 +86,21 @@
   --sidebar-ring: oklch(0.708 0 0);
 }
 
+/*
+ * ==========================================================================
+ * SECTION 1b: DARK MODE — Color overrides for dark theme
+ * ==========================================================================
+ * CUSTOMIZE: Modify these for dark mode appearance
+ */
+
 .dark {
-  /* Brighter dark theme: charcoal background and lighter card surfaces */
-  --background: #0f1416; /* deep charcoal but warmer/brighter than pure black */
-  --foreground: #f7f5ee; /* slightly brighter warm off-white for text */
-  --card: #121618; /* very dark charcoal, visibly lighter than pure black */
-  --card-foreground: #f6f2e6; /* readable warm text on cards */
+  /* Background: Deep charcoal with warmth */
+  --background: #0f1416;
+  --foreground: #f7f5ee;
+
+  /* Cards: Slightly lighter than background for depth */
+  --card: #121618;
+  --card-foreground: #f6f2e6;
   --popover: oklch(0.145 0 0);
   --popover-foreground: oklch(0.985 0 0);
   --primary: oklch(0.985 0 0);
@@ -79,9 +133,14 @@
   --sidebar-ring: oklch(0.439 0 0);
 }
 
-/* Subtle gold gradient behind the app content. Implemented as a fixed pseudo-element
-   so panels (which use --card) stay pure black while the underlying page shows
-   a delicate gold wash. */
+/*
+ * ==========================================================================
+ * SECTION 2: DECORATIVE BACKGROUND — Subtle gold gradient wash
+ * ==========================================================================
+ * Creates a premium gold tint behind the app. Panels stay solid black while
+ * the underlying page shows a delicate gold wash.
+ */
+
 body::before {
   content: "";
   position: fixed;
@@ -97,13 +156,20 @@ body::before {
   mix-blend-mode: screen;
 }
 
-/* Ensure the app content stacks above the decorative background */
+/* App content stacks above decorative background */
 #root, main, .app-root, .__next {
   position: relative;
   z-index: 1;
 }
 
-/* Card / panel visual polish: keep panels black but add subtle outline and depth */
+/*
+ * ==========================================================================
+ * SECTION 3: COMPONENT STYLES — Cards, buttons, inputs
+ * ==========================================================================
+ * Base styles for UI components with premium dark theme polish
+ */
+
+/* Card / Panel — Black background with subtle gold edge */
 .card, .panel, .bg-card, [data-card], .panel-root {
   background: var(--card) !important;
   color: var(--card-foreground) !important;
@@ -118,7 +184,7 @@ body::before {
   transform-origin: center center;
 }
 
-/* Headings and accent elements — subtle gold tint for highlights */
+/* Gold accent utilities */
 .accent-gold, .text-accent-gold {
   color: #e6c86b;
 }
@@ -126,7 +192,7 @@ body::before {
   box-shadow: 0 0 0 4px rgba(230,200,107,0.06);
 }
 
-/* Improve button contrast and style to match professional dark theme */
+/* Button — Glass-like appearance with hover lift */
 button, .btn {
   background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.005));
   color: var(--foreground);
@@ -141,7 +207,7 @@ button:hover, .btn:hover {
   transition-duration: 420ms;
 }
 
-/* Inputs and cards inner spacing */
+/* Form inputs */
 input, textarea, select {
   background: rgba(255,255,255,0.02);
   border: 1px solid rgba(255,255,255,0.03);
@@ -150,8 +216,14 @@ input, textarea, select {
   border-radius: 8px;
 }
 
-/* Map common Tailwind utility classes to the dark theme so existing markup
-   using `bg-white`, `bg-gray-50`, `text-gray-900`, etc. displays correctly. */
+/*
+ * ==========================================================================
+ * SECTION 4: DARK MODE OVERRIDES — Tailwind class mappings
+ * ==========================================================================
+ * Maps common Tailwind utility classes to dark theme colors so existing
+ * markup using `bg-white`, `bg-gray-50`, `text-gray-900` displays correctly.
+ */
+
 .dark .bg-white {
   background-color: var(--card) !important;
   color: var(--card-foreground) !important;
@@ -182,16 +254,15 @@ input, textarea, select {
   box-shadow: var(--tw-inset-shadow), var(--tw-inset-ring-shadow), var(--tw-ring-offset-shadow), var(--tw-ring-shadow), var(--tw-shadow);
 }
 
-/* Panel hover magnify & subtle lift */
+/* Panel hover effect — Subtle lift and magnify */
 .card:hover, .panel:hover, .bg-card:hover, [data-card]:hover, .panel-root:hover, .rounded-lg:hover {
-  /* very gentle, centered magnify toward user (small translateZ + tiny scale) */
   transform: perspective(1200px) translateZ(1px) scale(1.003);
   box-shadow: 0 10px 24px rgba(8,10,12,0.42), 0 5px 18px rgba(212,175,55,0.03);
   z-index: 2;
   transition: 800ms cubic-bezier(.16,.84,.24,1);
 }
 
-/* Respect reduced motion users */
+/* Accessibility: Respect reduced motion preference */
 @media (prefers-reduced-motion: reduce) {
   .card,
   .panel,
@@ -207,7 +278,7 @@ input, textarea, select {
   }
 }
 
-/* Fancy translucent gold-white edge for boxes (dark mode) */
+/* Dark mode card inner glow — Translucent gold-white edge */
 .dark .card::before, .dark .bg-white::before, .dark .panel::before, .dark .rounded-lg::before {
   content: "";
   position: absolute;
@@ -223,13 +294,13 @@ input, textarea, select {
   z-index: 0;
 }
 
-/* Ensure card content sits above decorative pseudo-element */
+/* Card content above decorative pseudo-element */
 .card > *, .bg-white > *, .panel > * {
   position: relative;
   z-index: 1;
 }
 
-/* Premium primary button */
+/* Primary button — Gold gradient for main CTAs */
 .btn-primary {
   background: linear-gradient(180deg, #f6de9a 0%, #d4af37 100%);
   color: #0b0b0b;
@@ -248,13 +319,21 @@ input, textarea, select {
   filter: brightness(0.98);
 }
 
-/* Provide a semantic utility so you can apply gold accent to existing elements */
+/* Gold background utility class */
 .accent-gold-bg {
   background: linear-gradient(180deg, rgba(230,200,107,0.12), rgba(212,175,55,0.06));
   border: 1px solid rgba(230,200,107,0.08);
 }
 
-/* Projections sidebar and account toggle styles */
+/*
+ * ==========================================================================
+ * SECTION 5: LAYOUT SYSTEM — Fixed trays, bottom strip, content columns
+ * ==========================================================================
+ * CUSTOMIZE: Adjust --left-tray-width, --bottom-strip-height, --header-height
+ * in the :root section above to change overall layout dimensions.
+ */
+
+/* Projections sidebar account toggle buttons */
 .proj-sidebar {
   background: transparent;
   color: var(--foreground);
@@ -287,17 +366,21 @@ input, textarea, select {
   transform: translateY(-1px);
 }
 
-/* Left fixed tray for Add Account (assets tab) */
+/*
+ * Left Tray — Fixed sidebar for Add Account form
+ * Position: Fixed left side, below header, above bottom strip
+ */
 .left-tray {
   position: fixed;
   left: 16px;
-  top: 96px;
-  width: 360px;
-  height: calc(100vh - 128px);
+  top: var(--header-height);           /* Below header/tabs */
+  width: var(--left-tray-width);
+  height: calc(100vh - var(--header-height) - 32px);  /* Full height minus header and padding */
   overflow: auto;
   z-index: 30;
 }
 
+/* Mobile: Left tray becomes inline block */
 @media (max-width: 900px) {
   .left-tray {
     position: static;
@@ -307,17 +390,20 @@ input, textarea, select {
   }
 }
 
-/* Ensure header and tabs sit above the left-tray drawer */
+/* Header/tabs stack above left tray */
 .max-w-7xl, .max-w-7xl h1, .tabs {
   position: relative;
   z-index: 40;
 }
 
-/* Bottom horizontal accounts strip that spans the page but avoids overlapping the left-tray */
+/*
+ * Bottom Accounts Strip — Horizontal scrollable ribbon of account cards
+ * Position: Fixed bottom, spans from right edge of left tray to right edge
+ */
 .bottom-accounts {
   position: fixed;
   bottom: 16px;
-  left: calc(16px + 360px);
+  left: calc(16px + var(--left-tray-width));  /* Start after left tray */
   right: 16px;
   z-index: 20;
   display: flex;
@@ -327,8 +413,10 @@ input, textarea, select {
   box-shadow: 0 8px 30px rgba(0,0,0,0.5);
   border-radius: 12px;
   background: linear-gradient(180deg, rgba(18,22,24,0.88), rgba(18,22,24,0.76));
-  overflow-x: auto;
+  overflow-x: auto;  /* Horizontal scroll when many accounts */
 }
+
+/* Individual account card in bottom strip */
 .bottom-accounts .acct {
   min-width: 160px;
   padding: 10px 14px;
@@ -339,6 +427,7 @@ input, textarea, select {
   flex-direction: column;
 }
 
+/* Mobile: Bottom strip spans full width */
 @media (max-width: 900px) {
   .bottom-accounts {
     left: 16px;
@@ -348,6 +437,81 @@ input, textarea, select {
   }
 }
 
+/*
+ * Main Layout — Content area to the right of left tray
+ * Provides padding to avoid header and bottom strip
+ */
+.main-layout {
+  margin-left: calc(var(--left-tray-width) + 32px);  /* Offset for left tray */
+  padding: var(--page-gap);
+  padding-top: calc(var(--header-height) - 56px);   /* Below header */
+  padding-bottom: calc(var(--bottom-strip-height) + 24px);  /* Above bottom strip */
+}
+
+/*
+ * Content Columns — Three-column flex layout for main panels
+ * Fills space between header and bottom strip
+ */
+.content-columns {
+  display: flex;
+  gap: 24px;
+  align-items: stretch;
+  /* Calculate available height between header and bottom strip */
+  height: calc(100vh - var(--header-height) - var(--bottom-strip-height) - 48px);
+  position: relative;
+  z-index: 30;
+}
+
+/* Individual column — Equal width, scrollable content */
+/* Individual column — Equal width, scrollable content */
+.column-item {
+  flex: 1 1 0;
+  display: flex;
+  flex-direction: column;
+  padding: 18px;
+  min-height: 0;    /* Allow flex item to shrink */
+  overflow: hidden;
+}
+
+/* Center column stacks multiple panels vertically */
+.center-column {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  height: 100%;
+}
+
+/* Chart panels */
+.composition-panel,
+.projection-panel {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  overflow: hidden;
+}
+
+/* Panel children fill available space */
+.composition-panel > *,
+.projection-panel > * {
+  min-height: 0;
+  flex: 1 1 0;
+  overflow: auto;
+}
+
+/* Right column placeholder panel */
+.right-column .right-placeholder {
+  height: calc(100vh - var(--header-height) - var(--bottom-strip-height) - 48px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0.9;
+}
+
+/*
+ * ==========================================================================
+ * SECTION 6: TAILWIND THEME — Design token mappings
+ * ==========================================================================
+ */
 
 @theme inline {
   --color-background: var(--background);
@@ -390,6 +554,12 @@ input, textarea, select {
   --color-sidebar-ring: var(--sidebar-ring);
 }
 
+/*
+ * ==========================================================================
+ * SECTION 7: BASE STYLES — Reset and typography
+ * ==========================================================================
+ */
+
 @layer base {
   * {
     @apply border-border outline-ring/50;
@@ -400,8 +570,9 @@ input, textarea, select {
   }
 }
 
-/**
- * Base typography. This is not applied to elements which have an ancestor with a Tailwind text class.
+/*
+ * Typography — Default sizes for semantic elements
+ * Only applies to elements without explicit Tailwind text classes
  */
 @layer base {
   :where(:not(:has([class*=' text-']), :not(:has([class^='text-'])))) {
@@ -455,6 +626,7 @@ input, textarea, select {
   }
 }
 
+/* Root font size */
 html {
   font-size: var(--font-size);
 }

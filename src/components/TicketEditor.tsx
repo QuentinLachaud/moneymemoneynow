@@ -1,25 +1,33 @@
-import React, { useState } from 'react';
+/**
+ * TicketEditor — Inline editor for account cards in bottom strip
+ *
+ * DISPLAYS:
+ * - Compact form for editing account details
+ * - Save/Cancel buttons
+ *
+ * PROPS:
+ * - account: Account being edited
+ * - onSave: Callback with updated account data (without id)
+ * - onCancel: Callback to close editor without saving
+ *
+ * CUSTOMIZATION:
+ * - To add fields: add input element and update form state
+ * - To change layout: modify the flex containers
+ * - To add validation: add checks before calling onSave
+ */
 
-type AccountShape = {
-  id: string;
-  name: string;
-  amount: number;
-  date: string;
-  expectedReturn: number;
-  timeHorizon: number;
-  frequency?: 'monthly' | 'annual';
-  transactionType: 'deposit' | 'withdraw';
-  transactionAmount: number;
-};
+import { useState } from 'react';
+import { Account } from '../App';
 
-type Props = {
-  account: AccountShape;
-  onSave: (data: Omit<AccountShape, 'id'>) => void;
+interface Props {
+  account: Account;
+  onSave: (data: Omit<Account, 'id'>) => void;
   onCancel: () => void;
-};
+}
 
 export default function TicketEditor({ account, onSave, onCancel }: Props) {
-  const [form, setForm] = useState<Omit<AccountShape, 'id'>>({
+  // Form state initialized from existing account data
+  const [form, setForm] = useState<Omit<Account, 'id'>>({
     name: account.name || '',
     amount: account.amount || 0,
     date: account.date || new Date().toISOString().slice(0, 10),
@@ -30,7 +38,10 @@ export default function TicketEditor({ account, onSave, onCancel }: Props) {
     transactionAmount: account.transactionAmount || 0,
   });
 
-  const update = (k: keyof typeof form, v: any) => setForm(prev => ({ ...prev, [k]: v }));
+  /** Update a single form field */
+  const update = <K extends keyof typeof form>(key: K, value: typeof form[K]) => {
+    setForm((prev) => ({ ...prev, [key]: value }));
+  };
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>

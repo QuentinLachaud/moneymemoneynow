@@ -1,11 +1,34 @@
-import React from 'react';
+/**
+ * ErrorBoundary — React error boundary for catching runtime errors
+ *
+ * PURPOSE:
+ * - Catches JavaScript errors anywhere in child component tree
+ * - Displays fallback UI instead of crashing the whole app
+ * - Logs error details to console for debugging
+ *
+ * USAGE:
+ * Wrap any component tree that might throw errors:
+ *   <ErrorBoundary>
+ *     <YourComponent />
+ *   </ErrorBoundary>
+ *
+ * CUSTOMIZATION:
+ * - To change fallback UI: modify the error div in render()
+ * - To add error reporting: add service call in componentDidCatch
+ */
+
+import React, { ReactNode } from 'react';
+
+interface Props {
+  children: ReactNode;
+}
 
 interface State {
   error: Error | null;
 }
 
-export class ErrorBoundary extends React.Component<{}, State> {
-  constructor(props: {}) {
+export class ErrorBoundary extends React.Component<Props, State> {
+  constructor(props: Props) {
     super(props);
     this.state = { error: null };
   }
@@ -15,7 +38,7 @@ export class ErrorBoundary extends React.Component<{}, State> {
   }
 
   componentDidCatch(error: Error, info: React.ErrorInfo) {
-    // eslint-disable-next-line no-console
+    // Log error for debugging - add error reporting service here if needed
     console.error('ErrorBoundary caught error:', error, info);
   }
 
@@ -24,7 +47,9 @@ export class ErrorBoundary extends React.Component<{}, State> {
       return (
         <div className="fixed inset-4 z-50 p-4 bg-red-50 border border-red-200 rounded shadow-lg text-sm text-red-900 overflow-auto">
           <div className="font-semibold mb-2">Runtime Error</div>
-          <pre style={{ whiteSpace: 'pre-wrap', maxHeight: '60vh', overflow: 'auto' }}>{String(this.state.error && this.state.error.stack ? this.state.error.stack : this.state.error)}</pre>
+          <pre style={{ whiteSpace: 'pre-wrap', maxHeight: '60vh', overflow: 'auto' }}>
+            {String(this.state.error?.stack || this.state.error)}
+          </pre>
         </div>
       );
     }
