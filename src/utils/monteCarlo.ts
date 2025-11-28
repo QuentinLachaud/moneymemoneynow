@@ -136,12 +136,12 @@ export function runMonteCarloSimulation(
     sigma = 0; // No volatility = deterministic
   }
 
-  // Calculate annual cash flow
-  const annualCashFlow = account.frequency === 'monthly' 
+  // Calculate annual cash flow (base amount)
+  const baseCashFlow = account.frequency === 'monthly' 
     ? account.transactionAmount * 12 
     : account.transactionAmount;
   const cashFlowSign = account.transactionType === 'withdraw' ? -1 : 1;
-  const signedCashFlow = annualCashFlow * cashFlowSign;
+  const annualIncreaseRate = (account.annualIncreaseRate || 0) / 100;
 
   // Run simulations
   const paths: SimulationPath[] = [];
@@ -167,6 +167,10 @@ export function runMonteCarloSimulation(
       
       // Apply return to current value
       let newValue = currentValue * randomReturn;
+      
+      // Calculate cash flow with annual increase applied
+      const adjustedCashFlow = baseCashFlow * Math.pow(1 + annualIncreaseRate, yearIdx - 1);
+      const signedCashFlow = adjustedCashFlow * cashFlowSign;
       
       // Add cash flow (deposit or withdrawal)
       newValue += signedCashFlow;

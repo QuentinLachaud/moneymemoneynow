@@ -20,6 +20,7 @@ import { MonteCarloChart } from './MonteCarloChart';
 import { HistogramChart } from './HistogramChart';
 import { CashFlowChart, getCashFlowData, getCashFlowColumns } from './CashFlowChart';
 import { StartingValueSlider } from './StartingValueSlider';
+import { SurvivalScatterChart } from './SurvivalScatterChart';
 import { 
   BarChart3, 
   Table, 
@@ -28,7 +29,8 @@ import {
   Download,
   Info,
   Zap,
-  Activity
+  Activity,
+  Target
 } from 'lucide-react';
 
 interface ProjectionsPanelV2Props {
@@ -47,6 +49,7 @@ export function ProjectionsPanelV2({ account }: ProjectionsPanelV2Props) {
   const [volatilityOverride, setVolatilityOverride] = useState<number>(15);
   const [histogramBins, setHistogramBins] = useState(20);
   const [showHistogram, setShowHistogram] = useState(true);
+  const [showSurvivalScatter, setShowSurvivalScatter] = useState(false);
   const [showDataTable, setShowDataTable] = useState(false);
   const [showCashFlowTable, setShowCashFlowTable] = useState(false);
   const [useLogScale, setUseLogScale] = useState(false);
@@ -145,6 +148,37 @@ export function ProjectionsPanelV2({ account }: ProjectionsPanelV2Props) {
   // Cash flow data
   const cashFlowData = useMemo(() => getCashFlowData([modifiedAccount]), [modifiedAccount]);
   const cashFlowColumns = useMemo(() => getCashFlowColumns([modifiedAccount]), [modifiedAccount]);
+
+  // Generate survival rate vs starting balance data for scatter chart
+  const survivalScatterData = useMemo(() => {
+    if (isDeterministic) return [];
+    
+    const dataPoints: Array<{ startingBalance: number; survivalRate: number }> = [];
+    const steps = 20;
+    const maxValue = 1000000; // £1M max for consistency with slider
+    
+    for (let i = 1; i <= steps; i++) {
+      const startingBalance = (maxValue / steps) * i;
+      
+      const testAccount = {
+        ...modifiedAccount,
+        amount: startingBalance,
+      };
+      
+      const sim = runMonteCarloSimulation(
+        testAccount,
+        50, // Fewer simulations for performance
+        effectiveVolatility
+      );
+      
+      dataPoints.push({
+        startingBalance,
+        survivalRate: sim.stats.survivalRate,
+      });
+    }
+    
+    return dataPoints;
+  }, [modifiedAccount, effectiveVolatility, isDeterministic]);
 
   const handleVolatilityChange = useCallback((value: number) => {
     setVolatilityOverride(value);
@@ -480,10 +514,19 @@ export function ProjectionsPanelV2({ account }: ProjectionsPanelV2Props) {
             {!isDeterministic && (
               <button
                 className={`toggle-btn ${showHistogram ? 'active' : ''}`}
-                onClick={() => setShowHistogram(!showHistogram)}
+                onClick={() => { setShowHistogram(true); setShowSurvivalScatter(false); }}
               >
                 <BarChart3 size={16} />
                 Distribution
+              </button>
+            )}
+            {!isDeterministic && (
+              <button
+                className={`toggle-btn ${showSurvivalScatter ? 'active' : ''}`}
+                onClick={() => { setShowSurvivalScatter(true); setShowHistogram(false); }}
+              >
+                <Target size={16} />
+                Survival
               </button>
             )}
             <button
@@ -518,6 +561,18 @@ export function ProjectionsPanelV2({ account }: ProjectionsPanelV2Props) {
                   stats={adjustedSimulation.stats}
                   numBins={histogramBins}
                 />
+              </div>
+            </div>
+          )}
+
+          {/* Survival Scatter Section */}
+          {!isDeterministic && showSurvivalScatter && (
+            <div className="survival-scatter-section card">
+              <div className="section-header">
+                <h4>Survival vs Starting Balance</h4>
+              </div>
+              <div className="scatter-container">
+                <SurvivalScatterChart data={survivalScatterData} />
               </div>
             </div>
           )}

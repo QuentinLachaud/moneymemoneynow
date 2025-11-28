@@ -29,6 +29,8 @@ export interface Account {
   frequency: 'monthly' | 'annual';
   transactionType: 'deposit' | 'withdraw';
   transactionAmount: number;
+  /** Annual increase rate for contributions (e.g., 3 = 3% increase per year) */
+  annualIncreaseRate?: number;
 }
 
 /** Tab types for navigation */

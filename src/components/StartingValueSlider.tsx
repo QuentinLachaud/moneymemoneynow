@@ -3,24 +3,25 @@
  * 
  * Allows users to experiment with different starting balances
  * and see how it affects the Monte Carlo simulation results.
+ * 
+ * Fixed range: £0 to £1,000,000 in £50,000 increments
  */
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useMemo } from 'react';
 
 interface StartingValueSliderProps {
   /** Current starting value */
   value: number;
-  /** Minimum value (0) */
-  min?: number;
-  /** Maximum value (calculated from account data) */
-  max: number;
-  /** Step size */
-  step?: number;
+  /** Maximum value (ignored - fixed at 1M) */
+  max?: number;
   /** Callback when value changes */
   onChange: (value: number) => void;
   /** Whether slider is disabled */
   disabled?: boolean;
 }
+
+const SLIDER_MAX = 1000000; // £1M
+const SLIDER_STEP = 50000;  // £50k increments
 
 function formatCurrency(value: number): string {
   if (value >= 1000000) return `£${(value / 1000000).toFixed(1)}M`;
@@ -30,25 +31,29 @@ function formatCurrency(value: number): string {
 
 export function StartingValueSlider({
   value,
-  min = 0,
-  max,
-  step,
   onChange,
   disabled = false,
 }: StartingValueSliderProps) {
   const [isDragging, setIsDragging] = useState(false);
 
-  // Calculate appropriate step size based on max value
-  const calculatedStep = step ?? Math.max(1000, Math.floor(max / 100));
-
   const handleChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     onChange(parseFloat(e.target.value));
   }, [onChange]);
 
-  const percentage = max > 0 ? ((value - min) / (max - min)) * 100 : 0;
+  const percentage = (value / SLIDER_MAX) * 100;
+
+  // Generate graduated marks
+  const marks = useMemo(() => {
+    const markValues = [1000000, 750000, 500000, 250000, 0];
+    return markValues.map(v => ({
+      value: v,
+      label: formatCurrency(v),
+      position: 100 - (v / SLIDER_MAX) * 100,
+    }));
+  }, []);
 
   return (
-    <div className={`starting-value-slider ${disabled ? 'disabled' : ''} ${isDragging ? 'dragging' : ''}`}>
+    <div className={`starting-value-slider wide ${disabled ? 'disabled' : ''} ${isDragging ? 'dragging' : ''}`}>
       <div className="slider-header">
         <span className="slider-label">Starting Value</span>
         <span className="slider-value">{formatCurrency(value)}</span>
@@ -62,9 +67,9 @@ export function StartingValueSlider({
           />
           <input
             type="range"
-            min={min}
-            max={max}
-            step={calculatedStep}
+            min={0}
+            max={SLIDER_MAX}
+            step={SLIDER_STEP}
             value={value}
             onChange={handleChange}
             onMouseDown={() => setIsDragging(true)}
@@ -76,10 +81,16 @@ export function StartingValueSlider({
           />
         </div>
         
-        <div className="slider-marks">
-          <span className="mark-label">{formatCurrency(max)}</span>
-          <span className="mark-label">{formatCurrency(max * 0.5)}</span>
-          <span className="mark-label">{formatCurrency(min)}</span>
+        <div className="slider-marks graduated">
+          {marks.map(mark => (
+            <span 
+              key={mark.value} 
+              className="mark-label"
+              style={{ top: `${mark.position}%` }}
+            >
+              {mark.label}
+            </span>
+          ))}
         </div>
       </div>
     </div>

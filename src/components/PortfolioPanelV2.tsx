@@ -18,8 +18,8 @@ import { MonteCarloChart } from './MonteCarloChart';
 import { HistogramChart } from './HistogramChart';
 import { CashFlowChart, getCashFlowData, getCashFlowColumns } from './CashFlowChart';
 import { PortfolioSummary } from './PortfolioSummary';
-import { StartingValueSlider } from './StartingValueSlider';
-import { SurvivalScatterChart } from './SurvivalScatterChart';
+// StartingValueSlider moved to ProjectionsPanelV2 only
+// SurvivalScatterChart moved to ProjectionsPanelV2
 import { 
   BarChart3, 
   Table, 
@@ -54,7 +54,6 @@ export function PortfolioPanel({ accounts, selectedAccountIds }: PortfolioPanelP
   const [globalVolatilityOverride, setGlobalVolatilityOverride] = useState<number>(15);
   const [histogramBins, setHistogramBins] = useState(20);
   const [showHistogram, setShowHistogram] = useState(true);
-  const [showSurvivalScatter, setShowSurvivalScatter] = useState(false);
   const [showDataTable, setShowDataTable] = useState(false);
   const [showCashFlowTable, setShowCashFlowTable] = useState(false);
   const [useLogScale, setUseLogScale] = useState(false);
@@ -200,47 +199,6 @@ export function PortfolioPanel({ accounts, selectedAccountIds }: PortfolioPanelP
     
     return { contributions, withdrawals };
   }, [activeAccounts]);
-
-  // Generate survival rate vs starting balance data for scatter chart
-  const survivalScatterData = useMemo(() => {
-    if (isDeterministic) return [];
-    
-    // Run multiple simulations at different starting values
-    const dataPoints: Array<{ startingBalance: number; survivalRate: number }> = [];
-    const steps = 20;
-    const maxValue = naturalValues.initialValue * 2;
-    
-    for (let i = 0; i <= steps; i++) {
-      const startingBalance = (maxValue / steps) * i;
-      if (startingBalance === 0) continue;
-      
-      const ratio = naturalValues.initialValue > 0 
-        ? startingBalance / naturalValues.initialValue 
-        : 1;
-        
-      const adjustedAccounts = activeAccounts.map(acc => {
-        if (acc.transactionType === 'deposit') {
-          return { ...acc, amount: (acc.amount || 0) * ratio };
-        }
-        return acc;
-      });
-      
-      const sim = runPortfolioMonteCarloSimulation(
-        adjustedAccounts,
-        50, // Fewer simulations for performance
-        effectiveVolatility,
-        assetOverridesForSimulation,
-        projectionYearsOverride ?? undefined
-      );
-      
-      dataPoints.push({
-        startingBalance,
-        survivalRate: sim.stats.survivalRate,
-      });
-    }
-    
-    return dataPoints;
-  }, [activeAccounts, naturalValues.initialValue, effectiveVolatility, assetOverridesForSimulation, projectionYearsOverride, isDeterministic]);
 
   // Cash flow data and columns for table view
   const cashFlowData = useMemo(() => getCashFlowData(activeAccounts), [activeAccounts]);
@@ -475,17 +433,8 @@ export function PortfolioPanel({ accounts, selectedAccountIds }: PortfolioPanelP
       </div>
 
       {/* Main Content */}
-      <div className="portfolio-content">
-        {/* Left: Starting Value Slider */}
-        <div className="portfolio-left-slider">
-          <StartingValueSlider
-            value={effectiveStartingValue}
-            max={naturalValues.initialValue * 3}
-            onChange={setStartingValueOverride}
-          />
-        </div>
-
-        {/* Center: Charts */}
+      <div className="portfolio-content no-slider">
+        {/* Charts */}
         <div className="portfolio-charts">
           {/* Monte Carlo / Projection Chart */}
           <div className="chart-section card">
@@ -567,19 +516,10 @@ export function PortfolioPanel({ accounts, selectedAccountIds }: PortfolioPanelP
             {!isDeterministic && (
               <button
                 className={`toggle-btn ${showHistogram ? 'active' : ''}`}
-                onClick={() => { setShowHistogram(true); setShowSurvivalScatter(false); }}
+                onClick={() => setShowHistogram(!showHistogram)}
               >
                 <BarChart3 size={16} />
                 Distribution
-              </button>
-            )}
-            {!isDeterministic && (
-              <button
-                className={`toggle-btn ${showSurvivalScatter ? 'active' : ''}`}
-                onClick={() => { setShowSurvivalScatter(true); setShowHistogram(false); }}
-              >
-                <Activity size={16} />
-                Survival
               </button>
             )}
             <button
@@ -614,18 +554,6 @@ export function PortfolioPanel({ accounts, selectedAccountIds }: PortfolioPanelP
                   stats={adjustedSimulation.stats}
                   numBins={histogramBins}
                 />
-              </div>
-            </div>
-          )}
-
-          {/* Survival Scatter Section */}
-          {!isDeterministic && showSurvivalScatter && (
-            <div className="survival-scatter-section card">
-              <div className="section-header">
-                <h4>Survival vs Starting Balance</h4>
-              </div>
-              <div className="scatter-container">
-                <SurvivalScatterChart data={survivalScatterData} />
               </div>
             </div>
           )}
@@ -672,7 +600,10 @@ export function PortfolioPanel({ accounts, selectedAccountIds }: PortfolioPanelP
                           max="50"
                           step="0.5"
                           value={currentReturn}
-                          onChange={(e) => handleAssetReturnOverride(c.name, parseFloat(e.target.value) || null)}
+                          onChange={(e) => {
+                            const val = e.target.value === '' ? null : parseFloat(e.target.value);
+                            handleAssetReturnOverride(c.name, val);
+                          }}
                         />
                         <span>%</span>
                       </div>
@@ -685,7 +616,10 @@ export function PortfolioPanel({ accounts, selectedAccountIds }: PortfolioPanelP
                             max="100"
                             step="1"
                             value={currentVolatility}
-                            onChange={(e) => handleAssetVolatilityOverride(c.name, parseFloat(e.target.value) || null)}
+                            onChange={(e) => {
+                              const val = e.target.value === '' ? null : parseFloat(e.target.value);
+                              handleAssetVolatilityOverride(c.name, val);
+                            }}
                           />
                           <span>%</span>
                         </div>

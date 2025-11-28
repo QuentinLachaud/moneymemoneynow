@@ -155,12 +155,16 @@ export function consolidateAccounts(accounts: Account[]): ConsolidatedAccount[] 
         if (year >= accStart && year < accEnd) {
           hasActiveData = true;
           
-          // Calculate annual cash flow contribution
-          // IMPORTANT: Deposits ADD to the pot, withdrawals SUBTRACT from it
-          const annualAmount = acc.frequency === 'monthly' 
+          // Calculate annual cash flow contribution with annual increase
+          const baseCashFlow = acc.frequency === 'monthly' 
             ? acc.transactionAmount * 12 
             : acc.transactionAmount;
-          const signedAmount = acc.transactionType === 'withdraw' ? -annualAmount : annualAmount;
+          const yearsElapsed = year - accStart;
+          const annualIncreaseRate = (acc.annualIncreaseRate || 0) / 100;
+          const adjustedCashFlow = baseCashFlow * Math.pow(1 + annualIncreaseRate, yearsElapsed);
+          
+          // IMPORTANT: Deposits ADD to the pot, withdrawals SUBTRACT from it
+          const signedAmount = acc.transactionType === 'withdraw' ? -adjustedCashFlow : adjustedCashFlow;
           netCashFlow += signedAmount;
           
           // Track for weighted return calculation (use amount from all accounts)
@@ -253,17 +257,22 @@ export function runPortfolioMonteCarloSimulation(
     yearlyCashFlow.set(y, 0);
   }
   
-  // Aggregate cash flows from ALL accounts
+  // Aggregate cash flows from ALL accounts (with annual increase support)
   accounts.forEach(acc => {
     const accStart = new Date(acc.date).getFullYear();
     const accEnd = accStart + acc.timeHorizon;
     
-    const annualCashFlow = acc.frequency === 'monthly' 
+    const baseCashFlow = acc.frequency === 'monthly' 
       ? acc.transactionAmount * 12 
       : acc.transactionAmount;
-    const signedCashFlow = acc.transactionType === 'withdraw' ? -annualCashFlow : annualCashFlow;
+    const annualIncreaseRate = (acc.annualIncreaseRate || 0) / 100;
     
     for (let y = accStart; y < accEnd && y <= endYear; y++) {
+      const yearsElapsed = y - accStart;
+      // Apply annual increase compound growth
+      const adjustedCashFlow = baseCashFlow * Math.pow(1 + annualIncreaseRate, yearsElapsed);
+      const signedCashFlow = acc.transactionType === 'withdraw' ? -adjustedCashFlow : adjustedCashFlow;
+      
       const current = yearlyCashFlow.get(y) || 0;
       yearlyCashFlow.set(y, current + signedCashFlow);
     }

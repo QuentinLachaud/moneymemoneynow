@@ -105,11 +105,12 @@ export function MonteCarloChart({ simulation, showPaths = false, useLogScale = f
             
             <YAxis
               scale={useLogScale ? 'log' : 'auto'}
-              domain={useLogScale ? ['auto', 'auto'] : ['auto', 'auto']}
-              allowDataOverflow={useLogScale}
+              domain={useLogScale ? [(dataMin: number) => Math.max(1, dataMin * 0.5), 'auto'] : [0, 'auto']}
+              allowDataOverflow={false}
               tickFormatter={(value) => {
                 if (value >= 1000000) return `£${(value / 1000000).toFixed(1)}M`;
                 if (value >= 1000) return `£${(value / 1000).toFixed(0)}k`;
+                if (value < 1) return `£${value.toFixed(2)}`;
                 return `£${value}`;
               }}
               tick={{ fontSize: 11, fill: 'rgba(255,255,255,0.6)' }}

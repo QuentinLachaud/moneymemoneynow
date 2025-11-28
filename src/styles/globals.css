@@ -2835,53 +2835,63 @@ html {
 .slider-with-presets {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 6px;
 }
 
 .compact-slider {
-  width: 100%;
-  height: 4px;
+  width: 140px;
+  height: 6px;
   -webkit-appearance: none;
   appearance: none;
-  background: rgba(255, 255, 255, 0.15);
-  border-radius: 2px;
+  background: linear-gradient(to right, rgba(99, 102, 241, 0.2), rgba(239, 68, 68, 0.2));
+  border-radius: 3px;
   outline: none;
+  cursor: pointer;
 }
 
 .compact-slider::-webkit-slider-thumb {
   -webkit-appearance: none;
   appearance: none;
-  width: 12px;
-  height: 12px;
-  background: #818cf8;
+  width: 16px;
+  height: 16px;
+  background: linear-gradient(135deg, #818cf8, #a78bfa);
   border-radius: 50%;
   cursor: pointer;
+  box-shadow: 0 2px 6px rgba(99, 102, 241, 0.4);
+  transition: transform 150ms ease;
+}
+
+.compact-slider::-webkit-slider-thumb:hover {
+  transform: scale(1.1);
 }
 
 .preset-btns {
   display: flex;
-  gap: 2px;
+  gap: 4px;
 }
 
 .preset-btn-sm {
   flex: 1;
-  padding: 3px 6px;
-  border: none;
+  padding: 4px 8px;
+  border: 1px solid rgba(255, 255, 255, 0.06);
   background: rgba(0, 0, 0, 0.2);
-  color: rgba(255, 255, 255, 0.4);
-  font-size: 0.6rem;
+  color: rgba(255, 255, 255, 0.45);
+  font-size: 0.65rem;
+  font-weight: 500;
   cursor: pointer;
-  border-radius: 3px;
-  transition: all 0.1s ease;
+  border-radius: 4px;
+  transition: all 0.15s ease;
 }
 
 .preset-btn-sm:hover:not(.active) {
   background: rgba(255, 255, 255, 0.05);
+  color: rgba(255, 255, 255, 0.6);
 }
 
 .preset-btn-sm.active {
-  background: rgba(99, 102, 241, 0.2);
-  color: #818cf8;
+  background: rgba(99, 102, 241, 0.25);
+  border-color: rgba(99, 102, 241, 0.4);
+  color: #a5b4fc;
 }
 
 /* Projection Control */
@@ -3041,10 +3051,58 @@ html {
   min-height: 0;
 }
 
+/* Portfolio content without slider (2-column) */
+.portfolio-content.no-slider {
+  grid-template-columns: 1fr 380px;
+}
+
 /* Starting Value Slider */
 .portfolio-left-slider {
   display: flex;
   flex-direction: column;
+}
+
+/* Wide starting value slider (for Projections tab) */
+.starting-value-slider.wide {
+  width: 80px;
+  padding: 16px 10px;
+}
+
+.starting-value-slider.wide .slider-header {
+  gap: 4px;
+}
+
+.starting-value-slider.wide .slider-label {
+  font-size: 0.6rem;
+  font-weight: 600;
+}
+
+.starting-value-slider.wide .slider-value {
+  font-size: 0.85rem;
+  font-weight: 700;
+}
+
+.starting-value-slider.wide .slider-track-container {
+  gap: 8px;
+}
+
+.starting-value-slider.wide .slider-track {
+  min-height: 280px;
+}
+
+.starting-value-slider.wide .slider-marks.graduated {
+  position: relative;
+  width: 50px;
+  height: 100%;
+}
+
+.starting-value-slider.wide .slider-marks.graduated .mark-label {
+  position: absolute;
+  font-size: 0.55rem;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.4);
+  white-space: nowrap;
+  transform: translateY(-50%);
 }
 
 .starting-value-slider {
@@ -3237,7 +3295,8 @@ html {
 }
 
 .chart-container.compact {
-  min-height: 150px;
+  min-height: 250px;
+  height: 280px;
 }
 
 /* Data Toggle Button */
@@ -3604,6 +3663,123 @@ html {
   border: 1px solid rgba(255, 255, 255, 0.05);
 }
 
+/* Tall Portfolio Summary Card (new vertical layout) */
+.portfolio-summary-card.tall {
+  padding: 14px 18px;
+  background: linear-gradient(135deg, rgba(15, 23, 42, 0.95), rgba(30, 41, 59, 0.9));
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
+  min-width: 320px;
+}
+
+.summary-metrics-vertical {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 100%;
+}
+
+.metrics-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+}
+
+.metric-divider-arrow {
+  color: rgba(255, 255, 255, 0.25);
+  font-size: 1.2rem;
+  font-weight: 300;
+}
+
+.metric-value.large {
+  font-size: 1.1rem;
+  font-weight: 700;
+}
+
+.returns-row {
+  display: flex;
+  justify-content: center;
+  gap: 24px;
+  padding: 8px 16px;
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 8px;
+}
+
+.return-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+}
+
+.return-label {
+  font-size: 0.6rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: rgba(255, 255, 255, 0.4);
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.return-value {
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.return-value.positive {
+  color: #4ade80;
+}
+
+.return-value.negative {
+  color: #f87171;
+}
+
+.breakdown-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 6px 0;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.survival-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 12px;
+  background: rgba(0, 0, 0, 0.15);
+  border-radius: 6px;
+}
+
+.survival-label {
+  font-size: 0.65rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: rgba(255, 255, 255, 0.5);
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.survival-value {
+  font-size: 1rem;
+  font-weight: 700;
+}
+
+.survival-value.excellent {
+  color: #4ade80;
+}
+
+.survival-value.good {
+  color: #fbbf24;
+}
+
+.survival-value.warning {
+  color: #f87171;
+}
+
 .summary-metrics {
   display: flex;
   align-items: center;
@@ -3618,10 +3794,10 @@ html {
 }
 
 .metric-label {
-  font-size: 0.55rem;
+  font-size: 0.6rem;
   text-transform: uppercase;
   letter-spacing: 0.5px;
-  color: rgba(255, 255, 255, 0.4);
+  color: rgba(255, 255, 255, 0.45);
   display: flex;
   align-items: center;
   gap: 4px;
@@ -3629,12 +3805,12 @@ html {
 }
 
 .metric-sublabel {
-  font-size: 0.5rem;
-  color: rgba(255, 255, 255, 0.3);
+  font-size: 0.55rem;
+  color: rgba(255, 255, 255, 0.35);
 }
 
 .metric-value {
-  font-size: 0.85rem;
+  font-size: 0.9rem;
   font-weight: 600;
   color: rgba(255, 255, 255, 0.9);
 }
@@ -3892,28 +4068,10 @@ html {
 .slider-with-presets {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 10px;
 }
 
-.compact-slider {
-  width: 80px;
-  height: 4px;
-  -webkit-appearance: none;
-  appearance: none;
-  background: linear-gradient(to right, rgba(99, 102, 241, 0.3), rgba(239, 68, 68, 0.3));
-  border-radius: 2px;
-  outline: none;
-}
-
-.compact-slider::-webkit-slider-thumb {
-  -webkit-appearance: none;
-  width: 12px;
-  height: 12px;
-  background: linear-gradient(135deg, #818cf8 0%, #a78bfa 100%);
-  border-radius: 50%;
-  cursor: pointer;
-  box-shadow: 0 2px 6px rgba(99, 102, 241, 0.3);
-}
+/* Note: .compact-slider styles are defined above in the main control section */
 
 .preset-btns {
   display: flex;

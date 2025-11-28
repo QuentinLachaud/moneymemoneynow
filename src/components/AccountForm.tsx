@@ -45,6 +45,7 @@ export function AccountForm({ onSubmit, initialData, submitLabel = 'Add Account'
   const [timeHorizon, setTimeHorizon] = useState(initialData?.timeHorizon || 10);
   const [frequency, setFrequency] = useState<'monthly' | 'annual'>(initialData?.frequency || 'annual');
   const [transactionAmount, setTransactionAmount] = useState(initialData?.transactionAmount?.toString() || '');
+  const [annualIncreaseRate, setAnnualIncreaseRate] = useState(initialData?.annualIncreaseRate?.toString() || '0');
 
   // Auto-populate amount from existing account with same name (at specified date)
   // Works for both deposits and drawdowns - calculates projected value at selected date
@@ -96,6 +97,7 @@ export function AccountForm({ onSubmit, initialData, submitLabel = 'Add Account'
       transactionType,
       // Always store a positive transaction amount; sign is implied by transactionType
       transactionAmount: Math.abs(parseFloat(transactionAmount) || 0),
+      annualIncreaseRate: parseFloat(annualIncreaseRate) || 0,
     });
 
     // Reset form if adding new cash flow
@@ -109,6 +111,7 @@ export function AccountForm({ onSubmit, initialData, submitLabel = 'Add Account'
       setFrequency('annual');
       setTransactionType('deposit');
       setTransactionAmount('');
+      setAnnualIncreaseRate('0');
     }
   };
 
@@ -237,6 +240,25 @@ export function AccountForm({ onSubmit, initialData, submitLabel = 'Add Account'
           placeholder="1000"
           step="0.01"
         />
+        
+        <label className="block text-sm text-gray-700 mb-1 mt-3">
+          Annual Increase (%)
+        </label>
+        <div className="relative">
+          <input
+            type="number"
+            value={annualIncreaseRate}
+            onChange={(e) => setAnnualIncreaseRate(e.target.value)}
+            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            placeholder="0"
+            step="0.5"
+            min="0"
+            max="20"
+          />
+          <span className="text-xs text-gray-500 mt-1 block">
+            Increase {transactionType === 'deposit' ? 'contributions' : 'withdrawals'} by this % each year
+          </span>
+        </div>
       </div>
 
       <button
