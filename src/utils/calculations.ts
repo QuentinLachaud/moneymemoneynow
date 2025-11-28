@@ -64,11 +64,11 @@ function calculateAccountValue(account: Account, years: number): number {
     value = value * (1 + returnPerPeriod * volatilityFactor);
     
     // Apply transaction
-    if (transactionType === 'deposit') {
-      value += transactionAmount;
-    } else {
-      value -= transactionAmount;
-    }
+    // Normalize transaction amount and apply sign based on transactionType.
+    // This ensures 'withdraw' reduces the balance and 'deposit' increases it.
+    const amt = Number(transactionAmount) || 0;
+    const signed = transactionType === 'withdraw' ? -Math.abs(amt) : Math.abs(amt);
+    value += signed;
   }
 
   return Math.max(0, value);

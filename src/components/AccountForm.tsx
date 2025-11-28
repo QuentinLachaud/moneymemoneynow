@@ -32,7 +32,8 @@ export function AccountForm({ onSubmit, initialData, submitLabel = 'Add Account'
       timeHorizon,
       frequency,
       transactionType,
-      transactionAmount: parseFloat(transactionAmount) || 0,
+      // Always store a positive transaction amount; sign is implied by transactionType
+      transactionAmount: Math.abs(parseFloat(transactionAmount) || 0),
     });
 
     // Reset form if adding new account

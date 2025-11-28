@@ -67,17 +67,18 @@ export function AccountsList({ accounts, onUpdate, onDelete }: AccountsListProps
                   </button>
                 </div>
               </div>
-              <div className="text-sm text-gray-600 space-y-1">
-                <div>Return: {account.expectedReturn}% | Horizon: {account.timeHorizon}y</div>
-                <div>
-                  {account.frequency === 'monthly' ? 'Monthly' : 'Annual'}{' '}
-                  {account.transactionType === 'deposit' ? 'Deposit' : 'Withdrawal'}:{' '}
-                  ${account.transactionAmount.toLocaleString()}
+                <div className="text-sm text-gray-600 space-y-1">
+                  <div>Return: {account.expectedReturn}% | Horizon: {account.timeHorizon}y</div>
+                  <div>
+                    {account.frequency === 'monthly' ? 'Monthly' : 'Annual'}{' '}
+                    {account.transactionType === 'deposit' ? 'Deposit' : 'Withdrawal'}:{' '}
+                    {/* Show negative sign for withdrawals; amount stored positive */}
+                    {account.transactionType === 'withdraw' ? '-$' : '$'}{Math.abs(account.transactionAmount).toLocaleString()}
+                  </div>
+                  {account.volatility && (
+                    <div>Volatility: {account.volatility}</div>
+                  )}
                 </div>
-                {account.volatility && (
-                  <div>Volatility: {account.volatility}</div>
-                )}
-              </div>
             </div>
           )}
         </div>

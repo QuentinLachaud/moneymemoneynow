@@ -21,9 +21,18 @@ export interface Account {
 
 export default function App() {
   const [accounts, setAccounts] = useState<Account[]>([]);
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
 
   const addAccount = (account: Omit<Account, 'id'>) => {
-    setAccounts([...accounts, { ...account, id: Date.now().toString() }]);
+    const id = Date.now().toString();
+    const next = { ...account, id } as Account;
+    setAccounts(prev => [...prev, next]);
+    // ensure newly added account is selected for projections
+    setSelectedIds(prev => {
+      const s = new Set(prev);
+      s.add(id);
+      return s;
+    });
   };
 
   const updateAccount = (id: string, account: Omit<Account, 'id'>) => {
@@ -32,9 +41,17 @@ export default function App() {
 
   const deleteAccount = (id: string) => {
     setAccounts(accounts.filter(acc => acc.id !== id));
+    setSelectedIds(prev => {
+      const s = new Set(prev);
+      s.delete(id);
+      return s;
+    });
   };
 
   const [tab, setTab] = useState<'assets' | 'projections'>('assets');
+
+  // Filtered accounts for projections: if nothing explicitly selected, treat all as selected
+  const filteredAccounts = selectedIds.size === 0 ? accounts : accounts.filter(acc => selectedIds.has(acc.id));
 
   return (
     <div className="min-h-screen bg-gray-50 p-8">
@@ -56,52 +73,100 @@ export default function App() {
         </div>
 
         {tab === 'assets' ? (
-          <div className="flex gap-6 mb-6">
-            <ResizablePanel defaultWidth={400} minWidth={300} maxWidth={600}>
+          <div className="relative">
+            {/* Fixed left tray containing the Add Account box */}
+            <aside className="left-tray">
               <div className="bg-white rounded-lg shadow-sm p-6 h-full overflow-auto">
                 <h2 className="mb-4 text-gray-900">Add Account</h2>
                 <AccountForm onSubmit={addAccount} />
-                <div className="mt-6">
-                  <AccountsList 
-                    accounts={accounts} 
-                    onUpdate={updateAccount}
-                    onDelete={deleteAccount}
-                  />
+              </div>
+            </aside>
+
+            {/* Main content shifted right to make room for the fixed tray */}
+            <div style={{ marginLeft: '392px' }}>
+              <div className="flex gap-6 mb-6">
+                {/* Accounts list panel sits immediately to the right of the add-account tray */}
+                <div style={{ width: '360px' }}>
+                  <div className="bg-white rounded-lg shadow-sm p-6 h-full overflow-auto">
+                    <h3 className="mb-4 text-gray-900">Accounts</h3>
+                    <AccountsList
+                      accounts={accounts}
+                      onUpdate={updateAccount}
+                      onDelete={deleteAccount}
+                    />
+                  </div>
+                </div>
+
+                {/* Charts and projections take remaining space */}
+                <div className="flex-1 flex flex-col gap-6">
+                  <ResizablePanel defaultHeight={300} minHeight={200} direction="vertical">
+                    <div className="bg-white rounded-lg shadow-sm p-6 h-full">
+                      <h2 className="mb-4 text-gray-900">Current Net Worth Composition</h2>
+                      <CompositionChart accounts={accounts} />
+                    </div>
+                  </ResizablePanel>
+
+                  <ResizablePanel defaultHeight={300} minHeight={200} direction="vertical">
+                    <div className="bg-white rounded-lg shadow-sm p-6 h-full">
+                      <h2 className="mb-4 text-gray-900">Net Worth Projection</h2>
+                      <ProjectionChart accounts={accounts} />
+                    </div>
+                  </ResizablePanel>
                 </div>
               </div>
-            </ResizablePanel>
-
-            <div className="flex-1 flex flex-col gap-6">
-              <ResizablePanel defaultHeight={300} minHeight={200} direction="vertical">
-                <div className="bg-white rounded-lg shadow-sm p-6 h-full">
-                  <h2 className="mb-4 text-gray-900">Current Net Worth Composition</h2>
-                  <CompositionChart accounts={accounts} />
-                </div>
-              </ResizablePanel>
-
-              <ResizablePanel defaultHeight={300} minHeight={200} direction="vertical">
-                <div className="bg-white rounded-lg shadow-sm p-6 h-full">
-                  <h2 className="mb-4 text-gray-900">Net Worth Projection</h2>
-                  <ProjectionChart accounts={accounts} />
-                </div>
-              </ResizablePanel>
             </div>
           </div>
         ) : (
-          <div className="space-y-6">
-            <ResizablePanel defaultHeight={360} minHeight={200} direction="vertical">
-              <div className="bg-white rounded-lg shadow-sm p-6 h-full">
-                <h2 className="mb-4 text-gray-900">Net Worth Projection</h2>
-                <ProjectionChart accounts={accounts} />
+          <div className="flex gap-6">
+            {/* Left sidebar: account toggles */}
+            <aside className="proj-sidebar w-56">
+              <div className="p-3">
+                <h3 className="mb-3 text-gray-900">Accounts</h3>
+                <div className="flex flex-col gap-2">
+                  {accounts.length === 0 && (
+                    <div className="text-sm text-gray-500">No accounts</div>
+                  )}
+                  {accounts.map(acc => {
+                    const on = selectedIds.size === 0 ? true : selectedIds.has(acc.id);
+                    return (
+                      <button
+                        key={acc.id}
+                        onClick={() => setSelectedIds(prev => {
+                          const s = new Set(prev);
+                          // if size 0 (implicit all selected), initialize with all ids
+                          if (prev.size === 0) {
+                            accounts.forEach(a => s.add(a.id));
+                          }
+                          if (s.has(acc.id)) s.delete(acc.id); else s.add(acc.id);
+                          return s;
+                        })}
+                        className={`account-toggle ${on ? 'on' : 'off'}`}
+                        aria-pressed={on}
+                      >
+                        <div className="truncate text-sm">{acc.name}</div>
+                        <div className="text-xs text-muted">${Math.abs(acc.amount).toLocaleString()}</div>
+                      </button>
+                    );
+                  })}
+                </div>
               </div>
-            </ResizablePanel>
+            </aside>
 
-            <ResizablePanel defaultHeight={420} minHeight={200} direction="vertical">
-              <div className="bg-white rounded-lg shadow-sm p-6 h-full overflow-auto">
-                <h2 className="mb-4 text-gray-900">Projection Data Table</h2>
-                <DataTable accounts={accounts} />
-              </div>
-            </ResizablePanel>
+            <main className="flex-1 space-y-6">
+              <ResizablePanel defaultHeight={360} minHeight={200} direction="vertical">
+                <div className="bg-white rounded-lg shadow-sm p-6 h-full">
+                  <h2 className="mb-4 text-gray-900">Net Worth Projection</h2>
+                  <ProjectionChart accounts={filteredAccounts} />
+                </div>
+              </ResizablePanel>
+
+              <ResizablePanel defaultHeight={420} minHeight={200} direction="vertical">
+                <div className="bg-white rounded-lg shadow-sm p-6 h-full overflow-auto">
+                  <h2 className="mb-4 text-gray-900">Projection Data Table</h2>
+                  <DataTable accounts={filteredAccounts} />
+                </div>
+              </ResizablePanel>
+            </main>
           </div>
         )}
       </div>
