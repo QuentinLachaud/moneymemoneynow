@@ -307,6 +307,47 @@ input, textarea, select {
   }
 }
 
+/* Ensure header and tabs sit above the left-tray drawer */
+.max-w-7xl, .max-w-7xl h1, .tabs {
+  position: relative;
+  z-index: 40;
+}
+
+/* Bottom horizontal accounts strip that spans the page but avoids overlapping the left-tray */
+.bottom-accounts {
+  position: fixed;
+  bottom: 16px;
+  left: calc(16px + 360px);
+  right: 16px;
+  z-index: 20;
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  padding: 10px;
+  box-shadow: 0 8px 30px rgba(0,0,0,0.5);
+  border-radius: 12px;
+  background: linear-gradient(180deg, rgba(18,22,24,0.88), rgba(18,22,24,0.76));
+  overflow-x: auto;
+}
+.bottom-accounts .acct {
+  min-width: 160px;
+  padding: 10px 14px;
+  border-radius: 8px;
+  background: rgba(255,255,255,0.02);
+  border: 1px solid rgba(255,255,255,0.03);
+  display: flex;
+  flex-direction: column;
+}
+
+@media (max-width: 900px) {
+  .bottom-accounts {
+    left: 16px;
+    right: 16px;
+    bottom: 16px;
+    position: fixed;
+  }
+}
+
 
 @theme inline {
   --color-background: var(--background);

@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { useState, useRef, useLayoutEffect } from 'react';
+import { setLocaleCurrency, getLocaleCurrency } from './utils/format';
 import { AccountForm } from './components/AccountForm';
 import { AccountsList } from './components/AccountsList';
 import { DataTable } from './components/DataTable';
@@ -22,6 +23,35 @@ export interface Account {
 export default function App() {
   const [accounts, setAccounts] = useState<Account[]>([]);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const leftTrayRef = useRef(null as HTMLDivElement | null);
+  const [bottomLeft, setBottomLeft] = useState<number | null>(null);
+
+  useLayoutEffect(() => {
+    function update() {
+      // On narrow screens let CSS handle full-width layout
+      if (window.innerWidth <= 900) {
+        setBottomLeft(16);
+        return;
+      }
+      const el = leftTrayRef.current;
+      if (!el) {
+        setBottomLeft(16 + 360);
+        return;
+      }
+      const rect = el.getBoundingClientRect();
+      const left = Math.max(16, Math.ceil(rect.right + 12));
+      setBottomLeft(left);
+    }
+
+    update();
+    window.addEventListener('resize', update);
+    const obs = new MutationObserver(update);
+    if (leftTrayRef.current) obs.observe(leftTrayRef.current, { attributes: true, childList: true, subtree: true });
+    return () => {
+      window.removeEventListener('resize', update);
+      obs.disconnect();
+    };
+  }, []);
 
   const addAccount = (account: Omit<Account, 'id'>) => {
     const id = Date.now().toString();
@@ -75,7 +105,7 @@ export default function App() {
         {tab === 'assets' ? (
           <div className="relative">
             {/* Fixed left tray containing the Add Account box */}
-            <aside className="left-tray">
+            <aside className="left-tray" ref={el => (leftTrayRef.current = el as HTMLDivElement)}>
               <div className="bg-white rounded-lg shadow-sm p-6 h-full overflow-auto">
                 <h2 className="mb-4 text-gray-900">Add Account</h2>
                 <AccountForm onSubmit={addAccount} />
@@ -169,6 +199,22 @@ export default function App() {
             </main>
           </div>
         )}
+      </div>
+      {/* Bottom selected-accounts strip. Shows selected accounts horizontally and avoids overlapping left-tray */}
+      <div className="bottom-accounts" role="region" aria-label="Selected accounts" style={bottomLeft != null ? { left: `${bottomLeft}px` } : undefined}>
+        {accounts && accounts.length > 0 ? (
+          Array.from(selectedIds).map(id => {
+            const acct = accounts.find(a => a.id === id);
+            if (!acct) return null;
+            return (
+              <div className="acct" key={acct.id}>
+                <div style={{ fontWeight: 600 }}>{acct.name}</div>
+                <div style={{ fontSize: '0.9rem', color: 'var(--muted-foreground)' }}>{acct.date}</div>
+                <div style={{ marginTop: 6, fontWeight: 700 }}>{acct.transactionType === 'withdraw' ? '-' : ''}{acct.amount.toLocaleString(undefined, { style: 'currency', currency: getLocaleCurrency().currency })}</div>
+              </div>
+            );
+          })
+        ) : null}
       </div>
     </div>
   );
