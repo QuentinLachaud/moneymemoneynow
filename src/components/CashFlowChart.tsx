@@ -227,7 +227,8 @@ export function CashFlowChart({ accounts }: CashFlowChartProps) {
             name={account.name}
             stroke={getColorForId(account.id)}
             strokeWidth={2}
-            dot={false}
+            dot={{ r: 3, fill: getColorForId(account.id), strokeWidth: 0 }}
+            activeDot={{ r: 5, fill: getColorForId(account.id), strokeWidth: 0 }}
             connectNulls={false}
           />
         ))}
@@ -239,7 +240,8 @@ export function CashFlowChart({ accounts }: CashFlowChartProps) {
           name="Total"
           stroke="#f7f5ee"
           strokeWidth={2.5}
-          dot={false}
+          dot={{ r: 3, fill: '#f7f5ee', strokeWidth: 0 }}
+          activeDot={{ r: 5, fill: '#f7f5ee', strokeWidth: 0 }}
           strokeDasharray="4 2"
         />
       </LineChart>

@@ -20,7 +20,7 @@
  * - To change spacing: update --page-gap in globals.css
  */
 
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { Plus, Check, X } from 'lucide-react';
 import { getLocaleCurrency } from './utils/format';
 import { AccountForm } from './components/AccountForm';
@@ -28,6 +28,7 @@ import { ProjectionChart, getProjectionData, getProjectionColumns } from './comp
 import { CashFlowChart, getCashFlowData, getCashFlowColumns } from './components/CashFlowChart';
 import { GraphPanel } from './components/GraphPanel';
 import { ProjectionsPanel } from './components/ProjectionsPanel';
+import { PortfolioPanel } from './components/PortfolioPanel';
 import { getColorForId } from './utils/colors';
 import Sparkline from './components/Sparkline';
 import TicketEditor from './components/TicketEditor';
@@ -178,20 +179,49 @@ export default function App() {
     });
   };
 
-  /** Current tab: 'assets' shows composition; 'projections' shows Monte Carlo */
-  const [tab, setTab] = useState<'assets' | 'projections'>('assets');
+  /** Current tab: 'assets' shows composition; 'projections' shows single Monte Carlo; 'portfolio' shows combined */
+  const [tab, setTab] = useState<'assets' | 'projections' | 'portfolio'>('assets');
 
   /** Selected account ID for Monte Carlo projection (single account) */
   const [projectionAccountId, setProjectionAccountId] = useState<string | null>(null);
+
+  /** Selected account IDs for portfolio tab (all selected by default) */
+  const [portfolioSelectedIds, setPortfolioSelectedIds] = useState<Set<string>>(new Set());
+
+  // Initialize portfolio selection when accounts change
+  useEffect(() => {
+    // Add new accounts to portfolio selection by default
+    const newIds = accounts.map(a => a.id).filter(id => !portfolioSelectedIds.has(id));
+    if (newIds.length > 0) {
+      setPortfolioSelectedIds(prev => {
+        const next = new Set(prev);
+        newIds.forEach(id => next.add(id));
+        return next;
+      });
+    }
+  }, [accounts]);
 
   /** Get the account selected for projection */
   const projectionAccount = projectionAccountId 
     ? accounts.find(a => a.id === projectionAccountId) 
     : null;
 
-  /** Toggle account selection for projection */
+  /** Toggle account selection for projection (single account mode) */
   const toggleProjectionAccount = (id: string) => {
     setProjectionAccountId(prev => prev === id ? null : id);
+  };
+
+  /** Toggle account selection for portfolio (multi-select mode) */
+  const togglePortfolioAccount = (id: string) => {
+    setPortfolioSelectedIds(prev => {
+      const next = new Set(prev);
+      if (next.has(id)) {
+        next.delete(id);
+      } else {
+        next.add(id);
+      }
+      return next;
+    });
   };
 
   /** Accounts to show in projections (all if none selected) */
@@ -207,12 +237,19 @@ export default function App() {
         <h1 className="app-title">Finance Portfolio Tracker</h1>
       </header>
 
-      {/* ─── TAB TOGGLE: Glass-style slider ─────────────────────────── */}
+      {/* ─── TAB TOGGLE: Glass-style slider (3 tabs) ─────────────────── */}
       <div className="tab-container">
-        <div className="tab-toggle">
+        <div className="tab-toggle three-tabs">
           <div 
             className="tab-slider" 
-            style={{ transform: tab === 'assets' ? 'translateX(0)' : 'translateX(100%)' }} 
+            style={{ 
+              width: '33.333%',
+              transform: tab === 'assets' 
+                ? 'translateX(0)' 
+                : tab === 'projections' 
+                  ? 'translateX(100%)' 
+                  : 'translateX(200%)' 
+            }} 
           />
           <button
             onClick={() => setTab('assets')}
@@ -225,6 +262,12 @@ export default function App() {
             className={`tab-button ${tab === 'projections' ? 'active' : ''}`}
           >
             Projections
+          </button>
+          <button
+            onClick={() => setTab('portfolio')}
+            className={`tab-button ${tab === 'portfolio' ? 'active' : ''}`}
+          >
+            Portfolio
           </button>
         </div>
       </div>
@@ -291,7 +334,7 @@ export default function App() {
                 <CashFlowChart accounts={accounts} />
               </GraphPanel>
             </>
-          ) : (
+          ) : tab === 'projections' ? (
             /* Projections Tab: Monte Carlo Simulation */
             <div className="projections-tab-content">
               {projectionAccount ? (
@@ -305,6 +348,14 @@ export default function App() {
                 </div>
               )}
             </div>
+          ) : (
+            /* Portfolio Tab: Combined Monte Carlo Simulation */
+            <div className="portfolio-tab-content">
+              <PortfolioPanel 
+                accounts={accounts} 
+                selectedAccountIds={portfolioSelectedIds}
+              />
+            </div>
           )}
 
           {/* Accounts Strip */}
@@ -317,6 +368,7 @@ export default function App() {
                   const sign = acct.transactionType === 'withdraw' ? '-' : '+';
                   const color = getColorForId(acct.id);
                   const isSelectedForProjection = projectionAccountId === acct.id;
+                  const isSelectedForPortfolio = portfolioSelectedIds.has(acct.id);
                   const formattedAmt = acct.transactionAmount?.toLocaleString(undefined, {
                     style: 'currency',
                     currency: getLocaleCurrency().currency,
@@ -324,14 +376,22 @@ export default function App() {
 
                   return (
                     <div 
-                      className={`account-card ${tab === 'projections' && isSelectedForProjection ? 'selected' : ''}`} 
+                      className={`account-card ${tab === 'projections' && isSelectedForProjection ? 'selected' : ''} ${tab === 'portfolio' && isSelectedForPortfolio ? 'selected' : ''}`} 
                       key={acct.id}
                     >
-                      {/* Selection toggle for projections tab */}
+                      {/* Selection toggle for projections tab (single select) */}
                       {tab === 'projections' && (
                         <SelectionToggle
                           isSelected={isSelectedForProjection}
                           onToggle={() => toggleProjectionAccount(acct.id)}
+                        />
+                      )}
+
+                      {/* Selection toggle for portfolio tab (multi select) */}
+                      {tab === 'portfolio' && (
+                        <SelectionToggle
+                          isSelected={isSelectedForPortfolio}
+                          onToggle={() => togglePortfolioAccount(acct.id)}
                         />
                       )}
 

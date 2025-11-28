@@ -1,72 +1,104 @@
 /**
- * ProjectionsPanel — Main Monte Carlo simulation panel for the Projections tab
+ * PortfolioPanel — Combined Monte Carlo simulation for entire portfolio
  * 
  * FEATURES:
- * - Simulation count selector (10, 100, 1000)
- * - Volatility adjustment slider (0-50% in 1% or 5% increments)
- * - Monte Carlo chart with percentile lines
- * - Histogram distribution with adjustable bins
- * - Summary statistics table
+ * - Aggregates all accounts into portfolio projection
+ * - Consolidates same-name accounts automatically
+ * - Shows portfolio-level percentile projections
+ * - Displays survival rate for entire portfolio
+ * - Allows toggling individual accounts on/off
  */
 
 import { useState, useMemo, useCallback } from 'react';
 import { Account } from '../App';
-import { runMonteCarloSimulation, SimulationResult } from '../utils/monteCarlo';
+import { runPortfolioMonteCarloSimulation, PortfolioSimulationResult } from '../utils/portfolioMonteCarlo';
 import { MonteCarloChart } from './MonteCarloChart';
 import { HistogramChart } from './HistogramChart';
 import { SimulationSummary } from './SimulationSummary';
 import { CashFlowChart } from './CashFlowChart';
-import { BarChart3, Table, Settings2 } from 'lucide-react';
+import { BarChart3, Table, TrendingUp, Shield } from 'lucide-react';
+import { generateHistogramBins } from '../utils/monteCarlo';
 
-interface ProjectionsPanelProps {
-  account: Account;
+interface PortfolioPanelProps {
+  accounts: Account[];
+  /** Set of account IDs to include in simulation */
+  selectedAccountIds: Set<string>;
 }
 
 const SIMULATION_COUNTS = [10, 100, 1000] as const;
-const BIN_STEPS = [5, 10, 15, 20, 25, 30, 40, 50, 60, 70, 80, 90, 100];
 
-export function ProjectionsPanel({ account }: ProjectionsPanelProps) {
+export function PortfolioPanel({ accounts, selectedAccountIds }: PortfolioPanelProps) {
   // Simulation settings
   const [numSimulations, setNumSimulations] = useState<number>(100);
-  const [volatilityOverride, setVolatilityOverride] = useState<number | null>(15);
+  const [volatilityOverride, setVolatilityOverride] = useState<number>(15);
   const [histogramBins, setHistogramBins] = useState(20);
   const [showHistogram, setShowHistogram] = useState(true);
   const [showDataTable, setShowDataTable] = useState(false);
 
-  // Get effective volatility
-  const effectiveVolatility = useMemo(() => {
-    if (volatilityOverride !== null) return volatilityOverride;
-    const volMap: Record<string, number> = {
-      'low': 5,
-      'medium': 15,
-      'high': 25,
-    };
-    return account.volatility ? volMap[account.volatility] || 0 : 0;
-  }, [volatilityOverride, account.volatility]);
+  // Filter accounts based on selection
+  const activeAccounts = useMemo(() => {
+    return accounts.filter(acc => selectedAccountIds.has(acc.id));
+  }, [accounts, selectedAccountIds]);
 
-  // Run simulation (memoized to prevent unnecessary recalculations)
-  const simulation: SimulationResult = useMemo(() => {
-    return runMonteCarloSimulation(
-      account,
+  // Run portfolio simulation
+  const simulation: PortfolioSimulationResult = useMemo(() => {
+    return runPortfolioMonteCarloSimulation(
+      activeAccounts,
       numSimulations,
-      volatilityOverride ?? undefined
+      volatilityOverride
     );
-  }, [account, numSimulations, volatilityOverride]);
+  }, [activeAccounts, numSimulations, volatilityOverride]);
 
   // Get final values for histogram
   const finalValues = useMemo(() => {
     return simulation.paths.map(p => p.finalValue);
   }, [simulation]);
 
-  // Handle volatility change with 1% increments
+  // Calculate total initial value
+  const totalInitialValue = useMemo(() => {
+    return simulation.consolidatedAccounts.reduce((sum, c) => sum + c.initialValue, 0);
+  }, [simulation]);
+
+  // Calculate time horizon
+  const timeHorizon = useMemo(() => {
+    if (simulation.years.length < 2) return 0;
+    return simulation.years[simulation.years.length - 1] - simulation.years[0];
+  }, [simulation]);
+
   const handleVolatilityChange = useCallback((value: number) => {
     setVolatilityOverride(value);
   }, []);
 
+  if (activeAccounts.length === 0) {
+    return (
+      <div className="empty-portfolio-state card">
+        <div className="empty-state-content">
+          <Shield size={48} className="empty-icon" />
+          <h3>No Assets Selected</h3>
+          <p>Toggle assets on from the bottom strip to see your combined portfolio projection.</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className="projections-panel">
+    <div className="portfolio-panel projections-panel">
       {/* Controls Header */}
       <div className="projections-controls">
+        {/* Portfolio Summary */}
+        <div className="control-group portfolio-summary">
+          <div className="portfolio-stat">
+            <span className="stat-label">Assets</span>
+            <span className="stat-value">{simulation.consolidatedAccounts.length}</span>
+          </div>
+          <div className="portfolio-stat">
+            <span className="stat-label">Initial Value</span>
+            <span className="stat-value">
+              {totalInitialValue.toLocaleString('en-GB', { style: 'currency', currency: 'GBP', maximumFractionDigits: 0 })}
+            </span>
+          </div>
+        </div>
+
         {/* Simulation Count Selector */}
         <div className="control-group">
           <label>Simulations</label>
@@ -86,7 +118,7 @@ export function ProjectionsPanel({ account }: ProjectionsPanelProps) {
         {/* Volatility Slider */}
         <div className="control-group volatility-control">
           <label>
-            Volatility: <span className="value-display">{effectiveVolatility}%</span>
+            Volatility: <span className="value-display">{volatilityOverride}%</span>
           </label>
           <div className="volatility-slider-container">
             <input
@@ -94,7 +126,7 @@ export function ProjectionsPanel({ account }: ProjectionsPanelProps) {
               min="0"
               max="50"
               step="1"
-              value={volatilityOverride ?? effectiveVolatility}
+              value={volatilityOverride}
               onChange={(e) => handleVolatilityChange(parseInt(e.target.value))}
               className="volatility-slider"
             />
@@ -111,7 +143,7 @@ export function ProjectionsPanel({ account }: ProjectionsPanelProps) {
             {[0, 5, 10, 15, 20, 25, 30].map(v => (
               <button
                 key={v}
-                className={`preset-btn ${effectiveVolatility === v ? 'active' : ''}`}
+                className={`preset-btn ${volatilityOverride === v ? 'active' : ''}`}
                 onClick={() => handleVolatilityChange(v)}
               >
                 {v}%
@@ -128,9 +160,12 @@ export function ProjectionsPanel({ account }: ProjectionsPanelProps) {
           {/* Monte Carlo Chart Section */}
           <div className="projections-chart-section card">
             <div className="section-header">
-              <h3>Monte Carlo Projection: {account.name}</h3>
+              <h3>
+                <TrendingUp size={18} className="header-icon" />
+                Portfolio Monte Carlo Projection
+              </h3>
               <div className="section-meta">
-                {numSimulations.toLocaleString()} simulations · {effectiveVolatility}% volatility · {account.timeHorizon} year horizon
+                {numSimulations.toLocaleString()} simulations · {volatilityOverride}% volatility · {timeHorizon} year horizon
               </div>
             </div>
             <div className="chart-container">
@@ -141,15 +176,15 @@ export function ProjectionsPanel({ account }: ProjectionsPanelProps) {
           {/* Cash Flow Chart Section */}
           <div className="cash-flow-section card">
             <div className="section-header">
-              <h3>Cash Flow: {account.name}</h3>
+              <h3>Portfolio Cash Flow</h3>
             </div>
             <div className="chart-container compact">
-              <CashFlowChart accounts={[account]} />
+              <CashFlowChart accounts={activeAccounts} />
             </div>
           </div>
         </div>
 
-        {/* Right Side Panel - Histogram & Summary */}
+        {/* Right Side Panel */}
         <div className="projections-side-panel">
           {/* Toggle Buttons */}
           <div className="side-panel-toggles">
@@ -170,7 +205,7 @@ export function ProjectionsPanel({ account }: ProjectionsPanelProps) {
           </div>
 
           {/* Histogram Section */}
-          {showHistogram && (
+          {showHistogram && finalValues.length > 0 && (
             <div className="histogram-section card">
               <div className="section-header">
                 <h4>Final Value Distribution</h4>
@@ -200,8 +235,30 @@ export function ProjectionsPanel({ account }: ProjectionsPanelProps) {
           <div className="summary-section card">
             <SimulationSummary
               stats={simulation.stats}
-              timeHorizon={account.timeHorizon}
+              timeHorizon={timeHorizon}
             />
+          </div>
+
+          {/* Consolidated Accounts Breakdown */}
+          <div className="consolidated-accounts-section card">
+            <div className="section-header">
+              <h4>Asset Breakdown</h4>
+            </div>
+            <div className="consolidated-accounts-list">
+              {simulation.consolidatedAccounts.map(c => (
+                <div key={c.name} className="consolidated-account-item">
+                  <div className="account-name">{c.name}</div>
+                  <div className="account-details">
+                    <span className="initial-value">
+                      {c.initialValue.toLocaleString('en-GB', { style: 'currency', currency: 'GBP', maximumFractionDigits: 0 })}
+                    </span>
+                    <span className={`cash-flow ${c.netAnnualCashFlow >= 0 ? 'positive' : 'negative'}`}>
+                      {c.netAnnualCashFlow >= 0 ? '+' : ''}{c.netAnnualCashFlow.toLocaleString('en-GB', { style: 'currency', currency: 'GBP', maximumFractionDigits: 0 })}/yr
+                    </span>
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
 
           {/* Data Table */}

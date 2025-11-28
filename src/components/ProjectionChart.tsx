@@ -174,7 +174,8 @@ export function ProjectionChart({ accounts, isLogScale = false }: ProjectionChar
             name={account.name}
             stroke={getColorForId(account.id)}
             strokeWidth={2}
-            dot={false}
+            dot={{ r: 3, fill: getColorForId(account.id), strokeWidth: 0 }}
+            activeDot={{ r: 5, fill: getColorForId(account.id), strokeWidth: 0 }}
           />
         ))}
 
@@ -184,7 +185,8 @@ export function ProjectionChart({ accounts, isLogScale = false }: ProjectionChar
           dataKey="Total"
           stroke="#f7f5ee"
           strokeWidth={2.5}
-          dot={false}
+          dot={{ r: 3, fill: '#f7f5ee', strokeWidth: 0 }}
+          activeDot={{ r: 5, fill: '#f7f5ee', strokeWidth: 0 }}
         />
       </LineChart>
     </ResponsiveContainer>

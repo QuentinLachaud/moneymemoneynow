@@ -489,6 +489,11 @@ input, textarea, select {
   pointer-events: none;
 }
 
+/* Three-tab variant */
+.tab-toggle.three-tabs .tab-slider {
+  width: calc(33.333% - 2.67px);
+}
+
 /* Tab Button — Individual tab */
 .tab-button {
   position: relative;
@@ -502,6 +507,10 @@ input, textarea, select {
   border-radius: 8px;
   cursor: pointer;
   transition: color 200ms ease;
+}
+
+.tab-toggle.three-tabs .tab-button {
+  padding: 10px 24px;
 }
 
 .tab-button:hover {
@@ -1814,4 +1823,138 @@ html {
 /* Make account card relative for absolute positioning */
 .account-card {
   position: relative;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   PORTFOLIO TAB STYLES
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.portfolio-tab-content {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.portfolio-panel {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.empty-portfolio-state {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: 1;
+  min-height: 300px;
+}
+
+.empty-portfolio-state .empty-state-content {
+  text-align: center;
+  max-width: 400px;
+}
+
+.empty-portfolio-state .empty-icon {
+  color: rgba(255, 255, 255, 0.2);
+  margin-bottom: 16px;
+}
+
+.empty-portfolio-state h3 {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: var(--foreground);
+  margin: 0 0 8px 0;
+}
+
+.empty-portfolio-state p {
+  font-size: 0.875rem;
+  color: rgba(255, 255, 255, 0.5);
+  margin: 0;
+}
+
+/* Portfolio Summary in Controls */
+.portfolio-summary {
+  display: flex;
+  gap: 24px;
+}
+
+.portfolio-stat {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.portfolio-stat .stat-label {
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: rgba(255, 255, 255, 0.4);
+}
+
+.portfolio-stat .stat-value {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--foreground);
+}
+
+/* Header Icon */
+.header-icon {
+  vertical-align: middle;
+  margin-right: 8px;
+  opacity: 0.7;
+}
+
+/* Consolidated Accounts Breakdown */
+.consolidated-accounts-section {
+  margin-top: 12px;
+}
+
+.consolidated-accounts-list {
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+.consolidated-account-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 12px;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.04);
+  border-radius: 8px;
+}
+
+.consolidated-account-item .account-name {
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: var(--foreground);
+}
+
+.consolidated-account-item .account-details {
+  display: flex;
+  gap: 12px;
+  font-size: 0.75rem;
+}
+
+.consolidated-account-item .initial-value {
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.consolidated-account-item .cash-flow {
+  font-weight: 500;
+}
+
+.consolidated-account-item .cash-flow.positive {
+  color: #4ade80;
+}
+
+.consolidated-account-item .cash-flow.negative {
+  color: #f87171;
 }

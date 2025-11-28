@@ -44,31 +44,40 @@ export function AccountForm({ onSubmit, initialData, submitLabel = 'Add Account'
   const [volatility, setVolatility] = useState(initialData?.volatility || '');
   const [timeHorizon, setTimeHorizon] = useState(initialData?.timeHorizon || 10);
   const [frequency, setFrequency] = useState<'monthly' | 'annual'>(initialData?.frequency || 'annual');
-  const [transactionAmount, setTransactionAmount] = useState(initialData?.transactionAmount?.toString() || '0');
+  const [transactionAmount, setTransactionAmount] = useState(initialData?.transactionAmount?.toString() || '');
 
   // Auto-populate amount from existing account with same name (at specified date)
+  // Works for both deposits and drawdowns - calculates projected value at selected date
   useEffect(() => {
-    if (name && date && transactionType === 'deposit') {
-      const matchingAccount = existingAccounts.find(
+    if (name && date) {
+      // Find all accounts with the same name (case-insensitive)
+      const matchingAccounts = existingAccounts.filter(
         acc => acc.name.toLowerCase() === name.toLowerCase()
       );
-      if (matchingAccount) {
-        // Calculate the projected value at the selected date
-        const accountStartDate = new Date(matchingAccount.date);
+      
+      if (matchingAccounts.length > 0) {
         const selectedDate = new Date(date);
-        const yearsDiff = (selectedDate.getTime() - accountStartDate.getTime()) / (1000 * 60 * 60 * 24 * 365.25);
+        let totalValue = 0;
         
-        // Only calculate forward projection if selected date is after account start
-        if (yearsDiff > 0) {
-          const projectedValue = calculateAccountValue(matchingAccount, yearsDiff);
-          setAmount(Math.round(projectedValue).toString());
-        } else {
-          // If same date or earlier, use original amount
-          setAmount(matchingAccount.amount.toString());
+        // Sum values from all matching accounts at the selected date
+        matchingAccounts.forEach(acc => {
+          const accountStartDate = new Date(acc.date);
+          const yearsDiff = (selectedDate.getTime() - accountStartDate.getTime()) / (1000 * 60 * 60 * 24 * 365.25);
+          
+          // Only include if the selected date is at or after account start
+          if (yearsDiff >= 0) {
+            const projectedValue = calculateAccountValue(acc, yearsDiff);
+            totalValue += projectedValue;
+          }
+        });
+        
+        // Set the amount to the total projected value
+        if (totalValue > 0) {
+          setAmount(Math.round(totalValue).toString());
         }
       }
     }
-  }, [name, date, existingAccounts, transactionType]);
+  }, [name, date, existingAccounts]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -99,7 +108,7 @@ export function AccountForm({ onSubmit, initialData, submitLabel = 'Add Account'
       setTimeHorizon(10);
       setFrequency('annual');
       setTransactionType('deposit');
-      setTransactionAmount('0');
+      setTransactionAmount('');
     }
   };
 
