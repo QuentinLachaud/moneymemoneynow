@@ -21,12 +21,13 @@
  */
 
 import { useState, useRef } from 'react';
-import { Plus } from 'lucide-react';
+import { Plus, Check, X } from 'lucide-react';
 import { getLocaleCurrency } from './utils/format';
 import { AccountForm } from './components/AccountForm';
 import { ProjectionChart, getProjectionData, getProjectionColumns } from './components/ProjectionChart';
 import { CashFlowChart, getCashFlowData, getCashFlowColumns } from './components/CashFlowChart';
 import { GraphPanel } from './components/GraphPanel';
+import { ProjectionsPanel } from './components/ProjectionsPanel';
 import { getColorForId } from './utils/colors';
 import Sparkline from './components/Sparkline';
 import TicketEditor from './components/TicketEditor';
@@ -153,8 +154,21 @@ export default function App() {
     });
   };
 
-  /** Current tab: 'assets' shows composition; 'projections' shows data table */
+  /** Current tab: 'assets' shows composition; 'projections' shows Monte Carlo */
   const [tab, setTab] = useState<'assets' | 'projections'>('assets');
+
+  /** Selected account ID for Monte Carlo projection (single account) */
+  const [projectionAccountId, setProjectionAccountId] = useState<string | null>(null);
+
+  /** Get the account selected for projection */
+  const projectionAccount = projectionAccountId 
+    ? accounts.find(a => a.id === projectionAccountId) 
+    : null;
+
+  /** Toggle account selection for projection */
+  const toggleProjectionAccount = (id: string) => {
+    setProjectionAccountId(prev => prev === id ? null : id);
+  };
 
   /** Accounts to show in projections (all if none selected) */
   const filteredAccounts = selectedIds.size === 0
@@ -219,54 +233,87 @@ export default function App() {
           )}
         </aside>
 
-        {/* Right Content: Graphs stacked vertically */}
+        {/* Right Content: Tab-specific content */}
         <div className="content-area">
-          {/* Graph 1: Net Worth Projection with log/linear toggle */}
-          <GraphPanel
-            title="Net Worth Projection"
-            data={getProjectionData(tab === 'assets' ? accounts : filteredAccounts)}
-            columns={getProjectionColumns(tab === 'assets' ? accounts : filteredAccounts)}
-            headerControls={
-              <button
-                className={`scale-toggle ${projectionLogScale ? 'active' : ''}`}
-                onClick={() => setProjectionLogScale(!projectionLogScale)}
-                title={projectionLogScale ? 'Switch to linear scale' : 'Switch to log scale'}
+          {tab === 'assets' ? (
+            <>
+              {/* Graph 1: Net Worth Projection with log/linear toggle */}
+              <GraphPanel
+                title="Net Worth Projection"
+                data={getProjectionData(accounts)}
+                columns={getProjectionColumns(accounts)}
+                headerControls={
+                  <button
+                    className={`scale-toggle ${projectionLogScale ? 'active' : ''}`}
+                    onClick={() => setProjectionLogScale(!projectionLogScale)}
+                    title={projectionLogScale ? 'Switch to linear scale' : 'Switch to log scale'}
+                  >
+                    {projectionLogScale ? 'Log' : 'Linear'}
+                  </button>
+                }
               >
-                {projectionLogScale ? 'Log' : 'Linear'}
-              </button>
-            }
-          >
-            <ProjectionChart 
-              accounts={tab === 'assets' ? accounts : filteredAccounts} 
-              isLogScale={projectionLogScale}
-            />
-          </GraphPanel>
+                <ProjectionChart 
+                  accounts={accounts} 
+                  isLogScale={projectionLogScale}
+                />
+              </GraphPanel>
 
-          {/* Graph 2: Cash Flow */}
-          <GraphPanel
-            title="Cash Flow"
-            data={getCashFlowData(tab === 'assets' ? accounts : filteredAccounts)}
-            columns={getCashFlowColumns(tab === 'assets' ? accounts : filteredAccounts)}
-          >
-            <CashFlowChart accounts={tab === 'assets' ? accounts : filteredAccounts} />
-          </GraphPanel>
+              {/* Graph 2: Cash Flow */}
+              <GraphPanel
+                title="Cash Flow"
+                data={getCashFlowData(accounts)}
+                columns={getCashFlowColumns(accounts)}
+              >
+                <CashFlowChart accounts={accounts} />
+              </GraphPanel>
+            </>
+          ) : (
+            /* Projections Tab: Monte Carlo Simulation */
+            <div className="projections-tab-content">
+              {projectionAccount ? (
+                <ProjectionsPanel account={projectionAccount} />
+              ) : (
+                <div className="empty-projection-state card">
+                  <div className="empty-state-content">
+                    <h3>Select an Asset to Project</h3>
+                    <p>Choose an asset from the bottom strip to run Monte Carlo simulations on its future value.</p>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
 
           {/* Accounts Strip */}
           <div className="accounts-strip card">
             <div className="accounts-scroll">
               {accounts.length > 0 ? (
-                (selectedIds.size === 0 ? accounts : accounts.filter((a) => selectedIds.has(a.id))).map((acct) => {
+                accounts.map((acct) => {
                   const startYear = new Date(acct.date).getFullYear();
                   const duration = `${acct.timeHorizon}y`;
                   const sign = acct.transactionType === 'withdraw' ? '-' : '+';
                   const color = getColorForId(acct.id);
+                  const isSelectedForProjection = projectionAccountId === acct.id;
                   const formattedAmt = acct.transactionAmount?.toLocaleString(undefined, {
                     style: 'currency',
                     currency: getLocaleCurrency().currency,
                   }) || '£0';
 
                   return (
-                    <div className="account-card" key={acct.id}>
+                    <div 
+                      className={`account-card ${tab === 'projections' && isSelectedForProjection ? 'selected' : ''}`} 
+                      key={acct.id}
+                    >
+                      {/* Selection toggle for projections tab */}
+                      {tab === 'projections' && (
+                        <button
+                          className={`account-select-toggle ${isSelectedForProjection ? 'selected' : ''}`}
+                          onClick={() => toggleProjectionAccount(acct.id)}
+                          title={isSelectedForProjection ? 'Deselect for projection' : 'Select for projection'}
+                        >
+                          {isSelectedForProjection ? <Check size={16} /> : <X size={16} />}
+                        </button>
+                      )}
+
                       {/* Card header */}
                       <div className="account-card-header">
                         <div className="account-card-title">
@@ -282,6 +329,7 @@ export default function App() {
                       {/* Card body */}
                       <div className="account-card-meta">
                         {startYear} · {duration} · {acct.frequency}
+                        {acct.volatility && ` · ${acct.volatility} vol`}
                       </div>
 
                       {/* Card amount */}
