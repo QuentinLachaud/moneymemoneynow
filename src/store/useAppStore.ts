@@ -34,7 +34,18 @@ export interface Account {
 }
 
 /** Tab types for navigation */
-export type TabType = 'projections' | 'projection-portfolio';
+export type TabType = 'projections' | 'projection-portfolio' | 'tax-calculator';
+
+/**
+ * Simulation settings - persisted for user convenience
+ */
+export interface SimulationSettings {
+  numSimulations: number;
+  volatilityOverride: number;
+  projectionYearsOverride: number | null;
+  adjustForInflation: boolean;
+  useLogScale: boolean;
+}
 
 /**
  * Store state interface — all persisted state
@@ -50,6 +61,9 @@ interface AppState {
   
   // UI state (persisted for convenience)
   tab: TabType;
+  
+  // Simulation settings (persisted)
+  simulationSettings: SimulationSettings;
 }
 
 /**
@@ -78,6 +92,9 @@ interface AppActions {
   // Tab navigation
   setTab: (tab: TabType) => void;
   
+  // Simulation settings
+  setSimulationSettings: (settings: Partial<SimulationSettings>) => void;
+  
   // Utility
   resetStore: () => void;
 }
@@ -93,6 +110,13 @@ const initialState: AppState = {
   projectionAccountId: null,
   portfolioSelectedIds: new Set(),
   tab: 'projections',
+  simulationSettings: {
+    numSimulations: 100,
+    volatilityOverride: 15,
+    projectionYearsOverride: null,
+    adjustForInflation: false,
+    useLogScale: false,
+  },
 };
 
 /**
@@ -233,6 +257,13 @@ export const useAppStore = create<AppStore>()(
         set({ tab });
       },
 
+      // ─── Simulation Settings ─────────────────────────────────────
+      setSimulationSettings: (settings) => {
+        set((state) => ({
+          simulationSettings: { ...state.simulationSettings, ...settings },
+        }));
+      },
+
       // ─── Utility ─────────────────────────────────────────────────
       resetStore: () => {
         set(initialState);
@@ -241,13 +272,23 @@ export const useAppStore = create<AppStore>()(
     {
       name: 'finance-portfolio-storage',
       storage: customStorage,
-      version: 1, // Increment version for migration
+      version: 2, // Increment version for migration
       migrate: (persistedState, version) => {
         const state = persistedState as AppState & { tab?: string };
         // Migration from v0: 'assets' tab no longer exists
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         if ((state.tab as any) === 'assets') {
           state.tab = 'projections' as TabType;
+        }
+        // Migration from v1: add simulationSettings if not present
+        if (!state.simulationSettings) {
+          state.simulationSettings = {
+            numSimulations: 100,
+            volatilityOverride: 15,
+            projectionYearsOverride: null,
+            adjustForInflation: false,
+            useLogScale: false,
+          };
         }
         return state as AppState;
       },
@@ -258,6 +299,7 @@ export const useAppStore = create<AppStore>()(
         projectionAccountId: state.projectionAccountId,
         portfolioSelectedIds: state.portfolioSelectedIds,
         tab: state.tab,
+        simulationSettings: state.simulationSettings,
       }),
     }
   )

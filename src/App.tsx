@@ -29,6 +29,7 @@ import { ChevronDown, ChevronUp } from 'lucide-react';
 import { AccountForm } from './components/AccountForm';
 import { ProjectionsPanelV2 } from './components/ProjectionsPanelV2';
 import { ProjectionPortfolioPanel } from './components/ProjectionPortfolioPanel';
+import { TaxCalculatorPanel } from './components/TaxCalculatorPanel';
 import { AccountsStrip } from './components/AccountsStrip';
 
 // Import Zustand store and Account type
@@ -143,14 +144,16 @@ export default function App() {
         
         {/* Tab Toggle inline with header */}
         <div className="tab-container">
-          <div className="tab-toggle two-tabs">
+          <div className="tab-toggle three-tabs">
             <div 
               className="tab-slider" 
               style={{ 
-                width: '50%',
+                width: '33.333%',
                 transform: tab === 'projections' 
                   ? 'translateX(0)' 
-                  : 'translateX(100%)'
+                  : tab === 'projection-portfolio'
+                    ? 'translateX(100%)'
+                    : 'translateX(200%)'
               }} 
             />
             <button
@@ -165,48 +168,56 @@ export default function App() {
             >
               Portfolio
             </button>
+            <button
+              onClick={() => setTab('tax-calculator')}
+              className={`tab-button ${tab === 'tax-calculator' ? 'active' : ''}`}
+            >
+              Tax Calculator
+            </button>
           </div>
         </div>
       </header>
 
       {/* ─── MAIN LAYOUT: Left panel + Content area ─────────────────── */}
-      <div className="main-grid">
-        {/* Left Panel: Add Account Form (collapsible on mobile) */}
-        <aside 
-          className={`left-panel card ${leftPanelCollapsed ? 'collapsed' : ''}`}
-          ref={(el) => { leftTrayRef.current = el as HTMLDivElement | null; }}
-        >
-          {/* Mobile toggle header */}
-          <button 
-            className="panel-toggle-header"
-            onClick={() => setLeftPanelCollapsed(!leftPanelCollapsed)}
+      <div className={`main-grid ${tab === 'tax-calculator' ? 'full-width' : ''}`}>
+        {/* Left Panel: Add Account Form (collapsible on mobile) - Hidden on Tax Calculator */}
+        {tab !== 'tax-calculator' && (
+          <aside 
+            className={`left-panel card ${leftPanelCollapsed ? 'collapsed' : ''}`}
+            ref={(el) => { leftTrayRef.current = el as HTMLDivElement | null; }}
           >
-            <h2 className="panel-title">{editingId ? 'Edit Cash Flow' : 'Add Cash Flow'}</h2>
-            {leftPanelCollapsed ? <ChevronDown size={20} /> : <ChevronUp size={20} />}
-          </button>
-          
-          <div className="panel-content">
-            <AccountForm
-              onSubmit={(data) => {
-                if (editingId) {
-                  updateAccount(editingId, data);
-                  cancelEdit();
-                } else {
-                  addAccount(data);
-                }
-                setLeftPanelCollapsed(true); // Collapse after submit on mobile
-              }}
-              initialData={editingId ? accounts.find((a) => a.id === editingId) : undefined}
-              submitLabel={editingId ? 'Update Cash Flow' : 'Add Cash Flow'}
-              existingAccounts={accounts}
-            />
-            {editingId && (
-              <button onClick={cancelEdit} className="btn cancel-btn">
-                Cancel Edit
-              </button>
-            )}
-          </div>
-        </aside>
+            {/* Mobile toggle header */}
+            <button 
+              className="panel-toggle-header"
+              onClick={() => setLeftPanelCollapsed(!leftPanelCollapsed)}
+            >
+              <h2 className="panel-title">{editingId ? 'Edit Cash Flow' : 'Add Cash Flow'}</h2>
+              {leftPanelCollapsed ? <ChevronDown size={20} /> : <ChevronUp size={20} />}
+            </button>
+            
+            <div className="panel-content">
+              <AccountForm
+                onSubmit={(data) => {
+                  if (editingId) {
+                    updateAccount(editingId, data);
+                    cancelEdit();
+                  } else {
+                    addAccount(data);
+                  }
+                  setLeftPanelCollapsed(true); // Collapse after submit on mobile
+                }}
+                initialData={editingId ? accounts.find((a) => a.id === editingId) : undefined}
+                submitLabel={editingId ? 'Update Cash Flow' : 'Add Cash Flow'}
+                existingAccounts={accounts}
+              />
+              {editingId && (
+                <button onClick={cancelEdit} className="btn cancel-btn">
+                  Cancel Edit
+                </button>
+              )}
+            </div>
+          </aside>
+        )}
 
         {/* Right Content: Tab-specific content */}
         <div className="content-area">
@@ -224,26 +235,33 @@ export default function App() {
                 </div>
               )}
             </div>
-          ) : (
+          ) : tab === 'projection-portfolio' ? (
             /* Portfolio Tab: Combined with ribbon and crash support */
             <div className="projection-portfolio-tab-content">
               <ProjectionPortfolioPanel accounts={accounts} />
             </div>
+          ) : (
+            /* Tax Calculator Tab: UK Income Tax Calculator */
+            <div className="tax-calculator-tab-content">
+              <TaxCalculatorPanel />
+            </div>
           )}
 
-          {/* Unified Accounts Strip - Color-coded deposits/drawdowns/crashes */}
-          <AccountsStrip
-            accounts={accounts}
-            tab={tab}
-            projectionAccountId={projectionAccountId}
-            onToggleProjection={toggleProjectionAccount}
-            portfolioSelectedIds={portfolioSelectedIds}
-            onTogglePortfolio={togglePortfolioAccount}
-            onAddDeposit={openAddDeposit}
-            onAddDrawdown={openAddDrawdown}
-            onEditAccount={openEditModal}
-            onDeleteAccount={deleteAccount}
-          />
+          {/* Unified Accounts Strip - Only show on projections/portfolio tabs */}
+          {tab !== 'tax-calculator' && (
+            <AccountsStrip
+              accounts={accounts}
+              tab={tab}
+              projectionAccountId={projectionAccountId}
+              onToggleProjection={toggleProjectionAccount}
+              portfolioSelectedIds={portfolioSelectedIds}
+              onTogglePortfolio={togglePortfolioAccount}
+              onAddDeposit={openAddDeposit}
+              onAddDrawdown={openAddDrawdown}
+              onEditAccount={openEditModal}
+              onDeleteAccount={deleteAccount}
+            />
+          )}
         </div>
       </div>
 

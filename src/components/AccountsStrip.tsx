@@ -32,7 +32,7 @@ import { useMarketCrashStore, MarketCrash } from '../store/useMarketCrashStore';
 import { MarketCrashModal } from './MarketCrashModal';
 import { getColorForId } from '../utils/colors';
 
-type TabType = 'projections' | 'projection-portfolio';
+type TabType = 'projections' | 'projection-portfolio' | 'tax-calculator';
 
 interface AccountsStripProps {
   accounts: Account[];

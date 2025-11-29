@@ -48,6 +48,10 @@ export function ProjectionPortfolioPanel({ accounts }: ProjectionPortfolioPanelP
   const portfolioSelectedIds = useAppStore((state) => state.portfolioSelectedIds);
   const togglePortfolioAccount = useAppStore((state) => state.togglePortfolioAccount);
   
+  // Get persisted simulation settings from store
+  const simulationSettings = useAppStore((state) => state.simulationSettings);
+  const setSimulationSettings = useAppStore((state) => state.setSimulationSettings);
+  
   // Market crash store
   const { crashes, activeCrashId } = useMarketCrashStore();
   const enabledCrashes = useMemo(() => crashes.filter(c => c.isEnabled), [crashes]);
@@ -55,16 +59,39 @@ export function ProjectionPortfolioPanel({ accounts }: ProjectionPortfolioPanelP
   // Mode toggle: deterministic vs stochastic
   const [isDeterministic, setIsDeterministic] = useState(false);
   
-  // Simulation settings
-  const [numSimulations, setNumSimulations] = useState<number>(100);
-  const [globalVolatilityOverride, setGlobalVolatilityOverride] = useState<number>(15);
+  // Use persisted settings
+  const numSimulations = simulationSettings.numSimulations;
+  const globalVolatilityOverride = simulationSettings.volatilityOverride;
+  const projectionYearsOverride = simulationSettings.projectionYearsOverride;
+  const adjustForInflation = simulationSettings.adjustForInflation;
+  const useLogScale = simulationSettings.useLogScale;
+  
+  // Local-only state (not persisted)
   const [histogramBins, setHistogramBins] = useState(20);
   const [showHistogram, setShowHistogram] = useState(true);
   const [showDataTable, setShowDataTable] = useState(false);
   const [showCashFlowTable, setShowCashFlowTable] = useState(false);
-  const [useLogScale, setUseLogScale] = useState(false);
-  const [projectionYearsOverride, setProjectionYearsOverride] = useState<number | null>(null);
-  const [adjustForInflation, setAdjustForInflation] = useState(false);
+  
+  // Update handlers for persisted settings
+  const setNumSimulations = useCallback((value: number) => {
+    setSimulationSettings({ numSimulations: value });
+  }, [setSimulationSettings]);
+  
+  const setGlobalVolatilityOverride = useCallback((value: number) => {
+    setSimulationSettings({ volatilityOverride: value });
+  }, [setSimulationSettings]);
+  
+  const setProjectionYearsOverride = useCallback((value: number | null) => {
+    setSimulationSettings({ projectionYearsOverride: value });
+  }, [setSimulationSettings]);
+  
+  const setAdjustForInflation = useCallback((value: boolean) => {
+    setSimulationSettings({ adjustForInflation: value });
+  }, [setSimulationSettings]);
+  
+  const setUseLogScale = useCallback((value: boolean) => {
+    setSimulationSettings({ useLogScale: value });
+  }, [setSimulationSettings]);
   
   // Per-asset overrides
   const [assetOverrides, setAssetOverrides] = useState<Map<string, AssetOverride>>(new Map());
@@ -257,7 +284,7 @@ export function ProjectionPortfolioPanel({ accounts }: ProjectionPortfolioPanelP
 
   const handleGlobalVolatilityChange = useCallback((value: number) => {
     setGlobalVolatilityOverride(value);
-  }, []);
+  }, [setGlobalVolatilityOverride]);
 
   // Format currency helper
   const formatCurrency = (value: number) => {

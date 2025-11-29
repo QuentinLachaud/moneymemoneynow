@@ -14,7 +14,7 @@
  */
 
 import { useState, useMemo, useCallback } from 'react';
-import { Account } from '../store/useAppStore';
+import { Account, useAppStore } from '../store/useAppStore';
 import { runMonteCarloSimulation, SimulationResult } from '../utils/monteCarlo';
 import { MonteCarloChart } from './MonteCarloChart';
 import { HistogramChart } from './HistogramChart';
@@ -41,23 +41,50 @@ const SIMULATION_COUNTS = [10, 100, 1000] as const;
 const DEFAULT_INFLATION_RATE = 2.5;
 
 export function ProjectionsPanelV2({ account }: ProjectionsPanelV2Props) {
+  // Get persisted simulation settings from store
+  const simulationSettings = useAppStore((state) => state.simulationSettings);
+  const setSimulationSettings = useAppStore((state) => state.setSimulationSettings);
+  
   // Mode toggle: deterministic vs stochastic
   const [isDeterministic, setIsDeterministic] = useState(false);
   
-  // Simulation settings
-  const [numSimulations, setNumSimulations] = useState<number>(100);
-  const [volatilityOverride, setVolatilityOverride] = useState<number>(15);
+  // Use persisted settings with local fallbacks for non-persisted ones
+  const numSimulations = simulationSettings.numSimulations;
+  const volatilityOverride = simulationSettings.volatilityOverride;
+  const projectionYearsOverride = simulationSettings.projectionYearsOverride;
+  const adjustForInflation = simulationSettings.adjustForInflation;
+  const useLogScale = simulationSettings.useLogScale;
+  
+  // Local-only state (not persisted)
   const [histogramBins, setHistogramBins] = useState(20);
   const [showHistogram, setShowHistogram] = useState(true);
   const [showSurvivalScatter, setShowSurvivalScatter] = useState(false);
   const [showDataTable, setShowDataTable] = useState(false);
   const [showCashFlowTable, setShowCashFlowTable] = useState(false);
-  const [useLogScale, setUseLogScale] = useState(false);
-  const [projectionYearsOverride, setProjectionYearsOverride] = useState<number | null>(null);
-  const [adjustForInflation, setAdjustForInflation] = useState(false);
   
   // Starting value override
   const [startingValueOverride, setStartingValueOverride] = useState<number | null>(null);
+
+  // Update handlers for persisted settings
+  const setNumSimulations = useCallback((value: number) => {
+    setSimulationSettings({ numSimulations: value });
+  }, [setSimulationSettings]);
+  
+  const setVolatilityOverride = useCallback((value: number) => {
+    setSimulationSettings({ volatilityOverride: value });
+  }, [setSimulationSettings]);
+  
+  const setProjectionYearsOverride = useCallback((value: number | null) => {
+    setSimulationSettings({ projectionYearsOverride: value });
+  }, [setSimulationSettings]);
+  
+  const setAdjustForInflation = useCallback((value: boolean) => {
+    setSimulationSettings({ adjustForInflation: value });
+  }, [setSimulationSettings]);
+  
+  const setUseLogScale = useCallback((value: boolean) => {
+    setSimulationSettings({ useLogScale: value });
+  }, [setSimulationSettings]);
 
   // Effective values
   const effectiveStartingValue = startingValueOverride ?? account.amount;
@@ -182,7 +209,7 @@ export function ProjectionsPanelV2({ account }: ProjectionsPanelV2Props) {
 
   const handleVolatilityChange = useCallback((value: number) => {
     setVolatilityOverride(value);
-  }, []);
+  }, [setVolatilityOverride]);
 
   // Download CSV
   const downloadCSV = useCallback((data: Array<Record<string, unknown>>, columns: Array<{ key: string; label: string }>, filename: string) => {
