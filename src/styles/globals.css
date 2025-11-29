@@ -3370,6 +3370,7 @@ html {
   display: flex;
   flex-direction: column;
   gap: 10px;
+  flex: 1 1 0;
   min-height: 0;
   overflow: hidden;
 }
@@ -3381,6 +3382,8 @@ html {
   background: linear-gradient(135deg, rgba(15, 23, 42, 0.95), rgba(30, 41, 59, 0.9));
   border-radius: 10px;
   border: 1px solid rgba(255, 255, 255, 0.08);
+  min-height: 0;
+  overflow: hidden;
 }
 
 .chart-section .section-header {
@@ -4426,11 +4429,15 @@ html {
 }
 
 .chart-section:first-child {
-  flex: 2;
+  flex: 2 1 0;
+  min-height: 200px;
 }
 
 .chart-section:last-child {
-  flex: 1;
+  flex: 1 1 0;
+  min-height: 120px;
+  max-height: none;
+  overflow: hidden;
 }
 
 .chart-section .section-header {
@@ -4512,22 +4519,28 @@ html {
 }
 
 .chart-container {
-  flex: 1;
+  flex: 1 1 0;
   min-height: 0;
   padding: 8px;
   overflow: hidden;
 }
 
 .chart-container.large {
-  min-height: 280px;
+  flex: 1 1 0;
+  min-height: 180px;
 }
 
 .chart-container.compact {
-  min-height: 360px;
+  flex: 1 1 0;
+  min-height: 200px;
 }
 
 .chart-container.cashflow-tall {
-  min-height: 400px;
+  flex: 1 1 0;
+  min-height: 0;
+  height: auto;
+  max-height: 100%;
+  overflow: hidden;
 }
 
 /* Data Table Container */
@@ -6760,79 +6773,288 @@ html {
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
-   TAX CALCULATOR PANEL
+   TAX CALCULATOR PANEL — New Left-Tray Layout
    ═══════════════════════════════════════════════════════════════════════════ */
 
 .tax-calculator-panel {
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
   height: 100%;
-  gap: 12px;
-  padding: 12px;
+  gap: 0;
+  overflow: hidden;
 }
 
-.tax-controls-bar {
-  flex-wrap: wrap;
+/* ─────────────────────────────────────────────────────────────────────────────
+   LEFT TRAY — Tax Settings
+   ───────────────────────────────────────────────────────────────────────────── */
+
+.tax-settings-tray {
+  width: 240px;
+  min-width: 240px;
+  display: flex;
+  flex-direction: column;
+  background: linear-gradient(180deg, rgba(15, 19, 28, 0.98), rgba(12, 16, 22, 0.99));
+  border-right: 1px solid rgba(255, 255, 255, 0.06);
+  overflow-y: auto;
 }
 
-.tax-controls-bar .pension-group {
+.tray-header {
+  padding: 16px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.tray-header h3 {
+  margin: 0;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.8);
+  letter-spacing: 0.3px;
+}
+
+.tray-content {
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.tray-section {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.tray-section .section-label {
   display: flex;
   align-items: center;
-  gap: 4px;
+  gap: 6px;
+  font-size: 0.7rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: rgba(255, 255, 255, 0.5);
 }
 
-.tax-controls-bar .pension-input {
-  width: 48px;
-  padding: 4px 6px;
+.tray-section .section-hint {
   font-size: 0.65rem;
+  color: rgba(255, 255, 255, 0.35);
+  margin-top: 4px;
+}
+
+/* Region Toggle */
+.region-toggle {
+  position: relative;
+  display: flex;
+  background: rgba(0, 0, 0, 0.3);
+  border-radius: 8px;
+  padding: 3px;
+  overflow: hidden;
+}
+
+.region-option {
+  flex: 1;
+  padding: 8px 12px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  background: transparent;
+  border: none;
+  color: rgba(255, 255, 255, 0.5);
+  cursor: pointer;
+  position: relative;
+  z-index: 1;
+  transition: color 200ms ease;
+}
+
+.region-option.active {
+  color: white;
+}
+
+.region-indicator {
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: calc(50% - 3px);
+  height: calc(100% - 6px);
+  background: linear-gradient(135deg, rgba(99, 102, 241, 0.7), rgba(168, 85, 247, 0.7));
+  border-radius: 6px;
+  transition: transform 200ms ease;
+}
+
+/* Pension Control */
+.pension-control {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.pension-slider {
+  flex: 1;
+  height: 4px;
+  -webkit-appearance: none;
+  appearance: none;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 2px;
+  cursor: pointer;
+}
+
+.pension-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 14px;
+  height: 14px;
+  background: linear-gradient(135deg, #818cf8, #a855f7);
+  border-radius: 50%;
+  cursor: grab;
+  transition: transform 150ms ease;
+}
+
+.pension-slider::-webkit-slider-thumb:active {
+  transform: scale(1.2);
+  cursor: grabbing;
+}
+
+.pension-value {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  min-width: 50px;
+}
+
+.pension-value .pension-input {
+  width: 36px;
+  padding: 4px 6px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  text-align: center;
   background: rgba(0, 0, 0, 0.3);
   border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 4px;
   color: var(--foreground);
-  text-align: center;
 }
 
-.tax-controls-bar .age-control {
+.pension-value .percent-sign {
+  font-size: 0.7rem;
+  color: rgba(255, 255, 255, 0.4);
+}
+
+/* Quick Presets */
+.quick-presets {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.preset-btn {
+  padding: 5px 8px;
+  font-size: 0.65rem;
+  font-weight: 500;
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 4px;
+  color: rgba(255, 255, 255, 0.5);
+  cursor: pointer;
+  transition: all 150ms ease;
+}
+
+.preset-btn:hover {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(255, 255, 255, 0.15);
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.preset-btn.active {
+  background: linear-gradient(135deg, rgba(99, 102, 241, 0.3), rgba(168, 85, 247, 0.3));
+  border-color: rgba(99, 102, 241, 0.4);
+  color: white;
+}
+
+/* Age Section */
+.age-section .age-control {
   display: flex;
   align-items: center;
   gap: 8px;
 }
 
-.tax-controls-bar .age-input {
-  width: 50px;
-  padding: 4px 6px;
-  font-size: 0.7rem;
+.age-section .age-input {
+  width: 56px;
+  padding: 8px 10px;
+  font-size: 1rem;
+  font-weight: 600;
+  text-align: center;
   background: rgba(0, 0, 0, 0.3);
   border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 4px;
+  border-radius: 6px;
   color: var(--foreground);
-  text-align: center;
 }
 
-.tax-controls-bar .years-to-retire {
-  font-size: 0.6rem;
+.age-section .age-unit {
+  font-size: 0.75rem;
   color: rgba(255, 255, 255, 0.4);
-  white-space: nowrap;
 }
 
-.tax-content {
+.retirement-info {
+  display: flex;
+  align-items: baseline;
+  gap: 4px;
+  padding: 8px;
+  background: rgba(16, 185, 129, 0.08);
+  border-radius: 6px;
+}
+
+.retirement-info .years-label {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #10b981;
+}
+
+.retirement-info .years-suffix {
+  font-size: 0.7rem;
+  color: rgba(255, 255, 255, 0.5);
+}
+
+/* Info Button */
+.info-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 14px;
+  height: 14px;
+  background: rgba(255, 255, 255, 0.08);
+  border: none;
+  border-radius: 50%;
+  color: rgba(255, 255, 255, 0.4);
+  cursor: help;
+  transition: all 150ms ease;
+}
+
+.info-btn:hover {
+  background: rgba(99, 102, 241, 0.2);
+  color: rgba(255, 255, 255, 0.7);
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   MAIN CONTENT AREA
+   ───────────────────────────────────────────────────────────────────────────── */
+
+.tax-main-content {
   flex: 1;
   display: flex;
   flex-direction: column;
+  overflow: hidden;
+  padding: 16px;
   gap: 16px;
-  overflow-y: auto;
 }
 
 /* Salary Input Section */
 .salary-input-section {
   display: flex;
   justify-content: center;
-  padding: 20px;
+  padding: 12px 0;
+  flex-shrink: 0;
 }
 
 .salary-form {
   width: 100%;
-  max-width: 500px;
+  max-width: 480px;
 }
 
 .salary-input-wrapper {
@@ -6851,8 +7073,8 @@ html {
 }
 
 .salary-input-wrapper .currency-symbol {
-  padding: 14px 16px;
-  font-size: 1.5rem;
+  padding: 12px 14px;
+  font-size: 1.25rem;
   font-weight: 600;
   color: rgba(255, 255, 255, 0.5);
   background: rgba(0, 0, 0, 0.2);
@@ -6860,8 +7082,9 @@ html {
 
 .salary-input {
   flex: 1;
-  padding: 14px 12px;
-  font-size: 1.5rem;
+  min-width: 0;
+  padding: 12px 10px;
+  font-size: 1.25rem;
   font-weight: 500;
   background: transparent;
   border: none;
@@ -6877,215 +7100,695 @@ html {
 .calculate-btn {
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 14px 20px;
-  font-size: 0.9rem;
+  gap: 6px;
+  padding: 12px 16px;
+  font-size: 0.85rem;
   font-weight: 600;
   background: linear-gradient(135deg, rgba(99, 102, 241, 0.8), rgba(168, 85, 247, 0.8));
   border: none;
   color: white;
   cursor: pointer;
   transition: all 200ms ease;
+  white-space: nowrap;
 }
 
 .calculate-btn:hover {
   background: linear-gradient(135deg, rgba(99, 102, 241, 1), rgba(168, 85, 247, 1));
 }
 
-/* Tax Results */
-.tax-results {
+/* ─────────────────────────────────────────────────────────────────────────────
+   RESULTS GRID — Side-by-side Breakdown & Scenario
+   ───────────────────────────────────────────────────────────────────────────── */
+
+.tax-results-grid {
+  flex: 1;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.breakdown-section,
+.scenario-section {
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  min-height: 0;
+  overflow: hidden;
 }
 
-/* Salary Header */
-.salary-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-end;
-  padding: 16px 24px;
-  background: linear-gradient(180deg, rgba(15, 19, 28, 0.9), rgba(12, 16, 22, 0.95));
-  border: 1px solid rgba(255, 255, 255, 0.06);
-  border-radius: 12px;
-}
+/* ─────────────────────────────────────────────────────────────────────────────
+   SALARY BREAKDOWN TABLE
+   ───────────────────────────────────────────────────────────────────────────── */
 
-.salary-main {
+.salary-breakdown-table {
   display: flex;
   flex-direction: column;
-  gap: 4px;
-}
-
-.gross-salary {
-  font-size: 2.5rem;
-  font-weight: 700;
-  color: var(--foreground);
-  margin: 0;
-  letter-spacing: -0.02em;
-}
-
-.salary-label {
-  font-size: 0.75rem;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  color: rgba(255, 255, 255, 0.4);
-}
-
-.salary-quick-stats {
-  display: flex;
-  gap: 24px;
-}
-
-.quick-stat {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-end;
-  gap: 2px;
-}
-
-.quick-stat .stat-value {
-  font-size: 1.25rem;
-  font-weight: 700;
-}
-
-.quick-stat .stat-value.effective-rate {
-  color: #818cf8;
-}
-
-.quick-stat .stat-value.marginal-rate {
-  color: #f59e0b;
-}
-
-.quick-stat .stat-label {
-  font-size: 0.6rem;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  color: rgba(255, 255, 255, 0.4);
-}
-
-/* Tax Breakdown Table */
-.tax-breakdown-container {
+  height: 100%;
   background: linear-gradient(180deg, rgba(15, 19, 28, 0.9), rgba(12, 16, 22, 0.95));
   border: 1px solid rgba(255, 255, 255, 0.06);
   border-radius: 12px;
   overflow: hidden;
 }
 
-.breakdown-table-wrapper {
-  overflow-x: auto;
+.salary-breakdown-table.scenario {
+  border-color: rgba(99, 102, 241, 0.2);
 }
 
-.tax-breakdown-table {
-  width: 100%;
-  border-collapse: collapse;
-}
-
-.tax-breakdown-table th,
-.tax-breakdown-table td {
+.salary-breakdown-table .table-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
   padding: 12px 16px;
-  text-align: left;
-}
-
-.tax-breakdown-table th {
-  font-size: 0.65rem;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  color: rgba(255, 255, 255, 0.4);
   background: rgba(0, 0, 0, 0.2);
   border-bottom: 1px solid rgba(255, 255, 255, 0.06);
 }
 
-.tax-breakdown-table th.annual-col,
-.tax-breakdown-table th.monthly-col {
-  text-align: right;
-}
-
-.tax-breakdown-table .row-label {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-weight: 500;
+.salary-breakdown-table .table-header h4 {
+  margin: 0;
+  font-size: 0.9rem;
+  font-weight: 600;
   color: rgba(255, 255, 255, 0.85);
 }
 
-.tax-breakdown-table .amount {
-  text-align: right;
-  font-family: 'SF Mono', 'Monaco', 'Inconsolata', monospace;
-  font-size: 0.85rem;
+.salary-breakdown-table .header-stats {
+  display: flex;
+  gap: 12px;
 }
 
-.tax-breakdown-table .amount.deduction {
-  color: #ef4444;
-}
-
-.tax-breakdown-table .amount.bonus,
-.tax-breakdown-table .amount.savings {
-  color: #10b981;
-}
-
-.tax-breakdown-table .amount.net {
-  color: #10b981;
-  font-weight: 700;
-  font-size: 1rem;
-}
-
-.tax-breakdown-table .amount.monthly {
-  color: rgba(255, 255, 255, 0.5);
-}
-
-/* Section headers */
-.tax-breakdown-table .section-header td {
-  padding: 8px 16px;
-  font-size: 0.65rem;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  color: rgba(255, 255, 255, 0.5);
-  background: rgba(0, 0, 0, 0.15);
-  border-top: 1px solid rgba(255, 255, 255, 0.04);
-}
-
-/* Band rows */
-.tax-breakdown-table .band-row td {
-  padding: 8px 16px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.02);
-}
-
-.tax-breakdown-table .band-label {
+.salary-breakdown-table .header-stats .stat {
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  align-items: flex-end;
+  gap: 1px;
 }
 
-.tax-breakdown-table .band-name {
+.salary-breakdown-table .header-stats .stat-value {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: #818cf8;
+}
+
+.salary-breakdown-table .header-stats .stat-label {
+  font-size: 0.55rem;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  color: rgba(255, 255, 255, 0.4);
+}
+
+.salary-breakdown-table .table-wrapper {
+  flex: 1;
+  overflow-y: auto;
+}
+
+.breakdown-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.breakdown-table th,
+.breakdown-table td {
+  padding: 8px 12px;
+  text-align: left;
+}
+
+.breakdown-table th {
+  font-size: 0.6rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  color: rgba(255, 255, 255, 0.4);
+  background: rgba(0, 0, 0, 0.15);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+  position: sticky;
+  top: 0;
+}
+
+.breakdown-table th.amount-col {
+  text-align: right;
+}
+
+.breakdown-table .category {
+  display: flex;
+  align-items: center;
+  gap: 6px;
   font-size: 0.8rem;
   color: rgba(255, 255, 255, 0.75);
 }
 
-.tax-breakdown-table .band-range {
-  font-size: 0.65rem;
+.breakdown-table .category.band {
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+}
+
+.breakdown-table .band-name {
+  font-size: 0.75rem;
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.breakdown-table .band-detail {
+  font-size: 0.6rem;
   color: rgba(255, 255, 255, 0.35);
 }
 
-/* Subtotal rows */
-.tax-breakdown-table .subtotal-row td {
-  padding: 10px 16px;
+.breakdown-table .amount {
+  text-align: right;
+  font-family: 'SF Mono', 'Monaco', 'Inconsolata', monospace;
+  font-size: 0.75rem;
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.breakdown-table .amount.deduction {
+  color: #ef4444;
+}
+
+.breakdown-table .amount.bonus,
+.breakdown-table .amount.savings {
+  color: #10b981;
+}
+
+.breakdown-table .amount.net {
+  color: #10b981;
+  font-weight: 700;
+  font-size: 0.9rem;
+}
+
+.breakdown-table .amount.monthly {
+  color: rgba(255, 255, 255, 0.45);
+}
+
+.breakdown-table .amount.monthly.highlight {
+  color: #10b981;
+  font-weight: 700;
+  font-size: 0.9rem;
+}
+
+/* Section dividers */
+.breakdown-table .section-divider td {
+  padding: 6px 12px;
+  font-size: 0.6rem;
   font-weight: 600;
-  border-top: 1px solid rgba(255, 255, 255, 0.06);
-  background: rgba(0, 0, 0, 0.1);
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  color: rgba(255, 255, 255, 0.45);
+  background: rgba(0, 0, 0, 0.12);
+  border-top: 1px solid rgba(255, 255, 255, 0.03);
+}
+
+/* Band rows */
+.breakdown-table .band-row td {
+  padding: 6px 12px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.02);
+}
+
+/* Subtotal rows */
+.breakdown-table .subtotal-row td {
+  padding: 8px 12px;
+  font-weight: 600;
+  background: rgba(0, 0, 0, 0.08);
+  border-top: 1px solid rgba(255, 255, 255, 0.04);
+}
+
+.breakdown-table .subtotal-row.tax-total td.deduction,
+.breakdown-table .subtotal-row.ni-total td.deduction {
+  color: #ef4444;
+  font-weight: 700;
 }
 
 /* Gross row */
-.tax-breakdown-table .gross-row td {
+.breakdown-table .gross-row td {
+  padding: 10px 12px;
   background: rgba(99, 102, 241, 0.05);
   border-bottom: 1px solid rgba(255, 255, 255, 0.04);
 }
 
 /* Net row */
-.tax-breakdown-table .net-row td {
-  padding: 14px 16px;
+.breakdown-table .net-row td {
+  padding: 12px;
   background: rgba(16, 185, 129, 0.08);
+  border-top: 2px solid rgba(16, 185, 129, 0.2);
+}
+
+.breakdown-table .employer-row td {
+  background: rgba(16, 185, 129, 0.03);
+}
+
+.breakdown-table .savings-row td {
+  background: rgba(16, 185, 129, 0.05);
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   SCENARIO PANEL
+   ───────────────────────────────────────────────────────────────────────────── */
+
+.scenario-panel {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  background: linear-gradient(180deg, rgba(15, 19, 28, 0.9), rgba(12, 16, 22, 0.95));
+  border: 1px solid rgba(99, 102, 241, 0.2);
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+/* Scenario Selector */
+.scenario-selector {
+  padding: 12px;
+  background: rgba(0, 0, 0, 0.2);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.scenario-toggle {
+  position: relative;
+  display: flex;
+  background: rgba(0, 0, 0, 0.3);
+  border-radius: 8px;
+  padding: 3px;
+}
+
+.scenario-option {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 8px 12px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  background: transparent;
+  border: none;
+  color: rgba(255, 255, 255, 0.5);
+  cursor: pointer;
+  position: relative;
+  z-index: 1;
+  transition: color 200ms ease;
+}
+
+.scenario-option.active {
+  color: white;
+}
+
+.scenario-indicator {
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: calc(50% - 3px);
+  height: calc(100% - 6px);
+  background: linear-gradient(135deg, rgba(99, 102, 241, 0.7), rgba(168, 85, 247, 0.7));
+  border-radius: 6px;
+  transition: transform 200ms ease;
+}
+
+/* Scenario Content */
+.scenario-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.salary-change-scenario,
+.salary-sacrifice-scenario {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+/* Scenario Controls */
+.scenario-controls {
+  padding: 12px;
+  background: rgba(0, 0, 0, 0.1);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+}
+
+.control-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.change-control {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 8px;
+  background: rgba(0, 0, 0, 0.15);
+  border: 1px solid rgba(255, 255, 255, 0.04);
+  border-radius: 8px;
+  opacity: 0.6;
+  transition: all 150ms ease;
+}
+
+.change-control.active {
+  opacity: 1;
+  border-color: rgba(99, 102, 241, 0.3);
+  background: rgba(99, 102, 241, 0.05);
+}
+
+.change-control label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.7rem;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.7);
+  cursor: pointer;
+}
+
+.change-control label input[type="radio"] {
+  width: 12px;
+  height: 12px;
+  accent-color: #818cf8;
+}
+
+.change-control .control-input {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.change-control .control-input input[type="range"] {
+  width: 100%;
+  height: 4px;
+  -webkit-appearance: none;
+  appearance: none;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 2px;
+  cursor: pointer;
+}
+
+.change-control .control-input input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 12px;
+  height: 12px;
+  background: linear-gradient(135deg, #818cf8, #a855f7);
+  border-radius: 50%;
+  cursor: grab;
+}
+
+.change-control .control-input input[type="range"]:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.input-with-unit {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  background: rgba(0, 0, 0, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 4px;
+  padding: 0 6px;
+}
+
+.input-with-unit input {
+  width: 50px;
+  padding: 5px 4px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  text-align: center;
+  background: transparent;
+  border: none;
+  color: var(--foreground);
+  outline: none;
+}
+
+.input-with-unit input:disabled {
+  opacity: 0.4;
+}
+
+.input-with-unit .unit {
+  font-size: 0.7rem;
+  color: rgba(255, 255, 255, 0.4);
+}
+
+.input-with-unit .unit.prefix {
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.change-control .control-hint {
+  font-size: 0.6rem;
+  color: rgba(255, 255, 255, 0.4);
+  text-align: center;
+}
+
+.unit-toggle {
+  display: flex;
+  gap: 4px;
+}
+
+.unit-toggle button {
+  padding: 4px 8px;
+  font-size: 0.6rem;
+  font-weight: 500;
+  background: rgba(0, 0, 0, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 4px;
+  color: rgba(255, 255, 255, 0.4);
+  cursor: pointer;
+  transition: all 150ms ease;
+}
+
+.unit-toggle button:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.unit-toggle button.active {
+  background: rgba(99, 102, 241, 0.2);
+  border-color: rgba(99, 102, 241, 0.3);
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.unit-toggle button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* Scenario table in panel */
+.scenario-panel .salary-breakdown-table {
+  flex: 1;
+  border: none;
+  border-radius: 0;
+  background: transparent;
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   PENSION GROWTH SECTION
+   ───────────────────────────────────────────────────────────────────────────── */
+
+.pension-growth-section {
+  padding: 16px;
+  background: rgba(16, 185, 129, 0.03);
+  border-top: 1px solid rgba(16, 185, 129, 0.1);
+}
+
+.pension-growth-section h5 {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 0 12px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.growth-summary {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 16px;
+}
+
+.summary-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 6px 10px;
+  background: rgba(0, 0, 0, 0.15);
+  border-radius: 6px;
+}
+
+.summary-row.impact {
+  background: rgba(239, 68, 68, 0.08);
+}
+
+.summary-row .label {
+  font-size: 0.7rem;
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.summary-row .value {
+  font-family: 'SF Mono', 'Monaco', monospace;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.summary-row .value.positive {
+  color: #10b981;
+}
+
+.summary-row .value.negative {
+  color: #ef4444;
+}
+
+.projection-box {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.projection-item {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 10px;
+  background: rgba(0, 0, 0, 0.15);
+  border-radius: 8px;
+}
+
+.projection-item.highlight {
+  background: rgba(16, 185, 129, 0.1);
+  border: 1px solid rgba(16, 185, 129, 0.2);
+}
+
+.projection-label {
+  font-size: 0.65rem;
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.projection-value {
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: #10b981;
+}
+
+.projection-detail {
+  font-size: 0.6rem;
+  color: rgba(255, 255, 255, 0.35);
+}
+
+.growth-explanation {
+  font-size: 0.7rem;
+  line-height: 1.5;
+  color: rgba(255, 255, 255, 0.55);
+  margin: 0;
+}
+
+.growth-explanation strong {
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.growth-explanation.secondary {
+  margin-top: 8px;
+  color: rgba(255, 255, 255, 0.45);
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   EMPTY STATE
+   ───────────────────────────────────────────────────────────────────────────── */
+
+.empty-state {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 40px;
+}
+
+.empty-state-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  text-align: center;
+  color: rgba(255, 255, 255, 0.4);
+}
+
+.empty-state-content svg {
+  opacity: 0.3;
+}
+
+.empty-state-content h3 {
+  margin: 0;
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.empty-state-content p {
+  margin: 0;
+  max-width: 360px;
+  font-size: 0.8rem;
+  line-height: 1.5;
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   RESPONSIVE — Tax Calculator
+   ───────────────────────────────────────────────────────────────────────────── */
+
+@media (max-width: 1024px) {
+  .tax-results-grid {
+    grid-template-columns: 1fr;
+    overflow-y: auto;
+  }
+  
+  .breakdown-section,
+  .scenario-section {
+    max-height: none;
+    overflow: visible;
+  }
+  
+  .salary-breakdown-table,
+  .scenario-panel {
+    max-height: none;
+  }
+}
+
+@media (max-width: 768px) {
+  .tax-calculator-panel {
+    flex-direction: column;
+  }
+  
+  .tax-settings-tray {
+    width: 100%;
+    min-width: unset;
+    border-right: none;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  }
+  
+  .tray-content {
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+  
+  .tray-section {
+    min-width: 140px;
+    flex: 1;
+  }
+  
+  .control-row {
+    grid-template-columns: 1fr;
+  }
+  
+  .salary-input-wrapper .currency-symbol {
+    padding: 10px 12px;
+    font-size: 1.1rem;
+  }
+  
+  .salary-input {
+    font-size: 1.1rem;
+    padding: 10px 8px;
+  }
+  
+  .calculate-btn {
+    padding: 10px 14px;
+    font-size: 0.8rem;
+  }
+};
   border-top: 2px solid rgba(16, 185, 129, 0.2);
 }
 
