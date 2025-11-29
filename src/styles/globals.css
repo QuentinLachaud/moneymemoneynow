@@ -8956,6 +8956,360 @@ html {
   margin-bottom: 8px;
 }
 
+/* ============================================
+   PENSION SLIDER INPUTS - Left Panel
+   ============================================ */
+
+.pension-sliders {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.pension-slider-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.pension-slider-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.pension-slider-label {
+  font-size: 0.75rem;
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.pension-slider-value {
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: #a855f7;
+}
+
+.pension-slider-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.pension-stepper-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 6px;
+  color: rgba(255, 255, 255, 0.6);
+  cursor: pointer;
+  transition: all 150ms ease;
+}
+
+.pension-stepper-btn:hover:not(:disabled) {
+  background: rgba(99, 102, 241, 0.2);
+  border-color: rgba(99, 102, 241, 0.4);
+  color: white;
+}
+
+.pension-stepper-btn:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+.pension-slider {
+  flex: 1;
+  height: 6px;
+  -webkit-appearance: none;
+  appearance: none;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 3px;
+  outline: none;
+  cursor: pointer;
+}
+
+.pension-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 16px;
+  height: 16px;
+  background: linear-gradient(135deg, #6366f1, #a855f7);
+  border-radius: 50%;
+  cursor: pointer;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+  transition: transform 150ms ease;
+}
+
+.pension-slider::-webkit-slider-thumb:hover {
+  transform: scale(1.15);
+}
+
+.pension-slider::-moz-range-thumb {
+  width: 16px;
+  height: 16px;
+  background: linear-gradient(135deg, #6366f1, #a855f7);
+  border-radius: 50%;
+  cursor: pointer;
+  border: none;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+}
+
+.pension-presets {
+  display: flex;
+  gap: 4px;
+  flex-wrap: wrap;
+}
+
+.pension-preset-btn {
+  padding: 4px 8px;
+  font-size: 0.65rem;
+  font-weight: 500;
+  font-family: inherit;
+  background: rgba(0, 0, 0, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 4px;
+  color: rgba(255, 255, 255, 0.4);
+  cursor: pointer;
+  transition: all 150ms ease;
+}
+
+.pension-preset-btn:hover {
+  background: rgba(255, 255, 255, 0.05);
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.pension-preset-btn.active {
+  background: linear-gradient(135deg, rgba(99, 102, 241, 0.3), rgba(168, 85, 247, 0.3));
+  border-color: rgba(99, 102, 241, 0.4);
+  color: white;
+}
+
+.pension-total-label {
+  font-size: 0.75rem;
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.pension-total-value {
+  font-size: 1rem;
+  font-weight: 700;
+  color: #10b981;
+}
+
+/* ============================================
+   STEPPED INPUT GROUPS - Right Panel Sliders
+   ============================================ */
+
+.scenario-controls {
+  margin-bottom: 12px;
+}
+
+.stepped-input-group {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 12px;
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 8px;
+}
+
+.stepped-input-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.stepped-input-label {
+  font-size: 0.8rem;
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.stepped-input-value {
+  font-size: 1.1rem;
+  font-weight: 700;
+}
+
+.stepped-input-value.positive {
+  color: #10b981;
+}
+
+.stepped-input-value.negative {
+  color: #ef4444;
+}
+
+.stepped-input-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.stepper-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 6px;
+  color: rgba(255, 255, 255, 0.6);
+  cursor: pointer;
+  transition: all 150ms ease;
+}
+
+.stepper-btn.large {
+  width: 36px;
+  height: 36px;
+}
+
+.stepper-btn:hover:not(:disabled) {
+  background: rgba(99, 102, 241, 0.2);
+  border-color: rgba(99, 102, 241, 0.4);
+  color: white;
+}
+
+.stepper-btn:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+.stepped-slider {
+  flex: 1;
+  height: 8px;
+  -webkit-appearance: none;
+  appearance: none;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 4px;
+  outline: none;
+  cursor: pointer;
+}
+
+.stepped-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 20px;
+  height: 20px;
+  background: linear-gradient(135deg, #6366f1, #a855f7);
+  border-radius: 50%;
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+  transition: transform 150ms ease;
+}
+
+.stepped-slider::-webkit-slider-thumb:hover {
+  transform: scale(1.1);
+}
+
+.stepped-slider::-moz-range-thumb {
+  width: 20px;
+  height: 20px;
+  background: linear-gradient(135deg, #6366f1, #a855f7);
+  border-radius: 50%;
+  cursor: pointer;
+  border: none;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+.stepped-presets {
+  display: flex;
+  gap: 4px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.stepped-tally {
+  display: flex;
+  align-items: baseline;
+  justify-content: center;
+  gap: 8px;
+  padding: 8px;
+  background: rgba(16, 185, 129, 0.1);
+  border-radius: 6px;
+}
+
+.stepped-tally .tally-label {
+  font-size: 0.75rem;
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.stepped-tally .tally-value {
+  font-size: 1rem;
+  font-weight: 700;
+  color: #10b981;
+}
+
+.stepped-tally .tally-detail {
+  font-size: 0.7rem;
+  color: rgba(255, 255, 255, 0.4);
+}
+
+/* ============================================
+   BOTTOM-ALIGNED TABLE SECTIONS
+   ============================================ */
+
+/* Main results grid */
+.tax-results-grid {
+  flex: 1;
+  display: flex;
+  gap: 16px;
+  min-height: 0;
+}
+
+/* Left breakdown section */
+.breakdown-section {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+/* Right scenario section */
+.scenario-section {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+/* Scenario panel layout */
+.scenario-panel {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+/* Result wrapper pushes table to bottom */
+.scenario-result-wrapper {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  min-height: 0;
+}
+
+/* Tax breakdown panel should fill available space and align content to bottom */
+.tax-breakdown-panel {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 12px;
+  padding: 16px;
+  min-height: 0;
+}
+
+.tax-breakdown-panel .table-wrapper {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  min-height: 0;
+  overflow: auto;
+}
+
 /* Responsive */
 @media (max-width: 768px) {
   .salary-header {
@@ -8983,6 +9337,10 @@ html {
   
   .tax-controls-bar .controls-left {
     gap: 10px;
+  }
+  
+  .tax-results-grid {
+    flex-direction: column;
   }
 }
 

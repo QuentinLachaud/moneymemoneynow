@@ -3,11 +3,11 @@
  * 
  * Contains:
  * - Tax region toggle (England / Scotland)
- * - Pension section with compact inputs for Base, Your Contributions, Employer Match
+ * - Pension section with satisfying slider + preset buttons
  * - Total pension contribution summary
  */
 
-import { Info } from 'lucide-react';
+import { Info, Minus, Plus } from 'lucide-react';
 import { TaxRegion } from '../../utils/ukTaxCalculator';
 
 interface TaxSettingsTrayProps {
@@ -19,6 +19,79 @@ interface TaxSettingsTrayProps {
   onPensionYourContributionChange: (percent: number) => void;
   pensionEmployerMatch: number;
   onPensionEmployerMatchChange: (percent: number) => void;
+}
+
+// Preset buttons for quick selection
+const PENSION_PRESETS = [0, 3, 5, 8, 10, 15];
+
+// Satisfying pension input with slider + stepper + presets
+function PensionSliderInput({
+  label,
+  value,
+  onChange,
+  max = 20,
+}: {
+  label: string;
+  value: number;
+  onChange: (v: number) => void;
+  max?: number;
+}) {
+  const increment = () => onChange(Math.min(max, value + 1));
+  const decrement = () => onChange(Math.max(0, value - 1));
+
+  return (
+    <div className="pension-slider-group">
+      <div className="pension-slider-header">
+        <span className="pension-slider-label">{label}</span>
+        <span className="pension-slider-value">{value}%</span>
+      </div>
+      
+      {/* Main slider */}
+      <div className="pension-slider-row">
+        <button 
+          className="pension-stepper-btn" 
+          onClick={decrement}
+          disabled={value <= 0}
+          type="button"
+        >
+          <Minus size={14} />
+        </button>
+        
+        <input
+          type="range"
+          min={0}
+          max={max}
+          step={1}
+          value={value}
+          onChange={(e) => onChange(parseInt(e.target.value))}
+          className="pension-slider"
+        />
+        
+        <button 
+          className="pension-stepper-btn" 
+          onClick={increment}
+          disabled={value >= max}
+          type="button"
+        >
+          <Plus size={14} />
+        </button>
+      </div>
+      
+      {/* Preset buttons */}
+      <div className="pension-presets">
+        {PENSION_PRESETS.filter(p => p <= max).map((preset) => (
+          <button
+            key={preset}
+            className={`pension-preset-btn ${value === preset ? 'active' : ''}`}
+            onClick={() => onChange(preset)}
+            type="button"
+          >
+            {preset}%
+          </button>
+        ))}
+      </div>
+    </div>
+  );
 }
 
 export function TaxSettingsTray({
@@ -33,15 +106,6 @@ export function TaxSettingsTray({
 }: TaxSettingsTrayProps) {
   // Calculate total pension contribution
   const totalPension = pensionBase + pensionYourContribution + pensionEmployerMatch;
-
-  // Handle numeric input change with validation
-  const handlePercentChange = (
-    value: string,
-    setter: (v: number) => void
-  ) => {
-    const num = parseInt(value) || 0;
-    setter(Math.min(50, Math.max(0, num)));
-  };
 
   return (
     <aside className="tax-settings-tray">
@@ -76,72 +140,45 @@ export function TaxSettingsTray({
           </span>
         </div>
 
-        {/* Pension Section - Compact Inputs */}
+        {/* Pension Section - Sliders with Steppers & Presets */}
         <div className="tray-section pension-section">
           <div className="section-header">
             <label className="section-label">Pension</label>
             <button 
               className="info-btn" 
-              title="Configure your pension contributions. Base is employer's minimum, Your Contribution is what you add, Employer Match is what they match up to."
+              title="Your contribution is deducted from gross salary before tax. Base & Employer Match don't reduce your taxable income."
             >
               <Info size={14} />
             </button>
           </div>
           
-          <div className="pension-inputs-compact">
-            {/* Base */}
-            <div className="pension-input-row">
-              <label className="pension-input-label">Base</label>
-              <div className="pension-input-field">
-                <input
-                  type="number"
-                  min={0}
-                  max={50}
-                  value={pensionBase}
-                  onChange={(e) => handlePercentChange(e.target.value, onPensionBaseChange)}
-                  className="pension-number-input"
-                />
-                <span className="pension-input-unit">%</span>
-              </div>
-            </div>
-
-            {/* Your Contributions */}
-            <div className="pension-input-row">
-              <label className="pension-input-label">Your Contributions</label>
-              <div className="pension-input-field">
-                <input
-                  type="number"
-                  min={0}
-                  max={50}
-                  value={pensionYourContribution}
-                  onChange={(e) => handlePercentChange(e.target.value, onPensionYourContributionChange)}
-                  className="pension-number-input"
-                />
-                <span className="pension-input-unit">%</span>
-              </div>
-            </div>
-
-            {/* Employer Match */}
-            <div className="pension-input-row">
-              <label className="pension-input-label">Employer Match</label>
-              <div className="pension-input-field">
-                <input
-                  type="number"
-                  min={0}
-                  max={50}
-                  value={pensionEmployerMatch}
-                  onChange={(e) => handlePercentChange(e.target.value, onPensionEmployerMatchChange)}
-                  className="pension-number-input"
-                />
-                <span className="pension-input-unit">%</span>
-              </div>
-            </div>
+          <div className="pension-sliders">
+            <PensionSliderInput
+              label="Base (employer)"
+              value={pensionBase}
+              onChange={onPensionBaseChange}
+              max={15}
+            />
+            
+            <PensionSliderInput
+              label="Your Contribution"
+              value={pensionYourContribution}
+              onChange={onPensionYourContributionChange}
+              max={20}
+            />
+            
+            <PensionSliderInput
+              label="Employer Match"
+              value={pensionEmployerMatch}
+              onChange={onPensionEmployerMatchChange}
+              max={15}
+            />
           </div>
 
           {/* Total Summary */}
           <div className="pension-total-summary">
-            <span className="pension-total-label">Total pension contribution:</span>
-            <span className="pension-total-value">{totalPension}% of gross salary</span>
+            <span className="pension-total-label">Total pension:</span>
+            <span className="pension-total-value">{totalPension}%</span>
           </div>
         </div>
       </div>

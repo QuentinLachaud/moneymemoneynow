@@ -3,26 +3,22 @@
  * 
  * Features:
  * - Mode selector (Salary Change / Salary Sacrifice) as segment buttons
- * - Salary sacrifice with clear explanation (on top of base pension)
- * - Stepped slider (1-15%, 1% increments)
- * - Delta values with golden styling for benefits
+ * - Clean stepped sliders with tally display (no number inputs)
+ * - Delta values displayed in breakdown table
  * - Shared Annual/Monthly pill-switch toggle
  */
 
 import { useState, useMemo } from 'react';
-import { TrendingUp, PiggyBank, Percent, PoundSterling, Info } from 'lucide-react';
+import { TrendingUp, PiggyBank, Minus, Plus } from 'lucide-react';
 import { 
   TaxRegion, 
   TaxCalculationResult,
   calculateIncomeTax,
-  calculateCompoundGrowth,
   compareTaxScenarios,
 } from '../../utils/ukTaxCalculator';
 import { SalaryBreakdownTable } from './SalaryBreakdownTable';
-import { ModeCard } from './shared/ModeCard';
 
 type ScenarioType = 'salary-change' | 'salary-sacrifice';
-type InputMode = 'percent' | 'amount';
 type ViewMode = 'annual' | 'monthly';
 
 interface ScenarioPanelProps {
@@ -35,12 +31,15 @@ interface ScenarioPanelProps {
   employerPension: number;
   age: number;
   pensionAge: number;
-  basePensionTotal: number; // Total from left panel (Base + Your + Employer)
+  basePensionTotal: number;
   salarySacrificePercent: number;
   onSalarySacrificeChange: (percent: number) => void;
   viewMode: ViewMode;
   onViewModeChange: (mode: ViewMode) => void;
 }
+
+// Preset values for salary change
+const SALARY_CHANGE_PRESETS = [-10, -5, 0, 3, 5, 10, 15, 20];
 
 export function ScenarioPanel({
   baselineResult,
@@ -50,8 +49,6 @@ export function ScenarioPanel({
   employerContributionPercent,
   employerMatchPercent,
   employerPension,
-  age,
-  pensionAge,
   basePensionTotal,
   salarySacrificePercent,
   onSalarySacrificeChange,
@@ -60,14 +57,9 @@ export function ScenarioPanel({
 }: ScenarioPanelProps) {
   // Scenario selection
   const [scenario, setScenario] = useState<ScenarioType>('salary-sacrifice');
-  const [inputMode, setInputMode] = useState<InputMode>('percent');
 
-  // Salary change state
-  const [changePercent, setChangePercent] = useState<number>(3);
-  const [changeAmount, setChangeAmount] = useState<number>(1000);
-
-  const yearsToRetirement = Math.max(0, pensionAge - age);
-  const GROWTH_RATE = 7;
+  // Salary change state (percentage only, stepped)
+  const [changePercent, setChangePercent] = useState<number>(5);
 
   // Format currency
   const formatCurrency = (value: number): string => {
@@ -91,14 +83,7 @@ export function ScenarioPanel({
 
   // Salary change simulation
   const salaryChangeResult = useMemo(() => {
-    let newSalary: number;
-    if (inputMode === 'percent') {
-      newSalary = grossSalary * (1 + changePercent / 100);
-    } else {
-      newSalary = grossSalary + changeAmount;
-    }
-    newSalary = Math.max(0, Math.min(newSalary, 1000000)); // Cap at £1M
-
+    const newSalary = Math.max(0, Math.min(grossSalary * (1 + changePercent / 100), 1000000));
     const result = calculateIncomeTax(newSalary, region, pensionPercent);
     const comparison = compareTaxScenarios(baselineResult, result);
     const newEmployerPension = calculateEmployerPensionForPercent(pensionPercent);
@@ -109,47 +94,22 @@ export function ScenarioPanel({
       employerPension: newEmployerPension,
       salaryChange: newSalary - grossSalary,
     };
-  }, [grossSalary, region, pensionPercent, inputMode, changePercent, changeAmount, baselineResult, employerContributionPercent, employerMatchPercent]);
+  }, [grossSalary, region, pensionPercent, changePercent, baselineResult, employerContributionPercent, employerMatchPercent]);
 
-  // Salary sacrifice simulation - uses the total from left panel + additional sacrifice
+  // Salary sacrifice simulation
   const sacrificeResult = useMemo(() => {
-    // Total effective pension = base pension from left panel + salary sacrifice
     const targetSacrificePercent = pensionPercent + salarySacrificePercent;
-    
-    // Cap at 50%
     const effectivePercent = Math.min(50, Math.max(0, targetSacrificePercent));
 
     const scenarioResult = calculateIncomeTax(grossSalary, region, effectivePercent);
     const comparison = compareTaxScenarios(baselineResult, scenarioResult);
-    
-    const additionalPensionContribution = scenarioResult.pensionContribution - baselineResult.pensionContribution;
-    const taxSaved = scenarioResult.pensionTaxSaved - baselineResult.pensionTaxSaved;
-    const niSaved = scenarioResult.pensionNISaved - baselineResult.pensionNISaved;
-    const totalSaved = taxSaved + niSaved;
-    
-    // Calculate employer pension for new rate
-    const newEmployerPension = calculateEmployerPensionForPercent(effectivePercent);
-    const additionalEmployerPension = newEmployerPension - employerPension;
-    
-    // Compound growth calculations
-    const singleYearFV = calculateCompoundGrowth(additionalPensionContribution, yearsToRetirement, GROWTH_RATE);
-    const repeatedFV = calculateCompoundGrowth(additionalPensionContribution, yearsToRetirement, GROWTH_RATE);
 
     return {
       result: scenarioResult,
       comparison,
       targetPercent: effectivePercent,
-      additionalPension: additionalPensionContribution,
-      taxSaved,
-      niSaved,
-      totalSaved,
-      newEmployerPension,
-      additionalEmployerPension,
-      singleYearFV,
-      repeatedFV,
-      netPayReduction: Math.abs(comparison.differences.netPay),
     };
-  }, [grossSalary, region, pensionPercent, salarySacrificePercent, baselineResult, yearsToRetirement, employerPension, employerContributionPercent, employerMatchPercent]);
+  }, [grossSalary, region, pensionPercent, salarySacrificePercent, baselineResult]);
 
   // Get current result based on scenario
   const currentResult = scenario === 'salary-change' 
@@ -166,11 +126,13 @@ export function ScenarioPanel({
     }
   };
 
-  // Handle stepped slider change (1-15%, 1% increments)
-  const handleSacrificeSliderChange = (value: number) => {
-    // Ensure integer values
-    const stepped = Math.round(value);
-    onSalarySacrificeChange(Math.min(15, Math.max(1, stepped)));
+  // Handle stepped changes
+  const handleSalaryChangeStep = (delta: number) => {
+    setChangePercent(prev => Math.max(-50, Math.min(100, prev + delta)));
+  };
+
+  const handleSacrificeStep = (delta: number) => {
+    onSalarySacrificeChange(Math.max(0, Math.min(20, salarySacrificePercent + delta)));
   };
 
   return (
@@ -195,114 +157,126 @@ export function ScenarioPanel({
         </div>
       </div>
 
-      {/* Scenario-specific controls */}
-      {scenario === 'salary-change' ? (
-        <>
-          {/* Sub-mode Cards for Salary Change */}
-          <div className="input-mode-cards">
-            <ModeCard
-              icon={<Percent size={20} />}
-              label="Percentage"
-              active={inputMode === 'percent'}
-              onClick={() => setInputMode('percent')}
-            />
-            <ModeCard
-              icon={<PoundSterling size={20} />}
-              label="Amount"
-              active={inputMode === 'amount'}
-              onClick={() => setInputMode('amount')}
-            />
-          </div>
-
-          {/* Value Input for Salary Change */}
-          <div className="value-input-section">
-            {inputMode === 'percent' ? (
-              <div className="value-input-row">
-                <input
-                  type="range"
-                  min={-30}
-                  max={50}
-                  step={1}
-                  value={changePercent}
-                  onChange={(e) => setChangePercent(parseInt(e.target.value))}
-                  className="value-slider"
-                />
-                <div className="value-display">
-                  <input
-                    type="number"
-                    min={-100}
-                    max={100}
-                    step={1}
-                    value={changePercent}
-                    onChange={(e) => setChangePercent(parseInt(e.target.value) || 0)}
-                    className="value-number"
-                  />
-                  <span className="value-unit">%</span>
-                </div>
-              </div>
-            ) : (
-              <div className="value-input-row">
-                <input
-                  type="range"
-                  min={-50000}
-                  max={100000}
-                  step={1000}
-                  value={changeAmount}
-                  onChange={(e) => setChangeAmount(parseInt(e.target.value))}
-                  className="value-slider"
-                />
-                <div className="value-display amount">
-                  <span className="value-unit prefix">£</span>
-                  <input
-                    type="number"
-                    min={-100000}
-                    max={500000}
-                    step={1000}
-                    value={changeAmount}
-                    onChange={(e) => setChangeAmount(parseInt(e.target.value) || 0)}
-                    className="value-number"
-                  />
-                </div>
-              </div>
-            )}
-          </div>
-        </>
-      ) : (
-        <>
-          {/* Salary Sacrifice Controls */}
-          <div className="sacrifice-controls">
-            {/* Explanatory Label */}
-            <div className="sacrifice-explainer">
-              <Info size={14} />
-              <span>Additional salary sacrifice (on top of {basePensionTotal}% base pension from left panel)</span>
+      {/* Scenario Controls */}
+      <div className="scenario-controls">
+        {scenario === 'salary-change' ? (
+          <div className="stepped-input-group">
+            <div className="stepped-input-header">
+              <span className="stepped-input-label">Salary change</span>
+              <span className={`stepped-input-value ${changePercent >= 0 ? 'positive' : 'negative'}`}>
+                {changePercent >= 0 ? '+' : ''}{changePercent}%
+              </span>
             </div>
-
-            {/* Stepped Slider (1-15%, 1% increments) */}
-            <div className="sacrifice-slider-section">
-              <div className="slider-with-labels">
-                <span className="slider-min">1%</span>
-                <input
-                  type="range"
-                  min={1}
-                  max={15}
-                  step={1}
-                  value={salarySacrificePercent || 1}
-                  onChange={(e) => handleSacrificeSliderChange(parseInt(e.target.value))}
-                  className="sacrifice-slider stepped"
-                />
-                <span className="slider-max">15%</span>
-              </div>
-              <div className="sacrifice-value-badge">
-                <span className="sacrifice-value">+{salarySacrificePercent || 0}%</span>
-                <span className="sacrifice-total">Total: {sacrificeResult.targetPercent}%</span>
-              </div>
+            
+            <div className="stepped-input-row">
+              <button 
+                className="stepper-btn large" 
+                onClick={() => handleSalaryChangeStep(-1)}
+                type="button"
+              >
+                <Minus size={18} />
+              </button>
+              
+              <input
+                type="range"
+                min={-30}
+                max={50}
+                step={1}
+                value={changePercent}
+                onChange={(e) => setChangePercent(parseInt(e.target.value))}
+                className="stepped-slider"
+              />
+              
+              <button 
+                className="stepper-btn large" 
+                onClick={() => handleSalaryChangeStep(1)}
+                type="button"
+              >
+                <Plus size={18} />
+              </button>
+            </div>
+            
+            {/* Preset buttons */}
+            <div className="stepped-presets">
+              {SALARY_CHANGE_PRESETS.map((preset) => (
+                <button
+                  key={preset}
+                  className={`preset-btn ${changePercent === preset ? 'active' : ''}`}
+                  onClick={() => setChangePercent(preset)}
+                  type="button"
+                >
+                  {preset >= 0 ? '+' : ''}{preset}%
+                </button>
+              ))}
+            </div>
+            
+            <div className="stepped-tally">
+              <span className="tally-label">New salary:</span>
+              <span className="tally-value">{formatCurrency(salaryChangeResult.result.grossSalary)}</span>
             </div>
           </div>
-        </>
-      )}
+        ) : (
+          <div className="stepped-input-group">
+            <div className="stepped-input-header">
+              <span className="stepped-input-label">Additional sacrifice</span>
+              <span className="stepped-input-value positive">+{salarySacrificePercent}%</span>
+            </div>
+            
+            <div className="stepped-input-row">
+              <button 
+                className="stepper-btn large" 
+                onClick={() => handleSacrificeStep(-1)}
+                disabled={salarySacrificePercent <= 0}
+                type="button"
+              >
+                <Minus size={18} />
+              </button>
+              
+              <input
+                type="range"
+                min={0}
+                max={20}
+                step={1}
+                value={salarySacrificePercent}
+                onChange={(e) => onSalarySacrificeChange(parseInt(e.target.value))}
+                className="stepped-slider"
+              />
+              
+              <button 
+                className="stepper-btn large" 
+                onClick={() => handleSacrificeStep(1)}
+                disabled={salarySacrificePercent >= 20}
+                type="button"
+              >
+                <Plus size={18} />
+              </button>
+            </div>
+            
+            {/* Preset buttons */}
+            <div className="stepped-presets">
+              {[0, 1, 2, 3, 5, 8, 10, 15].map((preset) => (
+                <button
+                  key={preset}
+                  className={`preset-btn ${salarySacrificePercent === preset ? 'active' : ''}`}
+                  onClick={() => onSalarySacrificeChange(preset)}
+                  type="button"
+                >
+                  +{preset}%
+                </button>
+              ))}
+            </div>
+            
+            <div className="stepped-tally">
+              <span className="tally-label">Total pension:</span>
+              <span className="tally-value">{basePensionTotal + salarySacrificePercent}%</span>
+              <span className="tally-detail">({basePensionTotal}% base + {salarySacrificePercent}% sacrifice)</span>
+            </div>
+          </div>
+        )}
+      </div>
 
-      {/* Result Table with Delta */}
-      <div className="scenario-result">
+      {/* Result Table with Delta - This should be bottom-aligned */}
+      <div className="scenario-result-wrapper">
         <SalaryBreakdownTable
           result={currentResult}
           title={getScenarioTitle()}
@@ -312,71 +286,6 @@ export function ScenarioPanel({
           onViewModeChange={onViewModeChange}
         />
       </div>
-
-      {/* Pension Growth Projection (for Salary Sacrifice) */}
-      {scenario === 'salary-sacrifice' && sacrificeResult.additionalPension > 0 && yearsToRetirement > 0 && (
-        <div className="pension-growth-section">
-          <h5>
-            <Info size={14} />
-            Pension Impact Summary
-          </h5>
-          
-          <div className="growth-summary">
-            <div className="summary-row impact">
-              <span className="label">Monthly take-home reduction</span>
-              <span className="value negative">
-                -{formatCurrency(sacrificeResult.netPayReduction / 12)}
-              </span>
-            </div>
-            <div className="summary-row">
-              <span className="label">Additional annual pension</span>
-              <span className="value positive bonus">
-                +{formatCurrency(sacrificeResult.additionalPension)}
-              </span>
-            </div>
-            {sacrificeResult.additionalEmployerPension > 0 && (
-              <div className="summary-row">
-                <span className="label">Extra employer contribution</span>
-                <span className="value positive bonus">
-                  +{formatCurrency(sacrificeResult.additionalEmployerPension)}
-                </span>
-              </div>
-            )}
-            <div className="summary-row">
-              <span className="label">Tax & NI saved this year</span>
-              <span className="value positive bonus">
-                +{formatCurrency(sacrificeResult.totalSaved)}
-              </span>
-            </div>
-          </div>
-
-          <div className="projection-box">
-            <div className="projection-item">
-              <span className="projection-label">
-                This year's extra contribution at age {pensionAge}
-              </span>
-              <span className="projection-value bonus">
-                {formatCurrency(sacrificeResult.singleYearFV)}
-              </span>
-              <span className="projection-detail">
-                ({formatCurrency(sacrificeResult.additionalPension)} × {yearsToRetirement} years at {GROWTH_RATE}%)
-              </span>
-            </div>
-            
-            <div className="projection-item highlight">
-              <span className="projection-label">
-                If repeated every year until age {pensionAge}
-              </span>
-              <span className="projection-value bonus">
-                {formatCurrency(sacrificeResult.repeatedFV)}
-              </span>
-              <span className="projection-detail">
-                Annual contribution compounded at {GROWTH_RATE}% over {yearsToRetirement} years
-              </span>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }
