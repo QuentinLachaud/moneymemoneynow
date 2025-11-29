@@ -5,20 +5,24 @@
  * - Gross Salary (prominent)
  * - Collapsible Tax section with breakdown
  * - Net Take-Home (highlighted)
- * - Annual/Monthly column toggles
+ * - Annual/Monthly pill-switch toggle (single selection)
  * - Optional delta display for scenario comparison
+ * - Improved font sizing and legibility
  */
 
 import { useState } from 'react';
 import { Wallet, TrendingUp, ChevronDown, ChevronRight } from 'lucide-react';
 import { TaxCalculationResult } from '../../utils/ukTaxCalculator';
-import { ColumnToggle } from './shared/ColumnToggle';
+
+type ViewMode = 'annual' | 'monthly';
 
 interface TaxBreakdownTableProps {
   result: TaxCalculationResult;
   title: string;
   baselineResult?: TaxCalculationResult; // For delta calculations
   isScenario?: boolean;
+  viewMode?: ViewMode;
+  onViewModeChange?: (mode: ViewMode) => void;
 }
 
 export function SalaryBreakdownTable({
@@ -26,9 +30,14 @@ export function SalaryBreakdownTable({
   title,
   baselineResult,
   isScenario = false,
+  viewMode: externalViewMode,
+  onViewModeChange,
 }: TaxBreakdownTableProps) {
-  const [showAnnual, setShowAnnual] = useState(true);
-  const [showMonthly, setShowMonthly] = useState(true);
+  // Use internal state if no external control provided
+  const [internalViewMode, setInternalViewMode] = useState<ViewMode>('annual');
+  const viewMode = externalViewMode ?? internalViewMode;
+  const setViewMode = onViewModeChange ?? setInternalViewMode;
+  
   const [taxExpanded, setTaxExpanded] = useState(false);
 
   // Format currency
@@ -53,7 +62,6 @@ export function SalaryBreakdownTable({
     : 0;
 
   // Calculate combined marginal rate (Income Tax + NI for next £1)
-  // At most income levels, this is marginal tax rate + 8% NI (or 2% above upper threshold)
   const getMarginalNIRate = (salary: number): number => {
     if (salary <= 12570) return 0;
     if (salary <= 50270) return 8;
@@ -75,11 +83,9 @@ export function SalaryBreakdownTable({
   const taxDelta = getDelta(totalTax, baselineResult ? baselineResult.totalTax + baselineResult.totalNI : undefined);
   const netDelta = getDelta(result.netPay, baselineResult?.netPay);
 
-  // Ensure at least one column is visible
-  const effectiveShowAnnual = showAnnual || !showMonthly;
-  const effectiveShowMonthly = showMonthly || !showAnnual;
-
-  const colCount = (effectiveShowAnnual ? 1 : 0) + (effectiveShowMonthly ? 1 : 0) + 1;
+  // Display values based on view mode
+  const displayMultiplier = viewMode === 'monthly' ? 1/12 : 1;
+  const getDisplayValue = (annual: number) => annual * displayMultiplier;
 
   return (
     <div className={`tax-breakdown-panel ${isScenario ? 'scenario' : 'baseline'}`}>
@@ -98,24 +104,35 @@ export function SalaryBreakdownTable({
         </div>
       </div>
 
-      {/* Column Toggles */}
+      {/* Pill Switch Toggle - Annual/Monthly */}
       <div className="table-controls">
-        <ColumnToggle
-          showAnnual={showAnnual}
-          showMonthly={showMonthly}
-          onToggleAnnual={() => setShowAnnual(!showAnnual)}
-          onToggleMonthly={() => setShowMonthly(!showMonthly)}
-        />
+        <div className="pill-switch">
+          <button
+            className={`pill-option ${viewMode === 'annual' ? 'active' : ''}`}
+            onClick={() => setViewMode('annual')}
+          >
+            Annual
+          </button>
+          <button
+            className={`pill-option ${viewMode === 'monthly' ? 'active' : ''}`}
+            onClick={() => setViewMode('monthly')}
+          >
+            Monthly
+          </button>
+          <div 
+            className="pill-indicator"
+            style={{ transform: viewMode === 'monthly' ? 'translateX(100%)' : 'translateX(0)' }}
+          />
+        </div>
       </div>
 
       {/* Table */}
       <div className="table-wrapper">
-        <table className="breakdown-table">
+        <table className="breakdown-table single-column">
           <thead>
             <tr>
               <th className="label-col"></th>
-              {effectiveShowAnnual && <th className="amount-col">Annual</th>}
-              {effectiveShowMonthly && <th className="amount-col">Monthly</th>}
+              <th className="amount-col">{viewMode === 'annual' ? 'Annual' : 'Monthly'}</th>
             </tr>
           </thead>
           <tbody>
@@ -125,22 +142,12 @@ export function SalaryBreakdownTable({
                 <Wallet size={16} />
                 <span>Gross Salary</span>
               </td>
-              {effectiveShowAnnual && (
-                <td className="amount-cell gross">
-                  {formatCurrency(result.grossSalary)}
-                  {grossDelta !== null && (
-                    <span className="delta">{formatDelta(grossDelta)}</span>
-                  )}
-                </td>
-              )}
-              {effectiveShowMonthly && (
-                <td className="amount-cell gross monthly">
-                  {formatCurrency(result.monthlyGross)}
-                  {grossDelta !== null && (
-                    <span className="delta">{formatDelta(grossDelta / 12)}</span>
-                  )}
-                </td>
-              )}
+              <td className="amount-cell gross single">
+                {formatCurrency(getDisplayValue(result.grossSalary))}
+                {grossDelta !== null && (
+                  <span className="delta">{formatDelta(getDisplayValue(grossDelta))}</span>
+                )}
+              </td>
             </tr>
 
             {/* Total Tax Row (collapsible) */}
@@ -152,26 +159,14 @@ export function SalaryBreakdownTable({
                 {taxExpanded ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
                 <span>Total Tax</span>
               </td>
-              {effectiveShowAnnual && (
-                <td className="amount-cell deduction">
-                  -{formatCurrency(totalTax)}
-                  {taxDelta !== null && (
-                    <span className={`delta ${taxDelta < 0 ? 'positive' : ''}`}>
-                      {formatDelta(taxDelta)}
-                    </span>
-                  )}
-                </td>
-              )}
-              {effectiveShowMonthly && (
-                <td className="amount-cell deduction monthly">
-                  -{formatCurrency(monthlyTotalTax)}
-                  {taxDelta !== null && (
-                    <span className={`delta ${taxDelta < 0 ? 'positive' : ''}`}>
-                      {formatDelta(taxDelta / 12)}
-                    </span>
-                  )}
-                </td>
-              )}
+              <td className="amount-cell deduction single">
+                -{formatCurrency(getDisplayValue(totalTax))}
+                {taxDelta !== null && (
+                  <span className={`delta ${taxDelta < 0 ? 'positive' : ''}`}>
+                    {formatDelta(getDisplayValue(taxDelta))}
+                  </span>
+                )}
+              </td>
             </tr>
 
             {/* Expanded Tax Breakdown */}
@@ -179,7 +174,7 @@ export function SalaryBreakdownTable({
               <>
                 {/* Income Tax Header */}
                 <tr className="section-header">
-                  <td colSpan={colCount}>Income Tax</td>
+                  <td colSpan={2}>Income Tax</td>
                 </tr>
                 
                 {/* Tax Bands */}
@@ -193,26 +188,14 @@ export function SalaryBreakdownTable({
                         <span className="band-name">{band.name}</span>
                         <span className="band-rate">{band.rate}%</span>
                       </td>
-                      {effectiveShowAnnual && (
-                        <td className="amount-cell deduction">
-                          -{formatCurrency(band.taxDue || 0)}
-                          {bandDelta !== null && bandDelta !== 0 && (
-                            <span className={`delta ${bandDelta < 0 ? 'positive' : ''}`}>
-                              {formatDelta(bandDelta)}
-                            </span>
-                          )}
-                        </td>
-                      )}
-                      {effectiveShowMonthly && (
-                        <td className="amount-cell deduction monthly">
-                          -{formatCurrency((band.taxDue || 0) / 12)}
-                          {bandDelta !== null && bandDelta !== 0 && (
-                            <span className={`delta ${bandDelta < 0 ? 'positive' : ''}`}>
-                              {formatDelta(bandDelta / 12)}
-                            </span>
-                          )}
-                        </td>
-                      )}
+                      <td className="amount-cell deduction">
+                        -{formatCurrency(getDisplayValue(band.taxDue || 0))}
+                        {bandDelta !== null && bandDelta !== 0 && (
+                          <span className={`delta ${bandDelta < 0 ? 'positive' : ''}`}>
+                            {formatDelta(getDisplayValue(bandDelta))}
+                          </span>
+                        )}
+                      </td>
                     </tr>
                   );
                 })}
@@ -220,21 +203,14 @@ export function SalaryBreakdownTable({
                 {/* Income Tax Subtotal */}
                 <tr className="subtotal-row">
                   <td className="label-cell">Income Tax Subtotal</td>
-                  {effectiveShowAnnual && (
-                    <td className="amount-cell deduction">
-                      -{formatCurrency(result.totalTax)}
-                    </td>
-                  )}
-                  {effectiveShowMonthly && (
-                    <td className="amount-cell deduction monthly">
-                      -{formatCurrency(result.monthlyTax)}
-                    </td>
-                  )}
+                  <td className="amount-cell deduction">
+                    -{formatCurrency(getDisplayValue(result.totalTax))}
+                  </td>
                 </tr>
 
                 {/* National Insurance Header */}
                 <tr className="section-header">
-                  <td colSpan={colCount}>National Insurance</td>
+                  <td colSpan={2}>National Insurance</td>
                 </tr>
                 
                 {/* NI Bands */}
@@ -248,26 +224,14 @@ export function SalaryBreakdownTable({
                         <span className="band-name">{band.name}</span>
                         <span className="band-rate">{band.rate}%</span>
                       </td>
-                      {effectiveShowAnnual && (
-                        <td className="amount-cell deduction">
-                          -{formatCurrency(band.niDue || 0)}
-                          {bandDelta !== null && bandDelta !== 0 && (
-                            <span className={`delta ${bandDelta < 0 ? 'positive' : ''}`}>
-                              {formatDelta(bandDelta)}
-                            </span>
-                          )}
-                        </td>
-                      )}
-                      {effectiveShowMonthly && (
-                        <td className="amount-cell deduction monthly">
-                          -{formatCurrency((band.niDue || 0) / 12)}
-                          {bandDelta !== null && bandDelta !== 0 && (
-                            <span className={`delta ${bandDelta < 0 ? 'positive' : ''}`}>
-                              {formatDelta(bandDelta / 12)}
-                            </span>
-                          )}
-                        </td>
-                      )}
+                      <td className="amount-cell deduction">
+                        -{formatCurrency(getDisplayValue(band.niDue || 0))}
+                        {bandDelta !== null && bandDelta !== 0 && (
+                          <span className={`delta ${bandDelta < 0 ? 'positive' : ''}`}>
+                            {formatDelta(getDisplayValue(bandDelta))}
+                          </span>
+                        )}
+                      </td>
                     </tr>
                   );
                 })}
@@ -275,16 +239,9 @@ export function SalaryBreakdownTable({
                 {/* NI Subtotal */}
                 <tr className="subtotal-row">
                   <td className="label-cell">NI Subtotal</td>
-                  {effectiveShowAnnual && (
-                    <td className="amount-cell deduction">
-                      -{formatCurrency(result.totalNI)}
-                    </td>
-                  )}
-                  {effectiveShowMonthly && (
-                    <td className="amount-cell deduction monthly">
-                      -{formatCurrency(result.monthlyNI)}
-                    </td>
-                  )}
+                  <td className="amount-cell deduction">
+                    -{formatCurrency(getDisplayValue(result.totalNI))}
+                  </td>
                 </tr>
               </>
             )}
@@ -295,26 +252,14 @@ export function SalaryBreakdownTable({
                 <TrendingUp size={16} />
                 <span>Net Take-Home</span>
               </td>
-              {effectiveShowAnnual && (
-                <td className="amount-cell net">
-                  {formatCurrency(result.netPay)}
-                  {netDelta !== null && (
-                    <span className={`delta ${netDelta > 0 ? 'positive' : 'negative'}`}>
-                      {formatDelta(netDelta)}
-                    </span>
-                  )}
-                </td>
-              )}
-              {effectiveShowMonthly && (
-                <td className="amount-cell net monthly">
-                  {formatCurrency(result.monthlyNet)}
-                  {netDelta !== null && (
-                    <span className={`delta ${netDelta > 0 ? 'positive' : 'negative'}`}>
-                      {formatDelta(netDelta / 12)}
-                    </span>
-                  )}
-                </td>
-              )}
+              <td className="amount-cell net single">
+                {formatCurrency(getDisplayValue(result.netPay))}
+                {netDelta !== null && (
+                  <span className={`delta ${netDelta > 0 ? 'positive' : 'negative'}`}>
+                    {formatDelta(getDisplayValue(netDelta))}
+                  </span>
+                )}
+              </td>
             </tr>
           </tbody>
         </table>

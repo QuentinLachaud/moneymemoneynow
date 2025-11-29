@@ -3,7 +3,7 @@
  * 
  * Layout:
  * - Left tray: Tax settings (region, pension percentages)
- * - Top controls: Salary + Age + Retirement Age + Calculate
+ * - Top controls: Salary + Age + Retirement Age + Calculate + Reset
  * - Main area: Two equal-width panels (Current vs Scenario)
  * 
  * Uses modular components:
@@ -13,7 +13,7 @@
  */
 
 import { useState, useMemo, useCallback } from 'react';
-import { Calculator } from 'lucide-react';
+import { Calculator, RotateCcw } from 'lucide-react';
 import {
   TaxRegion,
   calculateIncomeTax,
@@ -27,6 +27,13 @@ import { ScenarioPanel } from './tax/ScenarioPanel';
 // Default constants
 const DEFAULT_STATE_PENSION_AGE = 67;
 const DEFAULT_AGE = 38;
+const DEFAULT_PENSION_BASE = 3;
+const DEFAULT_PENSION_YOUR_CONTRIBUTION = 3;
+const DEFAULT_PENSION_EMPLOYER_MATCH = 0;
+const DEFAULT_SALARY_SACRIFICE = 0;
+
+// View mode type
+type ViewMode = 'annual' | 'monthly';
 
 export function TaxCalculatorPanel() {
   // Core inputs
@@ -36,23 +43,29 @@ export function TaxCalculatorPanel() {
   // Tax settings state
   const [region, setRegion] = useState<TaxRegion>('england');
   
-  // Pension settings (new naming)
-  const [pensionBase, setPensionBase] = useState<number>(3);
-  const [pensionYourContribution, setPensionYourContribution] = useState<number>(0);
-  const [pensionEmployerMatch, setPensionEmployerMatch] = useState<number>(0);
+  // Pension settings
+  const [pensionBase, setPensionBase] = useState<number>(DEFAULT_PENSION_BASE);
+  const [pensionYourContribution, setPensionYourContribution] = useState<number>(DEFAULT_PENSION_YOUR_CONTRIBUTION);
+  const [pensionEmployerMatch, setPensionEmployerMatch] = useState<number>(DEFAULT_PENSION_EMPLOYER_MATCH);
   
   // Age settings
   const [age, setAge] = useState<number>(DEFAULT_AGE);
   const [retirementAge, setRetirementAge] = useState<number>(DEFAULT_STATE_PENSION_AGE);
 
-  // Total employee pension contribution
-  const totalEmployeePension = pensionYourContribution;
+  // View mode (annual or monthly) - shared across both panels
+  const [viewMode, setViewMode] = useState<ViewMode>('annual');
+
+  // Salary sacrifice percent (for scenario panel)
+  const [salarySacrificePercent, setSalarySacrificePercent] = useState<number>(DEFAULT_SALARY_SACRIFICE);
+
+  // Total employee pension contribution (from left panel settings)
+  const totalBasePension = pensionBase + pensionYourContribution + pensionEmployerMatch;
   
   // Main tax calculation
   const taxResult = useMemo<TaxCalculationResult | null>(() => {
     if (grossSalary === null || grossSalary <= 0) return null;
-    return calculateIncomeTax(grossSalary, region, totalEmployeePension);
-  }, [grossSalary, region, totalEmployeePension]);
+    return calculateIncomeTax(grossSalary, region, pensionYourContribution);
+  }, [grossSalary, region, pensionYourContribution]);
 
   // Employer pension calculation
   const employerPension = useMemo(() => {
@@ -86,6 +99,20 @@ export function TaxCalculatorPanel() {
     if (isNaN(num)) return value;
     return num.toLocaleString('en-GB');
   };
+
+  // Reset all values to defaults
+  const handleReset = useCallback(() => {
+    setSalaryInput('');
+    setGrossSalary(null);
+    setAge(DEFAULT_AGE);
+    setRetirementAge(DEFAULT_STATE_PENSION_AGE);
+    setPensionBase(DEFAULT_PENSION_BASE);
+    setPensionYourContribution(DEFAULT_PENSION_YOUR_CONTRIBUTION);
+    setPensionEmployerMatch(DEFAULT_PENSION_EMPLOYER_MATCH);
+    setSalarySacrificePercent(DEFAULT_SALARY_SACRIFICE);
+    setViewMode('annual');
+    setRegion('england');
+  }, []);
 
   return (
     <div className="tax-calculator-panel">
@@ -153,11 +180,20 @@ export function TaxCalculatorPanel() {
               />
             </div>
 
-            {/* Calculate Button */}
-            <button type="submit" className="calculate-btn">
-              <Calculator size={16} />
-              Calculate
-            </button>
+            {/* Button Group */}
+            <div className="button-group">
+              {/* Calculate Button */}
+              <button type="submit" className="calculate-btn">
+                <Calculator size={16} />
+                Calculate
+              </button>
+
+              {/* Reset Button */}
+              <button type="button" className="reset-btn" onClick={handleReset}>
+                <RotateCcw size={16} />
+                Reset
+              </button>
+            </div>
           </form>
         </div>
 
@@ -170,6 +206,8 @@ export function TaxCalculatorPanel() {
                 result={taxResult}
                 title="Current Salary"
                 isScenario={false}
+                viewMode={viewMode}
+                onViewModeChange={setViewMode}
               />
             </div>
 
@@ -179,12 +217,17 @@ export function TaxCalculatorPanel() {
                 baselineResult={taxResult}
                 grossSalary={grossSalary}
                 region={region}
-                pensionPercent={totalEmployeePension}
+                pensionPercent={pensionYourContribution}
                 employerContributionPercent={pensionBase}
                 employerMatchPercent={pensionEmployerMatch}
                 employerPension={employerPension}
                 age={age}
                 pensionAge={retirementAge}
+                basePensionTotal={totalBasePension}
+                salarySacrificePercent={salarySacrificePercent}
+                onSalarySacrificeChange={setSalarySacrificePercent}
+                viewMode={viewMode}
+                onViewModeChange={setViewMode}
               />
             </div>
           </div>

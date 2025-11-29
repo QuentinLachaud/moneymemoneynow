@@ -8667,6 +8667,295 @@ html {
   margin: 0;
 }
 
+/* View Mode Toggle - Pill Switch */
+.view-mode-switch {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  padding: 2px;
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 6px;
+}
+
+.view-mode-switch button {
+  padding: 5px 12px;
+  font-size: 0.7rem;
+  font-weight: 500;
+  font-family: inherit;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  background: transparent;
+  border: none;
+  border-radius: 4px;
+  color: rgba(255, 255, 255, 0.4);
+  cursor: pointer;
+  transition: all 150ms ease;
+}
+
+.view-mode-switch button:hover:not(.active) {
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.view-mode-switch button.active {
+  background: linear-gradient(135deg, rgba(99, 102, 241, 0.4), rgba(168, 85, 247, 0.4));
+  color: white;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+}
+
+/* Pill Switch Toggle - Animated */
+.pill-switch {
+  position: relative;
+  display: flex;
+  padding: 3px;
+  background: rgba(0, 0, 0, 0.4);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.pill-option {
+  position: relative;
+  z-index: 2;
+  padding: 6px 16px;
+  font-size: 0.7rem;
+  font-weight: 600;
+  font-family: inherit;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  background: transparent;
+  border: none;
+  color: rgba(255, 255, 255, 0.4);
+  cursor: pointer;
+  transition: color 150ms ease;
+}
+
+.pill-option:hover:not(.active) {
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.pill-option.active {
+  color: white;
+}
+
+.pill-indicator {
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: calc(50% - 3px);
+  height: calc(100% - 6px);
+  background: linear-gradient(135deg, rgba(99, 102, 241, 0.5), rgba(168, 85, 247, 0.5));
+  border-radius: 5px;
+  transition: transform 200ms cubic-bezier(0.4, 0, 0.2, 1);
+  z-index: 1;
+}
+
+/* Percent Input Component */
+.percent-input-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.percent-input-row label {
+  flex: 1;
+  font-size: 0.8rem;
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.percent-input-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.percent-input-wrapper input {
+  width: 48px;
+  padding: 6px 8px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  font-family: inherit;
+  text-align: center;
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 6px;
+  color: var(--foreground);
+  transition: border-color 150ms ease;
+}
+
+.percent-input-wrapper input:focus {
+  outline: none;
+  border-color: rgba(99, 102, 241, 0.5);
+}
+
+.percent-input-wrapper .percent-symbol {
+  font-size: 0.8rem;
+  color: rgba(255, 255, 255, 0.4);
+}
+
+/* Pension Total Summary */
+.pension-total-summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 12px;
+  margin-top: 8px;
+  background: rgba(99, 102, 241, 0.1);
+  border-radius: 6px;
+}
+
+.pension-total-summary .summary-label {
+  font-size: 0.75rem;
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.pension-total-summary .summary-value {
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: #a855f7;
+}
+
+/* Bottom-Aligned Table Container */
+.breakdown-table-container {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  min-height: 0;
+  overflow: auto;
+}
+
+/* Single Column Table Mode */
+.breakdown-table.single-column .amount-cell {
+  font-size: 0.95rem;
+}
+
+.breakdown-table.single-column .amount-cell.single {
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+/* Table Controls */
+.table-controls {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 8px;
+}
+
+/* Sacrifice Controls Improvements */
+.sacrifice-controls {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 12px;
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 8px;
+  margin-bottom: 12px;
+}
+
+.sacrifice-explainer {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  font-size: 0.75rem;
+  color: rgba(255, 255, 255, 0.5);
+  line-height: 1.4;
+}
+
+.sacrifice-explainer svg {
+  flex-shrink: 0;
+  margin-top: 2px;
+  color: rgba(99, 102, 241, 0.6);
+}
+
+.sacrifice-slider-section {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.slider-with-labels {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.slider-with-labels .slider-min,
+.slider-with-labels .slider-max {
+  font-size: 0.7rem;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.4);
+  min-width: 28px;
+  text-align: center;
+}
+
+.sacrifice-slider.stepped {
+  flex: 1;
+  height: 6px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 3px;
+  cursor: pointer;
+}
+
+.sacrifice-value-badge {
+  display: flex;
+  align-items: baseline;
+  justify-content: center;
+  gap: 12px;
+}
+
+.sacrifice-value-badge .sacrifice-value {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #a855f7;
+}
+
+.sacrifice-value-badge .sacrifice-total {
+  font-size: 0.75rem;
+  color: rgba(255, 255, 255, 0.5);
+}
+
+/* Reset Button */
+.reset-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  font-family: inherit;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 6px;
+  color: rgba(255, 255, 255, 0.5);
+  cursor: pointer;
+  transition: all 150ms ease;
+}
+
+.reset-btn:hover {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(255, 255, 255, 0.25);
+  color: rgba(255, 255, 255, 0.8);
+}
+
+/* Button Group */
+.button-group {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+/* Salary Sacrifice Label Enhancement */
+.sacrifice-label-enhanced {
+  font-size: 0.7rem;
+  color: rgba(255, 255, 255, 0.4);
+  font-style: italic;
+  margin-top: -4px;
+  margin-bottom: 8px;
+}
+
 /* Responsive */
 @media (max-width: 768px) {
   .salary-header {
