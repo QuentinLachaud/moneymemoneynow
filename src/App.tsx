@@ -171,45 +171,45 @@ export default function App() {
   /* ─── RENDER ────────────────────────────────────────────────────── */
   return (
     <div className="app-container">
-      {/* ─── HEADER: Title ──────────────────────────────────────────── */}
+      {/* ─── HEADER + TABS: Combined row for efficiency ─────────────── */}
       <header className="app-header">
         <h1 className="app-title">Finance Portfolio Tracker</h1>
-      </header>
-
-      {/* ─── TAB TOGGLE: Glass-style slider (3 tabs) ─────────────────── */}
-      <div className="tab-container">
-        <div className="tab-toggle three-tabs">
-          <div 
-            className="tab-slider" 
-            style={{ 
-              width: '33.333%',
-              transform: tab === 'projections' 
-                ? 'translateX(0)' 
-                : tab === 'portfolio'
-                ? 'translateX(100%)' 
-                : 'translateX(200%)'
-            }} 
-          />
-          <button
-            onClick={() => setTab('projections')}
-            className={`tab-button ${tab === 'projections' ? 'active' : ''}`}
-          >
-            Projections
-          </button>
-          <button
-            onClick={() => setTab('portfolio')}
-            className={`tab-button ${tab === 'portfolio' ? 'active' : ''}`}
-          >
-            Portfolio
-          </button>
-          <button
-            onClick={() => setTab('projection-portfolio')}
-            className={`tab-button ${tab === 'projection-portfolio' ? 'active' : ''}`}
-          >
-            Projection Portfolio
-          </button>
+        
+        {/* Tab Toggle inline with header */}
+        <div className="tab-container">
+          <div className="tab-toggle three-tabs">
+            <div 
+              className="tab-slider" 
+              style={{ 
+                width: '33.333%',
+                transform: tab === 'projections' 
+                  ? 'translateX(0)' 
+                  : tab === 'portfolio'
+                  ? 'translateX(100%)' 
+                  : 'translateX(200%)'
+              }} 
+            />
+            <button
+              onClick={() => setTab('projections')}
+              className={`tab-button ${tab === 'projections' ? 'active' : ''}`}
+            >
+              Projections
+            </button>
+            <button
+              onClick={() => setTab('portfolio')}
+              className={`tab-button ${tab === 'portfolio' ? 'active' : ''}`}
+            >
+              Portfolio
+            </button>
+            <button
+              onClick={() => setTab('projection-portfolio')}
+              className={`tab-button ${tab === 'projection-portfolio' ? 'active' : ''}`}
+            >
+              Projection Portfolio
+            </button>
+          </div>
         </div>
-      </div>
+      </header>
 
       {/* ─── MAIN LAYOUT: Left panel + Content area ─────────────────── */}
       <div className="main-grid">
