@@ -1,36 +1,34 @@
 /**
  * ModeCard — Selectable card for Percentage/Amount modes
+ * 
+ * A clickable card with icon and label, no radio buttons
  */
 
 import { ReactNode } from 'react';
 
 interface ModeCardProps {
-  title: string;
-  isActive: boolean;
+  icon: ReactNode;
+  label: string;
+  active: boolean;
   onClick: () => void;
-  children: ReactNode;
-  disabled?: boolean;
 }
 
 export function ModeCard({
-  title,
-  isActive,
+  icon,
+  label,
+  active,
   onClick,
-  children,
-  disabled = false,
 }: ModeCardProps) {
   return (
     <div 
-      className={`mode-card ${isActive ? 'active' : ''} ${disabled ? 'disabled' : ''}`}
-      onClick={disabled ? undefined : onClick}
+      className={`mode-card ${active ? 'active' : ''}`}
+      onClick={onClick}
+      role="button"
+      tabIndex={0}
+      onKeyDown={(e) => e.key === 'Enter' && onClick()}
     >
-      <div className="mode-card-header">
-        <span className="mode-card-title">{title}</span>
-        <div className={`mode-indicator ${isActive ? 'active' : ''}`} />
-      </div>
-      <div className="mode-card-content">
-        {children}
-      </div>
+      <span className="mode-icon">{icon}</span>
+      <span className="mode-label">{label}</span>
     </div>
   );
 }
