@@ -25,51 +25,23 @@
  */
 
 import { useState, useRef } from 'react';
-import { Plus, Check, X, ChevronDown, ChevronUp } from 'lucide-react';
-import { getLocaleCurrency } from './utils/format';
+import { ChevronDown, ChevronUp } from 'lucide-react';
 import { AccountForm } from './components/AccountForm';
 import { ProjectionsPanelV2 } from './components/ProjectionsPanelV2';
-import { PortfolioPanel as PortfolioPanelV2 } from './components/PortfolioPanelV2';
 import { ProjectionPortfolioPanel } from './components/ProjectionPortfolioPanel';
-import { getColorForId } from './utils/colors';
-import Sparkline from './components/Sparkline';
+import { AccountsStrip } from './components/AccountsStrip';
 
 // Import Zustand store and Account type
-import { useAppStore, useProjectionAccount, useFilteredAccounts, Account } from './store/useAppStore';
+import { useAppStore, useProjectionAccount, Account } from './store/useAppStore';
 
 // Re-export Account type for backwards compatibility
 export type { Account } from './store/useAppStore';
-
-/**
- * SelectionToggle — Toggle button showing grey tick (off) → green tick (on) → X on hover
- */
-function SelectionToggle({ isSelected, onToggle }: { isSelected: boolean; onToggle: () => void }) {
-  const [isHovered, setIsHovered] = useState(false);
-
-  const showX = isSelected && isHovered;
-  const showGreenCheck = isSelected && !isHovered;
-  const showGreyCheck = !isSelected;
-
-  return (
-    <button
-      className={`account-select-toggle ${isSelected ? 'selected' : ''} ${showX ? 'show-x' : ''}`}
-      onClick={onToggle}
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
-      title={isSelected ? 'Click to deselect' : 'Click to select for projection'}
-    >
-      {showX && <X size={16} />}
-      {(showGreenCheck || showGreyCheck) && <Check size={16} />}
-    </button>
-  );
-}
 
 export default function App() {
   /* ─── ZUSTAND STORE ─────────────────────────────────────────────── */
   
   // Get state from Zustand store (persisted to localStorage)
   const accounts = useAppStore((state) => state.accounts);
-  const selectedIds = useAppStore((state) => state.selectedIds);
   const tab = useAppStore((state) => state.tab);
   const projectionAccountId = useAppStore((state) => state.projectionAccountId);
   const portfolioSelectedIds = useAppStore((state) => state.portfolioSelectedIds);
@@ -78,14 +50,12 @@ export default function App() {
   const addAccountToStore = useAppStore((state) => state.addAccount);
   const updateAccountInStore = useAppStore((state) => state.updateAccount);
   const deleteAccountFromStore = useAppStore((state) => state.deleteAccount);
-  const toggleSelection = useAppStore((state) => state.toggleSelection);
   const setTab = useAppStore((state) => state.setTab);
   const toggleProjectionAccount = useAppStore((state) => state.toggleProjectionAccount);
   const togglePortfolioAccount = useAppStore((state) => state.togglePortfolioAccount);
   
   // Derived state from custom hooks
   const projectionAccount = useProjectionAccount();
-  const filteredAccounts = useFilteredAccounts();
   
   /* ─── LOCAL UI STATE (not persisted) ────────────────────────────── */
   
@@ -97,6 +67,9 @@ export default function App() {
 
   /** Account being edited in modal (null = adding new) */
   const [editingAccountId, setEditingAccountId] = useState<string | null>(null);
+  
+  /** Pre-fill transaction type when adding from strip sections */
+  const [defaultTransactionType, setDefaultTransactionType] = useState<'deposit' | 'withdraw'>('deposit');
 
   /** Get the account being edited in modal */
   const editingAccount = editingAccountId ? accounts.find(a => a.id === editingAccountId) : null;
@@ -104,17 +77,22 @@ export default function App() {
   /** ID of account being edited in left tray (null = adding new) */
   const [editingId, setEditingId] = useState<string | null>(null);
 
-  /** ID of account being edited inline in bottom strip */
-  const [inlineEditingId, setInlineEditingId] = useState<string | null>(null);
-
   /** Left panel collapsed on mobile */
   const [leftPanelCollapsed, setLeftPanelCollapsed] = useState(true);
 
   /* ─── LOCAL UI HANDLERS ─────────────────────────────────────────── */
 
-  /** Open modal for adding new account */
-  const openAddModal = () => {
+  /** Open modal for adding new deposit */
+  const openAddDeposit = () => {
     setEditingAccountId(null);
+    setDefaultTransactionType('deposit');
+    setShowAccountModal(true);
+  };
+
+  /** Open modal for adding new drawdown */
+  const openAddDrawdown = () => {
+    setEditingAccountId(null);
+    setDefaultTransactionType('withdraw');
     setShowAccountModal(true);
   };
 
@@ -138,18 +116,6 @@ export default function App() {
 
   /** Cancel left tray editing */
   const cancelEdit = () => setEditingId(null);
-
-  /** Start inline editing in bottom strip */
-  const startInlineEdit = (id: string) => setInlineEditingId(id);
-
-  /** Cancel inline editing */
-  const cancelInlineEdit = () => setInlineEditingId(null);
-
-  /** Save inline edit and close editor */
-  const saveInlineEdit = (id: string, data: Omit<Account, 'id'>) => {
-    updateAccountInStore(id, data);
-    setInlineEditingId(null);
-  };
 
   /* ─── ACCOUNT CRUD WRAPPERS ─────────────────────────────────────── */
   
@@ -177,16 +143,14 @@ export default function App() {
         
         {/* Tab Toggle inline with header */}
         <div className="tab-container">
-          <div className="tab-toggle three-tabs">
+          <div className="tab-toggle two-tabs">
             <div 
               className="tab-slider" 
               style={{ 
-                width: '33.333%',
+                width: '50%',
                 transform: tab === 'projections' 
                   ? 'translateX(0)' 
-                  : tab === 'portfolio'
-                  ? 'translateX(100%)' 
-                  : 'translateX(200%)'
+                  : 'translateX(100%)'
               }} 
             />
             <button
@@ -196,16 +160,10 @@ export default function App() {
               Projections
             </button>
             <button
-              onClick={() => setTab('portfolio')}
-              className={`tab-button ${tab === 'portfolio' ? 'active' : ''}`}
-            >
-              Portfolio
-            </button>
-            <button
               onClick={() => setTab('projection-portfolio')}
               className={`tab-button ${tab === 'projection-portfolio' ? 'active' : ''}`}
             >
-              Projection Portfolio
+              Portfolio
             </button>
           </div>
         </div>
@@ -266,102 +224,26 @@ export default function App() {
                 </div>
               )}
             </div>
-          ) : tab === 'portfolio' ? (
-            /* Portfolio Tab: Combined Monte Carlo Simulation */
-            <div className="portfolio-tab-content">
-              <PortfolioPanelV2 
-                accounts={accounts} 
-                selectedAccountIds={portfolioSelectedIds}
-              />
-            </div>
           ) : (
-            /* Projection Portfolio Tab: Combined with ribbon and crash support */
+            /* Portfolio Tab: Combined with ribbon and crash support */
             <div className="projection-portfolio-tab-content">
               <ProjectionPortfolioPanel accounts={accounts} />
             </div>
           )}
 
-          {/* Accounts Strip */}
-          <div className="accounts-strip card">
-            <div className="accounts-scroll">
-              {accounts.length > 0 ? (
-                accounts.map((acct) => {
-                  const startYear = new Date(acct.date).getFullYear();
-                  const duration = `${acct.timeHorizon}y`;
-                  const sign = acct.transactionType === 'withdraw' ? '-' : '+';
-                  const color = getColorForId(acct.id);
-                  const isSelectedForProjection = projectionAccountId === acct.id;
-                  const isSelectedForPortfolio = portfolioSelectedIds.has(acct.id);
-                  const formattedAmt = acct.transactionAmount?.toLocaleString(undefined, {
-                    style: 'currency',
-                    currency: getLocaleCurrency().currency,
-                  }) || '£0';
-
-                  return (
-                    <div 
-                      className={`account-card ${tab === 'projections' && isSelectedForProjection ? 'selected' : ''} ${(tab === 'portfolio' || tab === 'projection-portfolio') && isSelectedForPortfolio ? 'selected' : ''}`} 
-                      key={acct.id}
-                    >
-                      {/* Selection toggle for projections tab (single select) */}
-                      {tab === 'projections' && (
-                        <SelectionToggle
-                          isSelected={isSelectedForProjection}
-                          onToggle={() => toggleProjectionAccount(acct.id)}
-                        />
-                      )}
-
-                      {/* Selection toggle for portfolio/projection-portfolio tabs (multi select) */}
-                      {(tab === 'portfolio' || tab === 'projection-portfolio') && (
-                        <SelectionToggle
-                          isSelected={isSelectedForPortfolio}
-                          onToggle={() => togglePortfolioAccount(acct.id)}
-                        />
-                      )}
-
-                      {/* Card header */}
-                      <div className="account-card-header">
-                        <div className="account-card-title">
-                          <div 
-                            className="account-dot" 
-                            style={{ background: color }} 
-                          />
-                          <span className="account-name">{acct.name}</span>
-                        </div>
-                        <Sparkline account={acct} years={Math.min(acct.timeHorizon, 10)} color={color} />
-                      </div>
-
-                      {/* Card body */}
-                      <div className="account-card-meta">
-                        {startYear} · {duration} · {acct.frequency}
-                        {acct.volatility && ` · ${acct.volatility} vol`}
-                      </div>
-
-                      {/* Card amount */}
-                      <div className={`account-card-amount ${acct.transactionType}`}>
-                        <span>{sign}{formattedAmt}</span>
-                        <span className="per-period">/{acct.frequency === 'monthly' ? 'mo' : 'yr'}</span>
-                      </div>
-
-                      {/* Card actions */}
-                      <div className="account-card-actions">
-                        <button onClick={() => openEditModal(acct.id)} className="btn-sm">Edit</button>
-                        <button onClick={() => deleteAccount(acct.id)} className="btn-sm btn-danger">Delete</button>
-                      </div>
-                    </div>
-                  );
-                })
-              ) : null}
-
-              {/* Add Cash Flow Button - always at the end */}
-              <button 
-                className="add-account-btn"
-                onClick={openAddModal}
-                title="Add new cash flow"
-              >
-                <Plus size={24} />
-              </button>
-            </div>
-          </div>
+          {/* Unified Accounts Strip - Color-coded deposits/drawdowns/crashes */}
+          <AccountsStrip
+            accounts={accounts}
+            tab={tab}
+            projectionAccountId={projectionAccountId}
+            onToggleProjection={toggleProjectionAccount}
+            portfolioSelectedIds={portfolioSelectedIds}
+            onTogglePortfolio={togglePortfolioAccount}
+            onAddDeposit={openAddDeposit}
+            onAddDrawdown={openAddDrawdown}
+            onEditAccount={openEditModal}
+            onDeleteAccount={deleteAccount}
+          />
         </div>
       </div>
 
@@ -370,7 +252,7 @@ export default function App() {
         <div className="modal-overlay" onClick={closeAccountModal}>
           <div className="modal-content" onClick={(e) => e.stopPropagation()}>
             <div className="modal-header">
-              <h2>{editingAccountId ? 'Edit Cash Flow' : 'Add Cash Flow'}</h2>
+              <h2>{editingAccountId ? 'Edit Cash Flow' : `Add ${defaultTransactionType === 'deposit' ? 'Deposit' : 'Drawdown'}`}</h2>
               <button 
                 className="modal-close"
                 onClick={closeAccountModal}
@@ -379,7 +261,7 @@ export default function App() {
               </button>
             </div>
             <AccountForm 
-              key={editingAccountId || 'new'}
+              key={editingAccountId || `new-${defaultTransactionType}`}
               initialData={editingAccount ? {
                 name: editingAccount.name,
                 amount: editingAccount.amount,
@@ -391,7 +273,8 @@ export default function App() {
                 transactionType: editingAccount.transactionType,
                 transactionAmount: editingAccount.transactionAmount,
               } : undefined}
-              submitLabel={editingAccountId ? 'Save Changes' : 'Add Cash Flow'}
+              defaultTransactionType={defaultTransactionType}
+              submitLabel={editingAccountId ? 'Save Changes' : `Add ${defaultTransactionType === 'deposit' ? 'Deposit' : 'Drawdown'}`}
               existingAccounts={accounts}
               onSubmit={(account) => {
                 if (editingAccountId) {

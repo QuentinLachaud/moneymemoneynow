@@ -1,22 +1,23 @@
 /**
- * ProjectionPortfolioPanel — Combined portfolio projection with cash flow ribbon
+ * ProjectionPortfolioPanel — Combined portfolio projection with market crash support
  * 
  * FEATURES:
  * - Portfolio Monte Carlo simulation with market crash support
- * - Cash flow ribbon (deposits, drawdowns, market crashes)
  * - Crash year slider under the Monte Carlo chart
  * - Toggle individual cash flows and crash scenarios
+ * 
+ * NOTE: The bottom accounts strip is now handled at the App.tsx level
+ * using the unified AccountsStrip component
  */
 
-import { useState, useMemo, useCallback, useEffect } from 'react';
+import { useState, useMemo, useCallback } from 'react';
 import { Account, useAppStore } from '../store/useAppStore';
 import { useMarketCrashStore, getCrashFactor } from '../store/useMarketCrashStore';
 import { runPortfolioMonteCarloSimulation, PortfolioSimulationResult } from '../utils/portfolioMonteCarlo';
 import { MonteCarloChart } from './MonteCarloChart';
 import { HistogramChart } from './HistogramChart';
 import { CashFlowChart, getCashFlowData, getCashFlowColumns } from './CashFlowChart';
-import { PortfolioSummary } from './PortfolioSummary';
-import { CashFlowRibbon } from './CashFlowRibbon';
+// PortfolioSummary replaced with inline summary-widget for unified ribbon design
 import { CrashYearSlider } from './CrashYearSlider';
 import { 
   BarChart3, 
@@ -67,9 +68,6 @@ export function ProjectionPortfolioPanel({ accounts }: ProjectionPortfolioPanelP
   
   // Per-asset overrides
   const [assetOverrides, setAssetOverrides] = useState<Map<string, AssetOverride>>(new Map());
-
-  // Add deposit/drawdown modal state
-  const [showAddModal, setShowAddModal] = useState<'deposit' | 'drawdown' | null>(null);
 
   // Filter accounts based on selection
   const activeAccounts = useMemo(() => {
@@ -261,6 +259,29 @@ export function ProjectionPortfolioPanel({ accounts }: ProjectionPortfolioPanelP
     setGlobalVolatilityOverride(value);
   }, []);
 
+  // Format currency helper
+  const formatCurrency = (value: number) => {
+    if (Math.abs(value) >= 1000000) return `£${(value / 1000000).toFixed(2)}M`;
+    if (Math.abs(value) >= 1000) return `£${(value / 1000).toFixed(1)}k`;
+    return `£${value.toFixed(0)}`;
+  };
+
+  // Calculate metrics for summary widget
+  const metrics = useMemo(() => {
+    const initialValue = totalInitialValue;
+    const medianFinal = adjustedSimulation.stats.finalValues.median;
+    const growthFromReturns = medianFinal - initialValue - (cashFlowTotals.contributions - cashFlowTotals.withdrawals);
+    
+    return {
+      initialValue,
+      medianFinal,
+      totalContributions: cashFlowTotals.contributions,
+      totalWithdrawals: cashFlowTotals.withdrawals,
+      growthFromReturns,
+      survivalRate: simulation.stats.survivalRate,
+    };
+  }, [totalInitialValue, adjustedSimulation.stats, cashFlowTotals, simulation.stats.survivalRate]);
+
   // Download CSV
   const downloadCSV = useCallback((data: Array<Record<string, unknown>>, columns: Array<{ key: string; label: string }>, filename: string) => {
     const headers = columns.map(col => col.label).join(',');
@@ -284,16 +305,6 @@ export function ProjectionPortfolioPanel({ accounts }: ProjectionPortfolioPanelP
     URL.revokeObjectURL(url);
   }, []);
 
-  // Handle add deposit/drawdown
-  const handleAddDeposit = () => {
-    // This will be handled by the parent - open the existing modal with deposit type
-    setShowAddModal('deposit');
-  };
-
-  const handleAddDrawdown = () => {
-    setShowAddModal('drawdown');
-  };
-
   if (activeAccounts.length === 0) {
     return (
       <div className="empty-portfolio-state card">
@@ -302,14 +313,6 @@ export function ProjectionPortfolioPanel({ accounts }: ProjectionPortfolioPanelP
           <h3>No Assets Selected</h3>
           <p>Toggle assets on from the ribbon below to see your combined portfolio projection.</p>
         </div>
-        
-        <CashFlowRibbon
-          accounts={accounts}
-          onAddDeposit={handleAddDeposit}
-          onAddDrawdown={handleAddDrawdown}
-          onToggleAccount={togglePortfolioAccount}
-          enabledAccountIds={portfolioSelectedIds}
-        />
       </div>
     );
   }
@@ -320,8 +323,8 @@ export function ProjectionPortfolioPanel({ accounts }: ProjectionPortfolioPanelP
 
   return (
     <div className="projection-portfolio-panel">
-      {/* Top Controls Bar */}
-      <div className="portfolio-controls-bar">
+      {/* Top Controls Bar - Using unified projections-controls-bar class */}
+      <div className="projections-controls-bar">
         <div className="controls-left">
           {/* Mode Toggle */}
           <div className="control-group mode-toggle">
@@ -472,17 +475,56 @@ export function ProjectionPortfolioPanel({ accounts }: ProjectionPortfolioPanelP
           </div>
         </div>
 
-        {/* Portfolio Summary */}
+        {/* Right Section: Summary Widget - Unified with ProjectionsPanelV2 */}
         <div className="controls-right">
-          <PortfolioSummary
-            initialValue={totalInitialValue}
-            medianFinalValue={adjustedSimulation.stats.finalValues.median}
-            totalContributions={cashFlowTotals.contributions}
-            totalWithdrawals={cashFlowTotals.withdrawals}
-            survivalRate={simulation.stats.survivalRate}
-            timeHorizon={timeHorizon}
-            isDeterministic={isDeterministic}
-          />
+          <div className="summary-widget">
+            <div className="summary-metrics">
+              <div className="metric-item initial">
+                <span className="metric-label">Initial</span>
+                <span className="metric-value">{formatCurrency(metrics.initialValue)}</span>
+              </div>
+              
+              <div className="metric-divider">→</div>
+              
+              <div className="metric-item final">
+                <span className="metric-label">
+                  {isDeterministic ? 'Final' : 'Median'}
+                  <span className="metric-sublabel">({timeHorizon}y)</span>
+                </span>
+                <span className="metric-value highlight">{formatCurrency(metrics.medianFinal)}</span>
+              </div>
+
+              <div className="metric-breakdown">
+                <div className="breakdown-item">
+                  <span className="breakdown-label">Returns</span>
+                  <span className={`breakdown-value ${metrics.growthFromReturns >= 0 ? 'positive' : 'negative'}`}>
+                    {metrics.growthFromReturns >= 0 ? '+' : ''}{formatCurrency(metrics.growthFromReturns)}
+                  </span>
+                </div>
+                {metrics.totalContributions > 0 && (
+                  <div className="breakdown-item">
+                    <span className="breakdown-label">Contrib</span>
+                    <span className="breakdown-value positive">+{formatCurrency(metrics.totalContributions)}</span>
+                  </div>
+                )}
+                {metrics.totalWithdrawals > 0 && (
+                  <div className="breakdown-item">
+                    <span className="breakdown-label">Withdraw</span>
+                    <span className="breakdown-value negative">-{formatCurrency(metrics.totalWithdrawals)}</span>
+                  </div>
+                )}
+              </div>
+
+              {!isDeterministic && (
+                <div className="metric-item survival">
+                  <span className="metric-label">Survival</span>
+                  <span className={`metric-value ${metrics.survivalRate >= 95 ? 'excellent' : metrics.survivalRate >= 80 ? 'good' : 'warning'}`}>
+                    {metrics.survivalRate.toFixed(1)}%
+                  </span>
+                </div>
+              )}
+            </div>
+          </div>
         </div>
       </div>
 
@@ -660,15 +702,6 @@ export function ProjectionPortfolioPanel({ accounts }: ProjectionPortfolioPanelP
           )}
         </div>
       </div>
-
-      {/* Cash Flow Ribbon at the bottom */}
-      <CashFlowRibbon
-        accounts={accounts}
-        onAddDeposit={handleAddDeposit}
-        onAddDrawdown={handleAddDrawdown}
-        onToggleAccount={togglePortfolioAccount}
-        enabledAccountIds={portfolioSelectedIds}
-      />
     </div>
   );
 }

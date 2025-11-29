@@ -73,7 +73,7 @@
   --header-height: 36px;         /* Height of title - compact */
   --tab-height: 44px;            /* Height of tab toggle - compact */
   --left-panel-width: 280px;     /* Width of Add Account panel */
-  --accounts-strip-height: 180px; /* Height of bottom accounts strip */
+  --accounts-strip-height: 150px; /* Height of bottom accounts strip */
   --page-gap: 12px;              /* Spacing between all elements */
 
   /* Sidebar (unused but defined for component library) */
@@ -1972,12 +1972,14 @@ html {
   flex: 1;
   min-height: 0;
   padding: 16px;
+  overflow: hidden;
 }
 
 .chart-container.compact {
   flex: 0;
   height: 220px;
   min-height: 220px;
+  overflow: hidden;
 }
 
 /* Cash Flow Section in Projections */
@@ -2876,7 +2878,7 @@ html {
 }
 
 .compact-slider {
-  width: 140px;
+  width: 160px;
   height: 6px;
   -webkit-appearance: none;
   appearance: none;
@@ -2933,8 +2935,8 @@ html {
 
 /* Projection Control - Compact */
 .projection-control {
-  min-width: 120px;
-  max-width: 150px;
+  min-width: 150px;
+  max-width: 180px;
 }
 
 .projection-slider-wide {
@@ -3400,6 +3402,7 @@ html {
 .chart-container {
   flex: 1;
   min-height: 0;
+  overflow: hidden;
 }
 
 .chart-container.large {
@@ -4241,7 +4244,7 @@ html {
 }
 
 .projection-slider-wide {
-  width: 100px;
+  width: 140px;
   height: 4px;
   -webkit-appearance: none;
   appearance: none;
@@ -4497,6 +4500,7 @@ html {
   flex: 1;
   min-height: 0;
   padding: 8px;
+  overflow: hidden;
 }
 
 .chart-container.large {
@@ -5584,6 +5588,1072 @@ html {
   .left-panel {
     max-height: 200px;
     overflow-y: auto;
+  }
+}
+
+/*
+ * ==========================================================================
+ * UNIFIED SIMULATION CONTROLS BAR
+ * ==========================================================================
+ * Top control bar used across all simulation tabs
+ */
+
+.simulation-controls-bar {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 10px 16px;
+  background: linear-gradient(180deg, rgba(10, 13, 18, 0.95), rgba(12, 16, 22, 0.98));
+  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+  flex-wrap: wrap;
+  min-height: 48px;
+}
+
+.simulation-controls-bar .control-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.simulation-controls-bar .control-label {
+  font-size: 0.7rem;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.5);
+  white-space: nowrap;
+}
+
+.simulation-controls-bar .mode-toggle {
+  display: flex;
+  background: rgba(255, 255, 255, 0.04);
+  border-radius: 6px;
+  padding: 2px;
+  gap: 2px;
+}
+
+.simulation-controls-bar .mode-btn {
+  padding: 4px 10px;
+  font-size: 0.7rem;
+  font-weight: 500;
+  border: none;
+  border-radius: 4px;
+  background: transparent;
+  color: rgba(255, 255, 255, 0.5);
+  cursor: pointer;
+  transition: all 150ms ease;
+}
+
+.simulation-controls-bar .mode-btn:hover {
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.simulation-controls-bar .mode-btn.active {
+  background: rgba(99, 102, 241, 0.3);
+  color: #a5b4fc;
+}
+
+.simulation-controls-bar .sim-count-btns {
+  display: flex;
+  gap: 4px;
+}
+
+.simulation-controls-bar .sim-btn {
+  padding: 3px 8px;
+  font-size: 0.65rem;
+  font-weight: 500;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 4px;
+  background: transparent;
+  color: rgba(255, 255, 255, 0.5);
+  cursor: pointer;
+  transition: all 150ms ease;
+}
+
+.simulation-controls-bar .sim-btn:hover {
+  border-color: rgba(99, 102, 241, 0.3);
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.simulation-controls-bar .sim-btn.active {
+  background: rgba(99, 102, 241, 0.2);
+  border-color: rgba(99, 102, 241, 0.4);
+  color: #a5b4fc;
+}
+
+.simulation-controls-bar .slider-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.simulation-controls-bar .slider-with-value {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.simulation-controls-bar .slider-value {
+  min-width: 40px;
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: #a5b4fc;
+  text-align: right;
+}
+
+.simulation-controls-bar .preset-btns {
+  display: flex;
+  gap: 3px;
+}
+
+.simulation-controls-bar .preset-btn {
+  padding: 2px 6px;
+  font-size: 0.6rem;
+  font-weight: 500;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 3px;
+  background: transparent;
+  color: rgba(255, 255, 255, 0.4);
+  cursor: pointer;
+  transition: all 150ms ease;
+}
+
+.simulation-controls-bar .preset-btn:hover {
+  border-color: rgba(99, 102, 241, 0.3);
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.simulation-controls-bar .preset-btn.active {
+  background: rgba(99, 102, 241, 0.15);
+  border-color: rgba(99, 102, 241, 0.3);
+  color: #a5b4fc;
+}
+
+.simulation-controls-bar .toggle-group {
+  display: flex;
+  gap: 12px;
+}
+
+.simulation-controls-bar .toggle-btn {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 8px;
+  font-size: 0.65rem;
+  font-weight: 500;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 4px;
+  background: transparent;
+  color: rgba(255, 255, 255, 0.5);
+  cursor: pointer;
+  transition: all 150ms ease;
+}
+
+.simulation-controls-bar .toggle-btn:hover {
+  border-color: rgba(255, 255, 255, 0.1);
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.simulation-controls-bar .toggle-btn.active {
+  background: rgba(99, 102, 241, 0.15);
+  border-color: rgba(99, 102, 241, 0.3);
+  color: #a5b4fc;
+}
+
+.simulation-controls-bar .divider {
+  width: 1px;
+  height: 24px;
+  background: rgba(255, 255, 255, 0.08);
+  flex-shrink: 0;
+}
+
+.simulation-controls-bar .spacer {
+  flex: 1;
+  min-width: 8px;
+}
+
+.simulation-controls-bar .metrics-widget {
+  display: flex;
+  gap: 16px;
+  padding: 6px 12px;
+  background: rgba(255, 255, 255, 0.02);
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.04);
+}
+
+.simulation-controls-bar .metric-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+}
+
+.simulation-controls-bar .metric-label {
+  font-size: 0.55rem;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.4);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.simulation-controls-bar .metric-value {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--foreground);
+}
+
+.simulation-controls-bar .metric-value.positive {
+  color: #10b981;
+}
+
+.simulation-controls-bar .metric-value.negative {
+  color: #ef4444;
+}
+
+.simulation-controls-bar .metric-value.highlight {
+  color: #a5b4fc;
+}
+
+.simulation-controls-bar .survival-rate {
+  font-size: 0.9rem;
+  font-weight: 700;
+}
+
+.simulation-controls-bar .survival-rate.excellent {
+  color: #10b981;
+}
+
+.simulation-controls-bar .survival-rate.good {
+  color: #22c55e;
+}
+
+.simulation-controls-bar .survival-rate.moderate {
+  color: #eab308;
+}
+
+.simulation-controls-bar .survival-rate.poor {
+  color: #f97316;
+}
+
+.simulation-controls-bar .survival-rate.critical {
+  color: #ef4444;
+}
+
+/*
+ * ==========================================================================
+ * UNIFIED ACCOUNTS STRIP
+ * ==========================================================================
+ * Bottom ribbon with deposits (green), drawdowns (red), and crashes (yellow)
+ */
+
+.accounts-strip-unified {
+  display: flex;
+  flex-shrink: 0;
+  height: var(--accounts-strip-height);
+  min-height: var(--accounts-strip-height);
+  background: linear-gradient(180deg, rgba(10, 13, 18, 0.6), rgba(10, 13, 18, 0.8));
+  border-top: 1px solid rgba(255, 255, 255, 0.04);
+  overflow: hidden;
+}
+
+.strip-section {
+  display: flex;
+  flex-direction: column;
+  padding: 10px 12px;
+  min-width: 0;
+  flex: 1;
+}
+
+.strip-section.deposits {
+  background: linear-gradient(180deg, rgba(16, 185, 129, 0.03), rgba(16, 185, 129, 0.01));
+  border-right: 1px solid rgba(255, 255, 255, 0.04);
+}
+
+.strip-section.drawdowns {
+  background: linear-gradient(180deg, rgba(239, 68, 68, 0.03), rgba(239, 68, 68, 0.01));
+  border-right: 1px solid rgba(255, 255, 255, 0.04);
+}
+
+.strip-section.crashes {
+  background: linear-gradient(180deg, rgba(234, 179, 8, 0.03), rgba(234, 179, 8, 0.01));
+  flex: 0 0 auto;
+  min-width: 180px;
+}
+
+.strip-section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+  padding-right: 4px;
+}
+
+.strip-section-title {
+  font-size: 0.65rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.strip-section.deposits .strip-section-title {
+  color: rgba(16, 185, 129, 0.7);
+}
+
+.strip-section.drawdowns .strip-section-title {
+  color: rgba(239, 68, 68, 0.7);
+}
+
+.strip-section.crashes .strip-section-title {
+  color: rgba(234, 179, 8, 0.7);
+}
+
+.strip-section-count {
+  font-size: 0.6rem;
+  font-weight: 500;
+  padding: 2px 6px;
+  border-radius: 10px;
+}
+
+.strip-section.deposits .strip-section-count {
+  background: rgba(16, 185, 129, 0.1);
+  color: rgba(16, 185, 129, 0.8);
+}
+
+.strip-section.drawdowns .strip-section-count {
+  background: rgba(239, 68, 68, 0.1);
+  color: rgba(239, 68, 68, 0.8);
+}
+
+.strip-section.crashes .strip-section-count {
+  background: rgba(234, 179, 8, 0.1);
+  color: rgba(234, 179, 8, 0.8);
+}
+
+.strip-section-content {
+  display: flex;
+  gap: 6px;
+  overflow-x: auto;
+  flex: 1;
+  align-items: flex-start;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.08) transparent;
+}
+
+.strip-section-content::-webkit-scrollbar {
+  height: 4px;
+}
+
+.strip-section-content::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 2px;
+}
+
+/* Account Ticket - Clickable Card */
+.account-ticket {
+  flex-shrink: 0;
+  min-width: 120px;
+  max-width: 150px;
+  padding: 6px 8px;
+  border-radius: 6px;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  cursor: pointer;
+  transition: all 200ms ease;
+  user-select: none;
+}
+
+.account-ticket.deposit {
+  background: linear-gradient(180deg, rgba(16, 185, 129, 0.08), rgba(16, 185, 129, 0.04));
+  border: 1px solid rgba(16, 185, 129, 0.15);
+}
+
+.account-ticket.deposit:hover {
+  background: linear-gradient(180deg, rgba(16, 185, 129, 0.12), rgba(16, 185, 129, 0.06));
+  border-color: rgba(16, 185, 129, 0.25);
+}
+
+.account-ticket.deposit.selected {
+  background: linear-gradient(180deg, rgba(16, 185, 129, 0.18), rgba(16, 185, 129, 0.1));
+  border-color: rgba(16, 185, 129, 0.4);
+  box-shadow: 0 0 12px rgba(16, 185, 129, 0.15);
+}
+
+.account-ticket.drawdown {
+  background: linear-gradient(180deg, rgba(239, 68, 68, 0.08), rgba(239, 68, 68, 0.04));
+  border: 1px solid rgba(239, 68, 68, 0.15);
+}
+
+.account-ticket.drawdown:hover {
+  background: linear-gradient(180deg, rgba(239, 68, 68, 0.12), rgba(239, 68, 68, 0.06));
+  border-color: rgba(239, 68, 68, 0.25);
+}
+
+.account-ticket.drawdown.selected {
+  background: linear-gradient(180deg, rgba(239, 68, 68, 0.18), rgba(239, 68, 68, 0.1));
+  border-color: rgba(239, 68, 68, 0.4);
+  box-shadow: 0 0 12px rgba(239, 68, 68, 0.15);
+}
+
+.account-ticket.crash {
+  background: linear-gradient(180deg, rgba(234, 179, 8, 0.08), rgba(234, 179, 8, 0.04));
+  border: 1px solid rgba(234, 179, 8, 0.15);
+}
+
+.account-ticket.crash:hover {
+  background: linear-gradient(180deg, rgba(234, 179, 8, 0.12), rgba(234, 179, 8, 0.06));
+  border-color: rgba(234, 179, 8, 0.25);
+}
+
+.account-ticket.crash.selected {
+  background: linear-gradient(180deg, rgba(234, 179, 8, 0.18), rgba(234, 179, 8, 0.1));
+  border-color: rgba(234, 179, 8, 0.4);
+  box-shadow: 0 0 12px rgba(234, 179, 8, 0.15);
+}
+
+.account-ticket .ticket-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+}
+
+.account-ticket .ticket-name {
+  font-size: 0.65rem;
+  font-weight: 600;
+  color: var(--foreground);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.account-ticket .ticket-indicator {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  opacity: 0.3;
+  transition: opacity 150ms ease;
+}
+
+.account-ticket.selected .ticket-indicator {
+  opacity: 1;
+}
+
+.account-ticket.deposit .ticket-indicator {
+  background: #10b981;
+}
+
+.account-ticket.drawdown .ticket-indicator {
+  background: #ef4444;
+}
+
+.account-ticket.crash .ticket-indicator {
+  background: #eab308;
+}
+
+.account-ticket .ticket-amount {
+  font-size: 0.7rem;
+  font-weight: 700;
+}
+
+.account-ticket.deposit .ticket-amount {
+  color: #10b981;
+}
+
+.account-ticket.drawdown .ticket-amount {
+  color: #ef4444;
+}
+
+.account-ticket.crash .ticket-amount {
+  color: #eab308;
+}
+
+.account-ticket .ticket-meta {
+  font-size: 0.55rem;
+  color: rgba(255, 255, 255, 0.45);
+}
+
+.account-ticket .ticket-actions {
+  display: flex;
+  gap: 4px;
+  margin-top: 4px;
+  opacity: 0;
+  transition: opacity 150ms ease;
+}
+
+.account-ticket:hover .ticket-actions {
+  opacity: 1;
+}
+
+.account-ticket .ticket-btn {
+  padding: 3px 8px;
+  font-size: 0.65rem;
+  font-weight: 500;
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  color: rgba(255, 255, 255, 0.6);
+  cursor: pointer;
+  transition: all 150ms ease;
+}
+
+.account-ticket .ticket-btn:hover {
+  background: rgba(255, 255, 255, 0.08);
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.account-ticket .ticket-btn.delete {
+  color: rgba(239, 68, 68, 0.7);
+}
+
+.account-ticket .ticket-btn.delete:hover {
+  background: rgba(239, 68, 68, 0.1);
+  color: #ef4444;
+}
+
+/* Add Button in Strip Section */
+.strip-add-btn {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  min-height: 60px;
+  border-radius: 8px;
+  border: 1px dashed;
+  cursor: pointer;
+  transition: all 200ms ease;
+}
+
+.strip-section.deposits .strip-add-btn {
+  background: rgba(16, 185, 129, 0.04);
+  border-color: rgba(16, 185, 129, 0.2);
+  color: rgba(16, 185, 129, 0.5);
+}
+
+.strip-section.deposits .strip-add-btn:hover {
+  background: rgba(16, 185, 129, 0.1);
+  border-color: rgba(16, 185, 129, 0.4);
+  color: #10b981;
+}
+
+.strip-section.drawdowns .strip-add-btn {
+  background: rgba(239, 68, 68, 0.04);
+  border-color: rgba(239, 68, 68, 0.2);
+  color: rgba(239, 68, 68, 0.5);
+}
+
+.strip-section.drawdowns .strip-add-btn:hover {
+  background: rgba(239, 68, 68, 0.1);
+  border-color: rgba(239, 68, 68, 0.4);
+  color: #ef4444;
+}
+
+.strip-section.crashes .strip-add-btn {
+  background: rgba(234, 179, 8, 0.04);
+  border-color: rgba(234, 179, 8, 0.2);
+  color: rgba(234, 179, 8, 0.5);
+}
+
+.strip-section.crashes .strip-add-btn:hover {
+  background: rgba(234, 179, 8, 0.1);
+  border-color: rgba(234, 179, 8, 0.4);
+  color: #eab308;
+}
+
+.strip-empty-text {
+  font-size: 0.7rem;
+  color: rgba(255, 255, 255, 0.3);
+  font-style: italic;
+  padding: 8px;
+}
+
+/*
+ * ==========================================================================
+ * ACCOUNTS STRIP - Component-specific classes (AccountsStrip.tsx)
+ * ==========================================================================
+ */
+
+/* Section layout */
+.strip-section.deposits-section {
+  background: linear-gradient(180deg, rgba(16, 185, 129, 0.04), rgba(16, 185, 129, 0.02));
+  border-right: 1px solid rgba(255, 255, 255, 0.04);
+}
+
+.strip-section.drawdowns-section {
+  background: linear-gradient(180deg, rgba(239, 68, 68, 0.04), rgba(239, 68, 68, 0.02));
+  border-right: 1px solid rgba(255, 255, 255, 0.04);
+}
+
+.strip-section.crashes-section {
+  background: linear-gradient(180deg, rgba(234, 179, 8, 0.04), rgba(234, 179, 8, 0.02));
+  flex: 0 0 auto;
+  min-width: 180px;
+  max-width: 280px;
+}
+
+.strip-section .section-header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0 0 6px 0;
+  font-size: 0.65rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.strip-section.deposits-section .section-header {
+  color: rgba(16, 185, 129, 0.7);
+}
+
+.strip-section.drawdowns-section .section-header {
+  color: rgba(239, 68, 68, 0.7);
+}
+
+.strip-section.crashes-section .section-header {
+  color: rgba(234, 179, 8, 0.7);
+}
+
+.strip-section .section-cards {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  flex: 1;
+  align-items: flex-start;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.08) transparent;
+}
+
+.strip-section .section-cards::-webkit-scrollbar {
+  height: 4px;
+}
+
+.strip-section .section-cards::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 2px;
+}
+
+/* Unified Account Card */
+.account-card-unified {
+  flex-shrink: 0;
+  min-width: 140px;
+  max-width: 180px;
+  padding: 8px 10px;
+  border-radius: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  cursor: pointer;
+  transition: all 200ms ease;
+  user-select: none;
+  position: relative;
+}
+
+.account-card-unified.deposit {
+  background: linear-gradient(180deg, rgba(16, 185, 129, 0.08), rgba(16, 185, 129, 0.04));
+  border: 1px solid rgba(16, 185, 129, 0.15);
+}
+
+.account-card-unified.deposit:hover {
+  background: linear-gradient(180deg, rgba(16, 185, 129, 0.12), rgba(16, 185, 129, 0.06));
+  border-color: rgba(16, 185, 129, 0.25);
+}
+
+.account-card-unified.deposit.selected {
+  background: linear-gradient(180deg, rgba(16, 185, 129, 0.18), rgba(16, 185, 129, 0.1));
+  border-color: rgba(16, 185, 129, 0.4);
+  box-shadow: 0 0 12px rgba(16, 185, 129, 0.15);
+}
+
+.account-card-unified.drawdown {
+  background: linear-gradient(180deg, rgba(239, 68, 68, 0.08), rgba(239, 68, 68, 0.04));
+  border: 1px solid rgba(239, 68, 68, 0.15);
+}
+
+.account-card-unified.drawdown:hover {
+  background: linear-gradient(180deg, rgba(239, 68, 68, 0.12), rgba(239, 68, 68, 0.06));
+  border-color: rgba(239, 68, 68, 0.25);
+}
+
+.account-card-unified.drawdown.selected {
+  background: linear-gradient(180deg, rgba(239, 68, 68, 0.18), rgba(239, 68, 68, 0.1));
+  border-color: rgba(239, 68, 68, 0.4);
+  box-shadow: 0 0 12px rgba(239, 68, 68, 0.15);
+}
+
+.account-card-unified .card-select-indicator {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 150ms ease;
+}
+
+.account-card-unified.deposit .card-select-indicator {
+  background: rgba(16, 185, 129, 0.2);
+  border: 1px solid rgba(16, 185, 129, 0.3);
+  color: transparent;
+}
+
+.account-card-unified.deposit.selected .card-select-indicator {
+  background: #10b981;
+  border-color: #10b981;
+  color: white;
+}
+
+.account-card-unified.drawdown .card-select-indicator {
+  background: rgba(239, 68, 68, 0.2);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  color: transparent;
+}
+
+.account-card-unified.drawdown.selected .card-select-indicator {
+  background: #ef4444;
+  border-color: #ef4444;
+  color: white;
+}
+
+.account-card-unified .card-content {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.account-card-unified .card-header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.account-card-unified .card-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 2px;
+  flex-shrink: 0;
+}
+
+.account-card-unified .card-name {
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--foreground);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  padding-right: 20px;
+}
+
+.account-card-unified .card-meta {
+  font-size: 0.6rem;
+  color: rgba(255, 255, 255, 0.45);
+}
+
+.account-card-unified .card-amount {
+  font-size: 0.78rem;
+  font-weight: 700;
+  margin-top: 2px;
+}
+
+.account-card-unified.deposit .card-amount {
+  color: #10b981;
+}
+
+.account-card-unified.drawdown .card-amount {
+  color: #ef4444;
+}
+
+.account-card-unified .card-actions {
+  display: flex;
+  gap: 4px;
+  margin-top: 4px;
+  opacity: 0;
+  transition: opacity 150ms ease;
+}
+
+.account-card-unified:hover .card-actions {
+  opacity: 1;
+}
+
+.account-card-unified .card-action-btn {
+  padding: 3px 8px;
+  font-size: 0.65rem;
+  font-weight: 500;
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  color: rgba(255, 255, 255, 0.6);
+  cursor: pointer;
+  transition: all 150ms ease;
+}
+
+.account-card-unified .card-action-btn:hover {
+  background: rgba(255, 255, 255, 0.08);
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.account-card-unified .card-action-btn.danger {
+  color: rgba(239, 68, 68, 0.7);
+}
+
+.account-card-unified .card-action-btn.danger:hover {
+  background: rgba(239, 68, 68, 0.1);
+  color: #ef4444;
+}
+
+/* Crash Card */
+.crash-card-unified {
+  flex-shrink: 0;
+  min-width: 130px;
+  max-width: 160px;
+  padding: 8px 10px;
+  border-radius: 8px;
+  background: linear-gradient(180deg, rgba(234, 179, 8, 0.06), rgba(234, 179, 8, 0.02));
+  border: 1px solid rgba(234, 179, 8, 0.15);
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  cursor: pointer;
+  transition: all 200ms ease;
+  user-select: none;
+  position: relative;
+}
+
+.crash-card-unified.disabled {
+  opacity: 0.5;
+}
+
+.crash-card-unified:hover {
+  background: linear-gradient(180deg, rgba(234, 179, 8, 0.1), rgba(234, 179, 8, 0.04));
+  border-color: rgba(234, 179, 8, 0.25);
+}
+
+.crash-card-unified.active {
+  background: linear-gradient(180deg, rgba(234, 179, 8, 0.16), rgba(234, 179, 8, 0.08));
+  border-color: rgba(234, 179, 8, 0.4);
+  box-shadow: 0 0 12px rgba(234, 179, 8, 0.15);
+}
+
+.crash-card-unified .card-select-indicator {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: rgba(234, 179, 8, 0.2);
+  border: 1px solid rgba(234, 179, 8, 0.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: transparent;
+  cursor: pointer;
+  transition: all 150ms ease;
+}
+
+.crash-card-unified.enabled .card-select-indicator {
+  background: #eab308;
+  border-color: #eab308;
+  color: white;
+}
+
+.crash-card-unified .card-content {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.crash-card-unified .card-header {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.crash-card-unified .crash-icon {
+  color: #eab308;
+  opacity: 0.8;
+}
+
+.crash-card-unified .card-name {
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--foreground);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  padding-right: 20px;
+}
+
+.crash-card-unified .card-meta {
+  font-size: 0.6rem;
+  color: rgba(234, 179, 8, 0.7);
+}
+
+.crash-card-unified .card-actions {
+  display: flex;
+  gap: 4px;
+  margin-top: 4px;
+  opacity: 0;
+  transition: opacity 150ms ease;
+}
+
+.crash-card-unified:hover .card-actions {
+  opacity: 1;
+}
+
+.crash-card-unified .card-action-btn {
+  padding: 3px 8px;
+  font-size: 0.65rem;
+  font-weight: 500;
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  color: rgba(255, 255, 255, 0.6);
+  cursor: pointer;
+  transition: all 150ms ease;
+}
+
+.crash-card-unified .card-action-btn:hover {
+  background: rgba(255, 255, 255, 0.08);
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.crash-card-unified .card-action-btn.danger {
+  color: rgba(239, 68, 68, 0.7);
+}
+
+.crash-card-unified .card-action-btn.danger:hover {
+  background: rgba(239, 68, 68, 0.1);
+  color: #ef4444;
+}
+
+/* Add Card Button */
+.add-card-btn {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  min-height: 80px;
+  border-radius: 8px;
+  border: 1px dashed;
+  cursor: pointer;
+  transition: all 200ms ease;
+}
+
+.add-card-btn.deposit-add {
+  background: rgba(16, 185, 129, 0.04);
+  border-color: rgba(16, 185, 129, 0.2);
+  color: rgba(16, 185, 129, 0.5);
+}
+
+.add-card-btn.deposit-add:hover {
+  background: rgba(16, 185, 129, 0.1);
+  border-color: rgba(16, 185, 129, 0.4);
+  color: #10b981;
+}
+
+.add-card-btn.drawdown-add {
+  background: rgba(239, 68, 68, 0.04);
+  border-color: rgba(239, 68, 68, 0.2);
+  color: rgba(239, 68, 68, 0.5);
+}
+
+.add-card-btn.drawdown-add:hover {
+  background: rgba(239, 68, 68, 0.1);
+  border-color: rgba(239, 68, 68, 0.4);
+  color: #ef4444;
+}
+
+.add-card-btn.crash-add {
+  background: rgba(234, 179, 8, 0.04);
+  border-color: rgba(234, 179, 8, 0.2);
+  color: rgba(234, 179, 8, 0.5);
+}
+
+.add-card-btn.crash-add:hover {
+  background: rgba(234, 179, 8, 0.1);
+  border-color: rgba(234, 179, 8, 0.4);
+  color: #eab308;
+}
+
+/* Responsive Simulation Controls */
+@media (max-width: 1200px) {
+  .simulation-controls-bar {
+    gap: 12px;
+    padding: 8px 12px;
+  }
+  
+  .simulation-controls-bar .metrics-widget {
+    gap: 12px;
+    padding: 4px 8px;
+  }
+}
+
+@media (max-width: 900px) {
+  .simulation-controls-bar {
+    gap: 8px;
+    padding: 6px 10px;
+    min-height: 40px;
+  }
+  
+  .simulation-controls-bar .control-label {
+    display: none;
+  }
+  
+  .simulation-controls-bar .divider {
+    display: none;
+  }
+  
+  .simulation-controls-bar .metrics-widget {
+    gap: 8px;
+    padding: 4px 6px;
+  }
+  
+  .simulation-controls-bar .metric-label {
+    font-size: 0.5rem;
+  }
+  
+  .simulation-controls-bar .metric-value {
+    font-size: 0.7rem;
+  }
+}
+
+/* Responsive Accounts Strip */
+@media (max-width: 1200px) {
+  .accounts-strip-unified {
+    flex-wrap: wrap;
+  }
+  
+  .strip-section.crashes {
+    flex: 1;
+    min-width: 140px;
+  }
+}
+
+@media (max-width: 768px) {
+  .accounts-strip-unified {
+    flex-direction: column;
+    height: auto;
+    min-height: auto;
+    max-height: 300px;
+    overflow-y: auto;
+  }
+  
+  .strip-section {
+    border-right: none !important;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+  }
+  
+  .strip-section:last-child {
+    border-bottom: none;
+  }
+  
+  .account-ticket {
+    min-width: 120px;
   }
 }
 

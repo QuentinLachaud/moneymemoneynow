@@ -33,10 +33,18 @@ interface AccountFormProps {
   submitLabel?: string;
   /** All existing accounts for auto-populating amount */
   existingAccounts?: Account[];
+  /** Default transaction type when adding new (used when clicked from deposit/drawdown section) */
+  defaultTransactionType?: 'deposit' | 'withdraw';
 }
 
-export function AccountForm({ onSubmit, initialData, submitLabel = 'Add Account', existingAccounts = [] }: AccountFormProps) {
-  const [transactionType, setTransactionType] = useState<'deposit' | 'withdraw'>(initialData?.transactionType || 'deposit');
+export function AccountForm({ 
+  onSubmit, 
+  initialData, 
+  submitLabel = 'Add Account', 
+  existingAccounts = [],
+  defaultTransactionType = 'deposit',
+}: AccountFormProps) {
+  const [transactionType, setTransactionType] = useState<'deposit' | 'withdraw'>(initialData?.transactionType || defaultTransactionType);
   const [name, setName] = useState(initialData?.name || '');
   const [amount, setAmount] = useState(initialData?.amount?.toString() || '');
   const [date, setDate] = useState(initialData?.date || new Date().toISOString().split('T')[0]);

@@ -34,7 +34,7 @@ export interface Account {
 }
 
 /** Tab types for navigation */
-export type TabType = 'projections' | 'portfolio' | 'projection-portfolio';
+export type TabType = 'projections' | 'projection-portfolio';
 
 /**
  * Store state interface — all persisted state
