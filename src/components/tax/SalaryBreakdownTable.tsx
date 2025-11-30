@@ -1,35 +1,45 @@
 /**
- * SalaryBreakdownTable — Detailed tax breakdown table
+ * TaxBreakdownTable — Comprehensive salary breakdown table
  * 
- * Shows comprehensive breakdown of:
- * - Gross salary
- * - Each tax band amount
- * - Total income tax
- * - National Insurance contributions
- * - Pension contributions (if any)
- * - Net take-home pay
- * 
- * Displays both annual and monthly values.
+ * Features:
+ * - Prominent effective/marginal tax rates at top
+ * - Modern, clean table design with rounded corners
+ * - Collapsible Tax section with breakdown
+ * - Net Take-Home (highlighted)
+ * - Annual/Monthly pill-switch toggle
+ * - Professional styling with better typography
  */
 
-import { Wallet, TrendingUp, PiggyBank } from 'lucide-react';
+import { useState } from 'react';
+import { Wallet, TrendingUp, ChevronDown, ChevronRight, Percent } from 'lucide-react';
 import { TaxCalculationResult } from '../../utils/ukTaxCalculator';
 
-interface SalaryBreakdownTableProps {
+type ViewMode = 'annual' | 'monthly';
+
+interface TaxBreakdownTableProps {
   result: TaxCalculationResult;
-  pensionPercent: number;
-  employerPension: number;
-  title?: string;
+  title: string;
+  baselineResult?: TaxCalculationResult; // For delta calculations
   isScenario?: boolean;
+  viewMode?: ViewMode;
+  onViewModeChange?: (mode: ViewMode) => void;
 }
 
 export function SalaryBreakdownTable({
   result,
-  pensionPercent,
-  employerPension,
-  title = 'Current Salary',
+  title,
+  baselineResult,
   isScenario = false,
-}: SalaryBreakdownTableProps) {
+  viewMode: externalViewMode,
+  onViewModeChange,
+}: TaxBreakdownTableProps) {
+  // Use internal state if no external control provided
+  const [internalViewMode, setInternalViewMode] = useState<ViewMode>('annual');
+  const viewMode = externalViewMode ?? internalViewMode;
+  const setViewMode = onViewModeChange ?? setInternalViewMode;
+  
+  const [taxExpanded, setTaxExpanded] = useState(false);
+
   // Format currency
   const formatCurrency = (value: number): string => {
     return new Intl.NumberFormat('en-GB', {
@@ -40,145 +50,204 @@ export function SalaryBreakdownTable({
     }).format(value);
   };
 
+  // Format delta with sign
+  const formatDelta = (value: number): string => {
+    const prefix = value >= 0 ? '+' : '';
+    return `${prefix}${formatCurrency(value)}`;
+  };
+
+  // Calculate combined effective rate (Income Tax + NI)
+  const effectiveRate = result.grossSalary > 0 
+    ? ((result.totalTax + result.totalNI) / result.grossSalary) * 100 
+    : 0;
+
+  // Calculate combined marginal rate (Income Tax + NI for next £1)
+  const getMarginalNIRate = (salary: number): number => {
+    if (salary <= 12570) return 0;
+    if (salary <= 50270) return 8;
+    return 2;
+  };
+  const marginalRate = result.marginalTaxRate + getMarginalNIRate(result.grossSalary);
+
+  // Total tax = Income Tax + NI
+  const totalTax = result.totalTax + result.totalNI;
+
+  // Get deltas if baseline provided
+  const getDelta = (current: number, baseline: number | undefined): number | null => {
+    if (baseline === undefined || !isScenario) return null;
+    return current - baseline;
+  };
+
+  const grossDelta = getDelta(result.grossSalary, baselineResult?.grossSalary);
+  const taxDelta = getDelta(totalTax, baselineResult ? baselineResult.totalTax + baselineResult.totalNI : undefined);
+  const netDelta = getDelta(result.netPay, baselineResult?.netPay);
+
+  // Display values based on view mode
+  const displayMultiplier = viewMode === 'monthly' ? 1/12 : 1;
+  const getDisplayValue = (annual: number) => annual * displayMultiplier;
+
   return (
-    <div className={`salary-breakdown-table ${isScenario ? 'scenario' : 'baseline'}`}>
-      <div className="table-header">
-        <h4>{title}</h4>
-        <div className="header-stats">
-          <span className="stat">
-            <span className="stat-value">{result.effectiveTaxRate.toFixed(1)}%</span>
-            <span className="stat-label">Effective</span>
-          </span>
-          <span className="stat">
-            <span className="stat-value">{result.marginalTaxRate}%</span>
-            <span className="stat-label">Marginal</span>
-          </span>
+    <div className={`tax-breakdown-panel modern ${isScenario ? 'scenario' : 'baseline'}`}>
+      {/* Header with Title */}
+      <div className="panel-header-modern">
+        <h4 className="panel-title-modern">{title}</h4>
+        
+        {/* Pill Switch Toggle - Annual/Monthly */}
+        <div className="pill-switch compact">
+          <button
+            className={`pill-option ${viewMode === 'annual' ? 'active' : ''}`}
+            onClick={() => setViewMode('annual')}
+          >
+            Annual
+          </button>
+          <button
+            className={`pill-option ${viewMode === 'monthly' ? 'active' : ''}`}
+            onClick={() => setViewMode('monthly')}
+          >
+            Monthly
+          </button>
+          <div 
+            className="pill-indicator"
+            style={{ transform: viewMode === 'monthly' ? 'translateX(100%)' : 'translateX(0)' }}
+          />
         </div>
       </div>
 
-      <div className="table-wrapper">
-        <table className="breakdown-table">
-          <thead>
-            <tr>
-              <th className="category-col"></th>
-              <th className="amount-col">Annual</th>
-              <th className="amount-col">Monthly</th>
-            </tr>
-          </thead>
-          <tbody>
-            {/* Gross Salary */}
-            <tr className="gross-row">
-              <td className="category">
-                <Wallet size={14} />
-                <span>Gross Salary</span>
-              </td>
-              <td className="amount">{formatCurrency(result.grossSalary)}</td>
-              <td className="amount monthly">{formatCurrency(result.monthlyGross)}</td>
-            </tr>
+      {/* Prominent Tax Rates Section */}
+      <div className="tax-rates-banner">
+        <div className="rate-card effective">
+          <Percent size={18} />
+          <div className="rate-content">
+            <span className="rate-number">{effectiveRate.toFixed(1)}%</span>
+            <span className="rate-name">Effective Rate</span>
+          </div>
+        </div>
+        <div className="rate-card marginal">
+          <Percent size={18} />
+          <div className="rate-content">
+            <span className="rate-number">{marginalRate}%</span>
+            <span className="rate-name">Marginal Rate</span>
+          </div>
+        </div>
+      </div>
 
-            {/* Income Tax Section */}
-            <tr className="section-divider">
-              <td colSpan={3}>Income Tax</td>
-            </tr>
-            
-            {result.taxBands.map((band, i) => (
-              <tr key={i} className="band-row">
-                <td className="category band">
-                  <span className="band-name">{band.name}</span>
-                  <span className="band-detail">
-                    {band.rate}%
-                    {band.max 
-                      ? ` · £${band.min.toLocaleString()}-£${band.max.toLocaleString()}`
-                      : ` · £${band.min.toLocaleString()}+`
-                    }
-                  </span>
-                </td>
-                <td className="amount deduction">
-                  {band.taxDue && band.taxDue > 0 ? `-${formatCurrency(band.taxDue)}` : '—'}
-                </td>
-                <td className="amount deduction monthly">
-                  {band.taxDue && band.taxDue > 0 ? `-${formatCurrency(band.taxDue / 12)}` : '—'}
-                </td>
-              </tr>
-            ))}
-            
-            <tr className="subtotal-row tax-total">
-              <td className="category">Total Income Tax</td>
-              <td className="amount deduction">{formatCurrency(result.totalTax)}</td>
-              <td className="amount deduction monthly">{formatCurrency(result.monthlyTax)}</td>
-            </tr>
+      {/* Modern Table */}
+      <div className="table-wrapper-modern">
+        <div className="breakdown-card">
+          {/* Gross Salary Row */}
+          <div className="breakdown-row gross">
+            <div className="row-label">
+              <Wallet size={18} />
+              <span>Gross Salary</span>
+            </div>
+            <div className="row-value">
+              <span className="amount">{formatCurrency(getDisplayValue(result.grossSalary))}</span>
+              {grossDelta !== null && (
+                <span className="delta">{formatDelta(getDisplayValue(grossDelta))}</span>
+              )}
+            </div>
+          </div>
 
-            {/* National Insurance Section */}
-            <tr className="section-divider">
-              <td colSpan={3}>National Insurance</td>
-            </tr>
-            
-            {result.niBands.filter(b => b.niDue && b.niDue > 0).map((band, i) => (
-              <tr key={i} className="band-row">
-                <td className="category band">
-                  <span className="band-name">{band.name}</span>
-                  <span className="band-detail">{band.rate}%</span>
-                </td>
-                <td className="amount deduction">-{formatCurrency(band.niDue!)}</td>
-                <td className="amount deduction monthly">-{formatCurrency(band.niDue! / 12)}</td>
-              </tr>
-            ))}
-            
-            <tr className="subtotal-row ni-total">
-              <td className="category">Total NI</td>
-              <td className="amount deduction">{formatCurrency(result.totalNI)}</td>
-              <td className="amount deduction monthly">{formatCurrency(result.monthlyNI)}</td>
-            </tr>
+          {/* Total Tax Row (collapsible) */}
+          <div 
+            className="breakdown-row tax clickable"
+            onClick={() => setTaxExpanded(!taxExpanded)}
+          >
+            <div className="row-label">
+              {taxExpanded ? <ChevronDown size={18} /> : <ChevronRight size={18} />}
+              <span>Total Tax & NI</span>
+            </div>
+            <div className="row-value">
+              <span className="amount deduction">-{formatCurrency(getDisplayValue(totalTax))}</span>
+              {taxDelta !== null && (
+                <span className={`delta ${taxDelta < 0 ? 'positive' : ''}`}>
+                  {formatDelta(getDisplayValue(taxDelta))}
+                </span>
+              )}
+            </div>
+          </div>
 
-            {/* Pension Section (if applicable) */}
-            {result.pensionContribution > 0 && (
-              <>
-                <tr className="section-divider">
-                  <td colSpan={3}>Pension</td>
-                </tr>
-                
-                <tr className="band-row">
-                  <td className="category">
-                    <PiggyBank size={14} />
-                    <span>Your Contribution ({pensionPercent}%)</span>
-                  </td>
-                  <td className="amount deduction">-{formatCurrency(result.pensionContribution)}</td>
-                  <td className="amount deduction monthly">-{formatCurrency(result.monthlyPension)}</td>
-                </tr>
-                
-                {employerPension > 0 && (
-                  <tr className="band-row employer-row">
-                    <td className="category">
-                      <span>Employer Contribution</span>
-                    </td>
-                    <td className="amount bonus">+{formatCurrency(employerPension)}</td>
-                    <td className="amount bonus monthly">+{formatCurrency(employerPension / 12)}</td>
-                  </tr>
-                )}
-                
-                <tr className="savings-row">
-                  <td className="category">Tax & NI Saved</td>
-                  <td className="amount savings">
-                    +{formatCurrency(result.pensionTaxSaved + result.pensionNISaved)}
-                  </td>
-                  <td className="amount savings monthly">
-                    +{formatCurrency((result.pensionTaxSaved + result.pensionNISaved) / 12)}
-                  </td>
-                </tr>
-              </>
-            )}
+          {/* Expanded Tax Breakdown */}
+          {taxExpanded && (
+            <div className="tax-breakdown-detail">
+              {/* Income Tax Section */}
+              <div className="detail-section">
+                <div className="detail-header">Income Tax</div>
+                {result.taxBands.filter(b => b.taxDue && b.taxDue > 0).map((band, i) => {
+                  const baselineBand = baselineResult?.taxBands.find(b => b.name === band.name);
+                  const bandDelta = getDelta(band.taxDue || 0, baselineBand?.taxDue);
+                  
+                  return (
+                    <div key={`tax-${i}`} className="detail-row">
+                      <div className="detail-label">
+                        <span className="band-name">{band.name}</span>
+                        <span className="band-rate">{band.rate}%</span>
+                      </div>
+                      <div className="detail-value">
+                        <span className="amount">-{formatCurrency(getDisplayValue(band.taxDue || 0))}</span>
+                        {bandDelta !== null && bandDelta !== 0 && (
+                          <span className={`delta ${bandDelta < 0 ? 'positive' : ''}`}>
+                            {formatDelta(getDisplayValue(bandDelta))}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
+                <div className="detail-subtotal">
+                  <span>Income Tax Total</span>
+                  <span>-{formatCurrency(getDisplayValue(result.totalTax))}</span>
+                </div>
+              </div>
 
-            {/* Net Pay - Highlighted */}
-            <tr className="net-row">
-              <td className="category">
-                <TrendingUp size={14} />
-                <span>Net Take-Home</span>
-              </td>
-              <td className="amount net">{formatCurrency(result.netPay)}</td>
-              <td className="amount net monthly highlight">{formatCurrency(result.monthlyNet)}</td>
-            </tr>
-          </tbody>
-        </table>
+              {/* National Insurance Section */}
+              <div className="detail-section">
+                <div className="detail-header">National Insurance</div>
+                {result.niBands.filter(b => b.niDue && b.niDue > 0).map((band, i) => {
+                  const baselineBand = baselineResult?.niBands.find(b => b.name === band.name);
+                  const bandDelta = getDelta(band.niDue || 0, baselineBand?.niDue);
+                  
+                  return (
+                    <div key={`ni-${i}`} className="detail-row">
+                      <div className="detail-label">
+                        <span className="band-name">{band.name}</span>
+                        <span className="band-rate">{band.rate}%</span>
+                      </div>
+                      <div className="detail-value">
+                        <span className="amount">-{formatCurrency(getDisplayValue(band.niDue || 0))}</span>
+                        {bandDelta !== null && bandDelta !== 0 && (
+                          <span className={`delta ${bandDelta < 0 ? 'positive' : ''}`}>
+                            {formatDelta(getDisplayValue(bandDelta))}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
+                <div className="detail-subtotal">
+                  <span>NI Total</span>
+                  <span>-{formatCurrency(getDisplayValue(result.totalNI))}</span>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Net Take-Home Row */}
+          <div className="breakdown-row net">
+            <div className="row-label">
+              <TrendingUp size={18} />
+              <span>Net Take-Home</span>
+            </div>
+            <div className="row-value">
+              <span className="amount">{formatCurrency(getDisplayValue(result.netPay))}</span>
+              {netDelta !== null && (
+                <span className={`delta ${netDelta > 0 ? 'positive' : 'negative'}`}>
+                  {formatDelta(getDisplayValue(netDelta))}
+                </span>
+              )}
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   );

@@ -7788,16 +7788,669 @@ html {
     padding: 10px 14px;
     font-size: 0.8rem;
   }
-};
-  border-top: 2px solid rgba(16, 185, 129, 0.2);
 }
 
-/* Employer pension row */
-.tax-breakdown-table .employer-row td {
-  background: rgba(16, 185, 129, 0.03);
+/* ═══════════════════════════════════════════════════════════════════════════
+   NEW TAX CALCULATOR STYLES — Redesigned Layout
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* Pension Group Styling */
+.pension-section .section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
 }
 
-.tax-breakdown-table .savings-row td {
+.pension-group {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 12px;
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.04);
+}
+
+.pension-item {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.pension-item-label {
+  font-size: 0.65rem;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.6);
+}
+
+/* PercentSlider styling */
+.percent-slider {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.percent-slider input[type="range"] {
+  flex: 1;
+  height: 4px;
+  -webkit-appearance: none;
+  appearance: none;
+  background: rgba(255, 255, 255, 0.12);
+  border-radius: 2px;
+  cursor: pointer;
+}
+
+.percent-slider input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 14px;
+  height: 14px;
+  background: linear-gradient(135deg, #818cf8, #a855f7);
+  border-radius: 50%;
+  cursor: grab;
+  transition: transform 150ms ease;
+}
+
+.percent-slider input[type="range"]::-webkit-slider-thumb:active {
+  transform: scale(1.15);
+  cursor: grabbing;
+}
+
+.percent-slider .value-display {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  min-width: 48px;
+}
+
+.percent-slider .value-display input {
+  width: 32px;
+  padding: 4px 5px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  text-align: center;
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 4px;
+  color: var(--foreground);
+  outline: none;
+}
+
+.percent-slider .percent-sign {
+  font-size: 0.65rem;
+  color: rgba(255, 255, 255, 0.4);
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   TOP CONTROLS ROW
+   ───────────────────────────────────────────────────────────────────────────── */
+
+.top-controls-row {
+  flex-shrink: 0;
+  padding: 12px 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+}
+
+.controls-form {
+  display: flex;
+  align-items: flex-end;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.control-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.control-group label {
+  font-size: 0.65rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.control-group.salary-group {
+  flex: 1;
+  max-width: 280px;
+}
+
+.control-group.salary-group .salary-input-wrapper {
+  display: flex;
+  align-items: center;
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  overflow: hidden;
+  transition: border-color 200ms ease;
+}
+
+.control-group.salary-group .salary-input-wrapper:focus-within {
+  border-color: rgba(99, 102, 241, 0.5);
+}
+
+.control-group.salary-group .currency-symbol {
+  padding: 10px 12px;
+  font-size: 1rem;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.5);
+  background: rgba(0, 0, 0, 0.2);
+}
+
+.control-group.salary-group .salary-input {
+  flex: 1;
+  min-width: 0;
+  padding: 10px 8px;
+  font-size: 1rem;
+  font-weight: 500;
+  background: transparent;
+  border: none;
+  color: var(--foreground);
+  outline: none;
+}
+
+.control-group.salary-group .salary-input::placeholder {
+  color: rgba(255, 255, 255, 0.3);
+  font-weight: 400;
+}
+
+.control-group.age-group .age-input,
+.control-group.retirement-group .retirement-input {
+  width: 72px;
+  padding: 10px 12px;
+  font-size: 1rem;
+  font-weight: 600;
+  text-align: center;
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  color: var(--foreground);
+  transition: border-color 200ms ease;
+}
+
+.control-group.age-group .age-input:focus,
+.control-group.retirement-group .retirement-input:focus {
+  border-color: rgba(99, 102, 241, 0.5);
+  outline: none;
+}
+
+.controls-form .calculate-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 11px 18px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  background: linear-gradient(135deg, rgba(99, 102, 241, 0.85), rgba(168, 85, 247, 0.85));
+  border: none;
+  border-radius: 8px;
+  color: white;
+  cursor: pointer;
+  transition: all 200ms ease;
+  white-space: nowrap;
+}
+
+.controls-form .calculate-btn:hover {
+  background: linear-gradient(135deg, rgba(99, 102, 241, 1), rgba(168, 85, 247, 1));
+  transform: translateY(-1px);
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   TAX BREAKDOWN PANEL — New Redesign
+   ───────────────────────────────────────────────────────────────────────────── */
+
+.tax-breakdown-panel {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  background: linear-gradient(180deg, rgba(15, 19, 28, 0.9), rgba(12, 16, 22, 0.95));
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.tax-breakdown-panel.scenario {
+  border-color: rgba(99, 102, 241, 0.2);
+}
+
+.tax-breakdown-panel .panel-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 14px 16px;
+  background: rgba(0, 0, 0, 0.2);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.tax-breakdown-panel .panel-title {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.tax-breakdown-panel .header-rates {
+  display: flex;
+  gap: 16px;
+}
+
+.tax-breakdown-panel .rate-badge {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 2px;
+}
+
+.tax-breakdown-panel .rate-value {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #818cf8;
+}
+
+.tax-breakdown-panel .rate-label {
+  font-size: 0.55rem;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  color: rgba(255, 255, 255, 0.4);
+}
+
+/* Table Controls (Column Toggle) */
+.tax-breakdown-panel .table-controls {
+  padding: 8px 16px;
+  background: rgba(0, 0, 0, 0.1);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+}
+
+/* Column Toggle Chips */
+.column-toggle {
+  display: flex;
+  gap: 6px;
+}
+
+.column-toggle .toggle-chip {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 5px 10px;
+  font-size: 0.7rem;
+  font-weight: 500;
+  background: rgba(0, 0, 0, 0.25);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 14px;
+  color: rgba(255, 255, 255, 0.5);
+  cursor: pointer;
+  transition: all 150ms ease;
+}
+
+.column-toggle .toggle-chip:hover {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.column-toggle .toggle-chip.active {
+  background: rgba(99, 102, 241, 0.2);
+  border-color: rgba(99, 102, 241, 0.4);
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.column-toggle .toggle-chip .check-icon {
+  width: 12px;
+  height: 12px;
+  opacity: 0.7;
+}
+
+/* Table Wrapper */
+.tax-breakdown-panel .table-wrapper {
+  flex: 1;
+  overflow-y: auto;
+}
+
+.tax-breakdown-panel .breakdown-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.tax-breakdown-panel .breakdown-table th,
+.tax-breakdown-panel .breakdown-table td {
+  padding: 10px 14px;
+  text-align: left;
+}
+
+.tax-breakdown-panel .breakdown-table th {
+  font-size: 0.65rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  color: rgba(255, 255, 255, 0.45);
+  background: rgba(0, 0, 0, 0.15);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+  position: sticky;
+  top: 0;
+}
+
+.tax-breakdown-panel .breakdown-table th.amount-col {
+  text-align: right;
+}
+
+.tax-breakdown-panel .breakdown-table .label-cell {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.85rem;
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.tax-breakdown-panel .breakdown-table .label-cell.band {
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  padding-left: 24px;
+}
+
+.tax-breakdown-panel .breakdown-table .band-name {
+  font-size: 0.75rem;
+  color: rgba(255, 255, 255, 0.65);
+}
+
+.tax-breakdown-panel .breakdown-table .band-rate {
+  font-size: 0.6rem;
+  color: rgba(255, 255, 255, 0.35);
+  margin-left: 6px;
+}
+
+.tax-breakdown-panel .breakdown-table .amount-cell {
+  text-align: right;
+  font-family: 'SF Mono', 'Monaco', 'Inconsolata', monospace;
+  font-size: 0.85rem;
+  color: rgba(255, 255, 255, 0.75);
+}
+
+.tax-breakdown-panel .breakdown-table .amount-cell.deduction {
+  color: #ef4444;
+}
+
+.tax-breakdown-panel .breakdown-table .amount-cell.gross {
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.tax-breakdown-panel .breakdown-table .amount-cell.net {
+  color: #10b981;
+  font-weight: 700;
+  font-size: 1rem;
+}
+
+.tax-breakdown-panel .breakdown-table .amount-cell.monthly {
+  color: rgba(255, 255, 255, 0.5);
+}
+
+/* Delta Values */
+.tax-breakdown-panel .breakdown-table .delta {
+  display: inline-block;
+  margin-left: 6px;
+  padding: 2px 5px;
+  font-size: 0.65rem;
+  font-weight: 600;
+  background: rgba(212, 175, 55, 0.12);
+  border-radius: 4px;
+  color: #d4af37;
+}
+
+.tax-breakdown-panel .breakdown-table .delta.positive {
+  background: rgba(16, 185, 129, 0.12);
+  color: #10b981;
+}
+
+.tax-breakdown-panel .breakdown-table .delta.negative {
+  background: rgba(239, 68, 68, 0.12);
+  color: #ef4444;
+}
+
+/* Clickable row for collapsible */
+.tax-breakdown-panel .breakdown-table .clickable {
+  cursor: pointer;
+  transition: background 150ms ease;
+}
+
+.tax-breakdown-panel .breakdown-table .clickable:hover {
+  background: rgba(255, 255, 255, 0.03);
+}
+
+/* Section headers in expanded view */
+.tax-breakdown-panel .breakdown-table .section-header td {
+  padding: 6px 14px;
+  font-size: 0.6rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: rgba(255, 255, 255, 0.4);
+  background: rgba(0, 0, 0, 0.15);
+  border-top: 1px solid rgba(255, 255, 255, 0.03);
+}
+
+/* Band rows */
+.tax-breakdown-panel .breakdown-table .band-row td {
+  padding: 8px 14px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.02);
+}
+
+/* Subtotal rows */
+.tax-breakdown-panel .breakdown-table .subtotal-row td {
+  padding: 8px 14px;
+  font-weight: 600;
+  font-size: 0.75rem;
+  background: rgba(0, 0, 0, 0.08);
+  border-top: 1px solid rgba(255, 255, 255, 0.04);
+}
+
+/* Gross salary row */
+.tax-breakdown-panel .breakdown-table .gross-row td {
+  padding: 12px 14px;
+  background: rgba(99, 102, 241, 0.05);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+}
+
+/* Total tax row */
+.tax-breakdown-panel .breakdown-table .total-tax-row td {
+  padding: 10px 14px;
+  background: rgba(239, 68, 68, 0.03);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+}
+
+/* Net take-home row */
+.tax-breakdown-panel .breakdown-table .net-row td {
+  padding: 14px;
+  background: rgba(16, 185, 129, 0.08);
+  border-top: 2px solid rgba(16, 185, 129, 0.25);
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   SCENARIO PANEL — New Redesign
+   ───────────────────────────────────────────────────────────────────────────── */
+
+.scenario-panel .mode-selector-row {
+  padding: 12px 16px;
+  background: rgba(0, 0, 0, 0.2);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.scenario-panel .scenario-toggle {
+  display: flex;
+  background: rgba(0, 0, 0, 0.35);
+  border-radius: 8px;
+  padding: 3px;
+  gap: 2px;
+}
+
+.scenario-panel .scenario-btn {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 10px 16px;
+  font-size: 0.8rem;
+  font-weight: 500;
+  background: transparent;
+  border: none;
+  border-radius: 6px;
+  color: rgba(255, 255, 255, 0.5);
+  cursor: pointer;
+  transition: all 200ms ease;
+}
+
+.scenario-panel .scenario-btn:hover {
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.scenario-panel .scenario-btn.active {
+  background: linear-gradient(135deg, rgba(99, 102, 241, 0.8), rgba(168, 85, 247, 0.8));
+  color: white;
+  box-shadow: 0 2px 8px rgba(99, 102, 241, 0.25);
+}
+
+/* Input Mode Cards */
+.scenario-panel .input-mode-cards {
+  display: flex;
+  gap: 10px;
+  padding: 12px 16px;
+  background: rgba(0, 0, 0, 0.1);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+}
+
+.mode-card {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 10px 14px;
+  background: rgba(0, 0, 0, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 8px;
+  color: rgba(255, 255, 255, 0.5);
+  cursor: pointer;
+  transition: all 150ms ease;
+}
+
+.mode-card:hover {
+  background: rgba(255, 255, 255, 0.04);
+  border-color: rgba(255, 255, 255, 0.15);
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.mode-card.active {
+  background: rgba(99, 102, 241, 0.1);
+  border-color: rgba(99, 102, 241, 0.4);
+  color: white;
+}
+
+.mode-card .mode-label {
+  font-size: 0.75rem;
+  font-weight: 500;
+}
+
+/* Value Input Section */
+.scenario-panel .value-input-section {
+  padding: 12px 16px;
+  background: rgba(0, 0, 0, 0.08);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+}
+
+.scenario-panel .value-input-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.scenario-panel .value-slider {
+  flex: 1;
+  height: 6px;
+  -webkit-appearance: none;
+  appearance: none;
+  background: rgba(255, 255, 255, 0.12);
+  border-radius: 3px;
+  cursor: pointer;
+}
+
+.scenario-panel .value-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 16px;
+  height: 16px;
+  background: linear-gradient(135deg, #818cf8, #a855f7);
+  border-radius: 50%;
+  cursor: grab;
+  transition: transform 150ms ease;
+}
+
+.scenario-panel .value-slider::-webkit-slider-thumb:active {
+  transform: scale(1.15);
+  cursor: grabbing;
+}
+
+.scenario-panel .value-display {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  padding: 0 8px;
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 6px;
+}
+
+.scenario-panel .value-display.amount {
+  min-width: 110px;
+}
+
+.scenario-panel .value-number {
+  width: 56px;
+  padding: 8px 4px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  text-align: center;
+  background: transparent;
+  border: none;
+  color: var(--foreground);
+  outline: none;
+}
+
+.scenario-panel .value-unit {
+  font-size: 0.7rem;
+  color: rgba(255, 255, 255, 0.4);
+}
+
+.scenario-panel .value-unit.prefix {
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.scenario-panel .value-hint {
+  font-size: 0.65rem;
+  color: rgba(255, 255, 255, 0.4);
+  margin-left: auto;
+}
+
+/* Scenario Result */
+.scenario-panel .scenario-result {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.scenario-panel .scenario-result .tax-breakdown-panel {
+  border: none;
+  border-radius: 0;
+  background: transparent;
+}
+
+/* Bonus/positive styling in pension summary */
+.summary-row .value.bonus,
+.projection-value.bonus {
+  color: #d4af37 !important;
+  text-shadow: 0 0 12px rgba(212, 175, 55, 0.25);
+}
   background: rgba(16, 185, 129, 0.05);
 }
 
@@ -8014,6 +8667,673 @@ html {
   margin: 0;
 }
 
+/* View Mode Toggle - Pill Switch */
+.view-mode-switch {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  padding: 2px;
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 6px;
+}
+
+.view-mode-switch button {
+  padding: 5px 12px;
+  font-size: 0.7rem;
+  font-weight: 500;
+  font-family: inherit;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  background: transparent;
+  border: none;
+  border-radius: 4px;
+  color: rgba(255, 255, 255, 0.4);
+  cursor: pointer;
+  transition: all 150ms ease;
+}
+
+.view-mode-switch button:hover:not(.active) {
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.view-mode-switch button.active {
+  background: linear-gradient(135deg, rgba(99, 102, 241, 0.4), rgba(168, 85, 247, 0.4));
+  color: white;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+}
+
+/* Pill Switch Toggle - Animated */
+.pill-switch {
+  position: relative;
+  display: flex;
+  padding: 3px;
+  background: rgba(0, 0, 0, 0.4);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.pill-option {
+  position: relative;
+  z-index: 2;
+  padding: 6px 16px;
+  font-size: 0.7rem;
+  font-weight: 600;
+  font-family: inherit;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  background: transparent;
+  border: none;
+  color: rgba(255, 255, 255, 0.4);
+  cursor: pointer;
+  transition: color 150ms ease;
+}
+
+.pill-option:hover:not(.active) {
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.pill-option.active {
+  color: white;
+}
+
+.pill-indicator {
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: calc(50% - 3px);
+  height: calc(100% - 6px);
+  background: linear-gradient(135deg, rgba(99, 102, 241, 0.5), rgba(168, 85, 247, 0.5));
+  border-radius: 5px;
+  transition: transform 200ms cubic-bezier(0.4, 0, 0.2, 1);
+  z-index: 1;
+}
+
+/* Percent Input Component */
+.percent-input-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.percent-input-row label {
+  flex: 1;
+  font-size: 0.8rem;
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.percent-input-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.percent-input-wrapper input {
+  width: 48px;
+  padding: 6px 8px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  font-family: inherit;
+  text-align: center;
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 6px;
+  color: var(--foreground);
+  transition: border-color 150ms ease;
+}
+
+.percent-input-wrapper input:focus {
+  outline: none;
+  border-color: rgba(99, 102, 241, 0.5);
+}
+
+.percent-input-wrapper .percent-symbol {
+  font-size: 0.8rem;
+  color: rgba(255, 255, 255, 0.4);
+}
+
+/* Pension Total Summary */
+.pension-total-summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 12px;
+  margin-top: 8px;
+  background: rgba(99, 102, 241, 0.1);
+  border-radius: 6px;
+}
+
+.pension-total-summary .summary-label {
+  font-size: 0.75rem;
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.pension-total-summary .summary-value {
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: #a855f7;
+}
+
+/* Bottom-Aligned Table Container */
+.breakdown-table-container {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  min-height: 0;
+  overflow: auto;
+}
+
+/* Single Column Table Mode */
+.breakdown-table.single-column .amount-cell {
+  font-size: 0.95rem;
+}
+
+.breakdown-table.single-column .amount-cell.single {
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+/* Table Controls */
+.table-controls {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 8px;
+}
+
+/* Sacrifice Controls Improvements */
+.sacrifice-controls {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 12px;
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 8px;
+  margin-bottom: 12px;
+}
+
+.sacrifice-explainer {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  font-size: 0.75rem;
+  color: rgba(255, 255, 255, 0.5);
+  line-height: 1.4;
+}
+
+.sacrifice-explainer svg {
+  flex-shrink: 0;
+  margin-top: 2px;
+  color: rgba(99, 102, 241, 0.6);
+}
+
+.sacrifice-slider-section {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.slider-with-labels {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.slider-with-labels .slider-min,
+.slider-with-labels .slider-max {
+  font-size: 0.7rem;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.4);
+  min-width: 28px;
+  text-align: center;
+}
+
+.sacrifice-slider.stepped {
+  flex: 1;
+  height: 6px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 3px;
+  cursor: pointer;
+}
+
+.sacrifice-value-badge {
+  display: flex;
+  align-items: baseline;
+  justify-content: center;
+  gap: 12px;
+}
+
+.sacrifice-value-badge .sacrifice-value {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #a855f7;
+}
+
+.sacrifice-value-badge .sacrifice-total {
+  font-size: 0.75rem;
+  color: rgba(255, 255, 255, 0.5);
+}
+
+/* Reset Button */
+.reset-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  font-family: inherit;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 6px;
+  color: rgba(255, 255, 255, 0.5);
+  cursor: pointer;
+  transition: all 150ms ease;
+}
+
+.reset-btn:hover {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(255, 255, 255, 0.25);
+  color: rgba(255, 255, 255, 0.8);
+}
+
+/* Button Group */
+.button-group {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+/* Salary Sacrifice Label Enhancement */
+.sacrifice-label-enhanced {
+  font-size: 0.7rem;
+  color: rgba(255, 255, 255, 0.4);
+  font-style: italic;
+  margin-top: -4px;
+  margin-bottom: 8px;
+}
+
+/* ============================================
+   PENSION SLIDER INPUTS - Left Panel
+   ============================================ */
+
+.pension-sliders {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.pension-slider-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.pension-slider-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.pension-slider-label {
+  font-size: 0.75rem;
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.pension-slider-value {
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: #a855f7;
+}
+
+.pension-slider-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.pension-stepper-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 6px;
+  color: rgba(255, 255, 255, 0.6);
+  cursor: pointer;
+  transition: all 150ms ease;
+}
+
+.pension-stepper-btn:hover:not(:disabled) {
+  background: rgba(99, 102, 241, 0.2);
+  border-color: rgba(99, 102, 241, 0.4);
+  color: white;
+}
+
+.pension-stepper-btn:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+.pension-slider {
+  flex: 1;
+  height: 6px;
+  -webkit-appearance: none;
+  appearance: none;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 3px;
+  outline: none;
+  cursor: pointer;
+}
+
+.pension-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 16px;
+  height: 16px;
+  background: linear-gradient(135deg, #6366f1, #a855f7);
+  border-radius: 50%;
+  cursor: pointer;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+  transition: transform 150ms ease;
+}
+
+.pension-slider::-webkit-slider-thumb:hover {
+  transform: scale(1.15);
+}
+
+.pension-slider::-moz-range-thumb {
+  width: 16px;
+  height: 16px;
+  background: linear-gradient(135deg, #6366f1, #a855f7);
+  border-radius: 50%;
+  cursor: pointer;
+  border: none;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+}
+
+.pension-presets {
+  display: flex;
+  gap: 4px;
+  flex-wrap: wrap;
+}
+
+.pension-preset-btn {
+  padding: 4px 8px;
+  font-size: 0.65rem;
+  font-weight: 500;
+  font-family: inherit;
+  background: rgba(0, 0, 0, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 4px;
+  color: rgba(255, 255, 255, 0.4);
+  cursor: pointer;
+  transition: all 150ms ease;
+}
+
+.pension-preset-btn:hover {
+  background: rgba(255, 255, 255, 0.05);
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.pension-preset-btn.active {
+  background: linear-gradient(135deg, rgba(99, 102, 241, 0.3), rgba(168, 85, 247, 0.3));
+  border-color: rgba(99, 102, 241, 0.4);
+  color: white;
+}
+
+.pension-total-label {
+  font-size: 0.75rem;
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.pension-total-value {
+  font-size: 1rem;
+  font-weight: 700;
+  color: #10b981;
+}
+
+/* ============================================
+   STEPPED INPUT GROUPS - Right Panel Sliders
+   ============================================ */
+
+.scenario-controls {
+  margin-bottom: 12px;
+}
+
+.stepped-input-group {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 12px;
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 8px;
+}
+
+.stepped-input-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.stepped-input-label {
+  font-size: 0.8rem;
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.stepped-input-value {
+  font-size: 1.1rem;
+  font-weight: 700;
+}
+
+.stepped-input-value.positive {
+  color: #10b981;
+}
+
+.stepped-input-value.negative {
+  color: #ef4444;
+}
+
+.stepped-input-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.stepper-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 6px;
+  color: rgba(255, 255, 255, 0.6);
+  cursor: pointer;
+  transition: all 150ms ease;
+}
+
+.stepper-btn.large {
+  width: 36px;
+  height: 36px;
+}
+
+.stepper-btn:hover:not(:disabled) {
+  background: rgba(99, 102, 241, 0.2);
+  border-color: rgba(99, 102, 241, 0.4);
+  color: white;
+}
+
+.stepper-btn:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+.stepped-slider {
+  flex: 1;
+  height: 8px;
+  -webkit-appearance: none;
+  appearance: none;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 4px;
+  outline: none;
+  cursor: pointer;
+}
+
+.stepped-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 20px;
+  height: 20px;
+  background: linear-gradient(135deg, #6366f1, #a855f7);
+  border-radius: 50%;
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+  transition: transform 150ms ease;
+}
+
+.stepped-slider::-webkit-slider-thumb:hover {
+  transform: scale(1.1);
+}
+
+.stepped-slider::-moz-range-thumb {
+  width: 20px;
+  height: 20px;
+  background: linear-gradient(135deg, #6366f1, #a855f7);
+  border-radius: 50%;
+  cursor: pointer;
+  border: none;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+.stepped-presets {
+  display: flex;
+  gap: 4px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.stepped-tally {
+  display: flex;
+  align-items: baseline;
+  justify-content: center;
+  gap: 8px;
+  padding: 8px;
+  background: rgba(16, 185, 129, 0.1);
+  border-radius: 6px;
+}
+
+.stepped-tally .tally-label {
+  font-size: 0.75rem;
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.stepped-tally .tally-value {
+  font-size: 1rem;
+  font-weight: 700;
+  color: #10b981;
+}
+
+.stepped-tally .tally-detail {
+  font-size: 0.7rem;
+  color: rgba(255, 255, 255, 0.4);
+}
+
+/* ============================================
+   BOTTOM-ALIGNED TABLE SECTIONS
+   ============================================ */
+
+/* Main results grid */
+.tax-results-grid {
+  flex: 1;
+  display: flex;
+  gap: 16px;
+  min-height: 0;
+  align-items: stretch;
+}
+
+/* Left breakdown section - uses flexbox to push content to bottom */
+.breakdown-section {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+/* Right scenario section - matches left section */
+.scenario-section {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+/* Both sections should have equal height children */
+.breakdown-section > .tax-breakdown-panel,
+.scenario-section > .scenario-panel {
+  flex: 1;
+  min-height: 0;
+}
+
+/* Summary ribbons should be fixed height at the bottom */
+.breakdown-section > .summary-ribbon,
+.scenario-section > .summary-ribbon {
+  flex-shrink: 0;
+}
+
+/* Scenario panel layout - fills available space */
+.scenario-panel {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+/* Result wrapper pushes table to bottom */
+.scenario-result-wrapper {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  min-height: 0;
+}
+
+/* Tax breakdown panel - use flex to push table to bottom */
+.tax-breakdown-panel {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 12px;
+  padding: 16px;
+  min-height: 0;
+}
+
+/* Modern variant panel */
+.tax-breakdown-panel.modern {
+  justify-content: flex-end;
+}
+
+/* Table wrapper sits at bottom */
+.tax-breakdown-panel .table-wrapper,
+.tax-breakdown-panel .table-wrapper-modern {
+  margin-top: auto;
+}
+
+.tax-breakdown-panel .table-wrapper {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  min-height: 0;
+  overflow: auto;
+}
+
 /* Responsive */
 @media (max-width: 768px) {
   .salary-header {
@@ -8041,6 +9361,873 @@ html {
   
   .tax-controls-bar .controls-left {
     gap: 10px;
+  }
+  
+  .tax-results-grid {
+    flex-direction: column;
+  }
+}
+
+/* ============================================
+   MODERN TABLE REDESIGN
+   Professional, clean look with rounded corners
+   ============================================ */
+
+/* Large prominent rate badges */
+.rate-badge-large {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 16px;
+  background: linear-gradient(135deg, rgba(99, 102, 241, 0.15), rgba(139, 92, 246, 0.1));
+  border: 1px solid rgba(99, 102, 241, 0.25);
+  border-radius: 12px;
+}
+
+.rate-badge-large .rate-value {
+  font-size: 1.5rem;
+  font-weight: 800;
+  background: linear-gradient(135deg, #818cf8, #a78bfa);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  line-height: 1;
+}
+
+.rate-badge-large .rate-label {
+  font-size: 0.7rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: rgba(255, 255, 255, 0.6);
+  line-height: 1.2;
+}
+
+/* Rates header for modern table */
+.rates-header {
+  display: flex;
+  gap: 12px;
+  padding: 16px;
+  background: rgba(0, 0, 0, 0.25);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+/* Modern table wrapper */
+.modern-table-wrapper {
+  padding: 16px;
+  flex: 1;
+  overflow: auto;
+}
+
+/* Modern table styling */
+.modern-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  border-radius: 12px;
+  overflow: hidden;
+  background: rgba(0, 0, 0, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.modern-table thead {
+  background: linear-gradient(180deg, rgba(30, 35, 50, 0.9), rgba(25, 30, 42, 0.95));
+}
+
+.modern-table th {
+  padding: 14px 16px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  color: rgba(255, 255, 255, 0.6);
+  text-align: left;
+  border-bottom: 2px solid rgba(99, 102, 241, 0.3);
+}
+
+.modern-table th.amount-col {
+  text-align: right;
+}
+
+.modern-table th:first-child {
+  border-top-left-radius: 11px;
+}
+
+.modern-table th:last-child {
+  border-top-right-radius: 11px;
+}
+
+.modern-table tbody tr {
+  transition: background 150ms ease;
+}
+
+.modern-table tbody tr:hover {
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.modern-table td {
+  padding: 12px 16px;
+  font-size: 0.9rem;
+  color: rgba(255, 255, 255, 0.85);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+}
+
+.modern-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.modern-table tbody tr:last-child td:first-child {
+  border-bottom-left-radius: 11px;
+}
+
+.modern-table tbody tr:last-child td:last-child {
+  border-bottom-right-radius: 11px;
+}
+
+/* Label cells */
+.modern-table .label-cell {
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.modern-table .label-cell.indent {
+  padding-left: 32px;
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 0.85rem;
+}
+
+/* Amount cells */
+.modern-table .amount-cell {
+  text-align: right;
+  font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Menlo', monospace;
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.85);
+}
+
+.modern-table .amount-cell.deduction {
+  color: #f87171;
+}
+
+.modern-table .amount-cell.gross {
+  font-weight: 700;
+  font-size: 0.95rem;
+  color: #fff;
+}
+
+.modern-table .amount-cell.net {
+  font-weight: 800;
+  font-size: 1rem;
+  color: #34d399;
+}
+
+/* Special row types */
+.modern-table .gross-row {
+  background: linear-gradient(90deg, rgba(99, 102, 241, 0.08), transparent);
+}
+
+.modern-table .gross-row td {
+  padding: 14px 16px;
+  border-bottom: 1px solid rgba(99, 102, 241, 0.2);
+}
+
+.modern-table .deduction-row td {
+  background: rgba(239, 68, 68, 0.02);
+}
+
+.modern-table .total-deductions-row {
+  background: rgba(239, 68, 68, 0.05);
+}
+
+.modern-table .total-deductions-row td {
+  font-weight: 600;
+  border-top: 1px solid rgba(239, 68, 68, 0.15);
+  padding: 14px 16px;
+}
+
+.modern-table .net-row {
+  background: linear-gradient(90deg, rgba(16, 185, 129, 0.1), rgba(16, 185, 129, 0.05));
+}
+
+.modern-table .net-row td {
+  padding: 16px;
+  border-top: 2px solid rgba(16, 185, 129, 0.3);
+}
+
+.modern-table .net-row .label-cell {
+  font-weight: 700;
+  font-size: 0.95rem;
+  color: #34d399;
+}
+
+/* Section headers */
+.modern-table .section-header td {
+  padding: 10px 16px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  color: rgba(255, 255, 255, 0.45);
+  background: rgba(0, 0, 0, 0.25);
+}
+
+/* Clickable expandable rows */
+.modern-table .clickable {
+  cursor: pointer;
+}
+
+.modern-table .clickable:hover {
+  background: rgba(99, 102, 241, 0.08);
+}
+
+.modern-table .expand-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  margin-right: 8px;
+  background: rgba(99, 102, 241, 0.2);
+  border-radius: 4px;
+  color: #818cf8;
+  font-size: 0.75rem;
+  transition: transform 150ms ease;
+}
+
+.modern-table .clickable.expanded .expand-icon {
+  transform: rotate(90deg);
+}
+
+/* Band rows (sub-items) */
+.modern-table .band-row td {
+  padding: 10px 16px 10px 48px;
+  font-size: 0.8rem;
+  color: rgba(255, 255, 255, 0.65);
+  background: rgba(0, 0, 0, 0.1);
+}
+
+.modern-table .band-row .band-name {
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.modern-table .band-row .band-range {
+  font-size: 0.7rem;
+  color: rgba(255, 255, 255, 0.4);
+  margin-left: 8px;
+}
+
+/* Delta indicators */
+.modern-table .delta {
+  display: inline-block;
+  margin-left: 8px;
+  padding: 3px 8px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  border-radius: 6px;
+}
+
+.modern-table .delta.positive {
+  background: rgba(16, 185, 129, 0.15);
+  color: #34d399;
+}
+
+.modern-table .delta.negative {
+  background: rgba(239, 68, 68, 0.15);
+  color: #f87171;
+}
+
+/* ============================================
+   SUMMARY RIBBON
+   Bottom summary with tax savings info
+   ============================================ */
+
+.summary-ribbon {
+  display: flex;
+  align-items: stretch;
+  gap: 1px;
+  margin-top: 12px;
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.ribbon-section {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 14px 16px;
+  background: rgba(15, 20, 30, 0.8);
+  text-align: center;
+}
+
+.ribbon-section:first-child {
+  border-right: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.ribbon-section .ribbon-label {
+  font-size: 0.65rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  color: rgba(255, 255, 255, 0.45);
+  margin-bottom: 4px;
+}
+
+.ribbon-section .ribbon-value {
+  font-size: 1.25rem;
+  font-weight: 800;
+  font-family: 'SF Mono', 'Monaco', 'Menlo', monospace;
+  line-height: 1;
+}
+
+.ribbon-section .ribbon-value.positive {
+  color: #34d399;
+}
+
+.ribbon-section .ribbon-value.highlight {
+  background: linear-gradient(135deg, #818cf8, #a78bfa);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.ribbon-section .ribbon-detail {
+  font-size: 0.7rem;
+  color: rgba(255, 255, 255, 0.5);
+  margin-top: 4px;
+}
+
+/* Full-width summary sentence */
+.summary-sentence {
+  padding: 16px 20px;
+  background: linear-gradient(135deg, rgba(16, 185, 129, 0.1), rgba(99, 102, 241, 0.08));
+  border: 1px solid rgba(16, 185, 129, 0.2);
+  border-radius: 12px;
+  margin-top: 12px;
+  text-align: center;
+}
+
+.summary-sentence p {
+  margin: 0;
+  font-size: 0.9rem;
+  color: rgba(255, 255, 255, 0.85);
+  line-height: 1.5;
+}
+
+.summary-sentence .highlight-value {
+  font-weight: 700;
+  color: #34d399;
+}
+
+.summary-sentence .highlight-accent {
+  font-weight: 700;
+  color: #818cf8;
+}
+
+/* Panel footer for summary ribbon container */
+.panel-footer {
+  padding: 12px 16px 16px;
+  background: rgba(0, 0, 0, 0.1);
+  border-top: 1px solid rgba(255, 255, 255, 0.04);
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .rate-badge-large {
+    padding: 8px 12px;
+    gap: 8px;
+  }
+  
+  .rate-badge-large .rate-value {
+    font-size: 1.25rem;
+  }
+  
+  .summary-ribbon {
+    flex-direction: column;
+  }
+  
+  .ribbon-section:first-child {
+    border-right: none;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  }
+}
+
+/* ============================================
+   MODERN BREAKDOWN TABLE STYLES
+   Clean, professional design with prominent rates
+   ============================================ */
+
+/* Modern panel container */
+.tax-breakdown-panel.modern {
+  display: flex;
+  flex-direction: column;
+  background: linear-gradient(180deg, rgba(18, 22, 32, 0.95), rgba(12, 15, 22, 0.98));
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 16px;
+  overflow: hidden;
+  flex: 1;
+  min-height: 0;
+}
+
+.tax-breakdown-panel.modern.scenario {
+  border-color: rgba(99, 102, 241, 0.25);
+}
+
+/* Modern Panel Header */
+.panel-header-modern {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 20px;
+  background: rgba(0, 0, 0, 0.25);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.panel-title-modern {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.95);
+  letter-spacing: 0.3px;
+}
+
+/* Compact Pill Switch for Annual/Monthly */
+.pill-switch.compact {
+  position: relative;
+  display: flex;
+  background: rgba(0, 0, 0, 0.3);
+  border-radius: 8px;
+  padding: 3px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.pill-switch.compact .pill-option {
+  position: relative;
+  z-index: 1;
+  padding: 6px 12px;
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.5);
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  transition: color 150ms ease;
+}
+
+.pill-switch.compact .pill-option.active {
+  color: #fff;
+}
+
+.pill-switch.compact .pill-indicator {
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: calc(50% - 3px);
+  height: calc(100% - 6px);
+  background: linear-gradient(135deg, #6366f1, #8b5cf6);
+  border-radius: 5px;
+  transition: transform 200ms ease;
+}
+
+/* Tax Rates Banner - Prominent Display */
+.tax-rates-banner {
+  display: flex;
+  gap: 12px;
+  padding: 16px 20px;
+  background: linear-gradient(180deg, rgba(99, 102, 241, 0.08), rgba(0, 0, 0, 0.15));
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.rate-card {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px;
+  background: rgba(0, 0, 0, 0.25);
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.rate-card svg {
+  color: rgba(255, 255, 255, 0.4);
+}
+
+.rate-card.effective {
+  border-color: rgba(99, 102, 241, 0.3);
+  background: linear-gradient(135deg, rgba(99, 102, 241, 0.12), rgba(139, 92, 246, 0.08));
+}
+
+.rate-card.effective svg {
+  color: #818cf8;
+}
+
+.rate-card.marginal {
+  border-color: rgba(168, 85, 247, 0.3);
+  background: linear-gradient(135deg, rgba(168, 85, 247, 0.12), rgba(139, 92, 246, 0.08));
+}
+
+.rate-card.marginal svg {
+  color: #a78bfa;
+}
+
+.rate-content {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.rate-number {
+  font-size: 1.5rem;
+  font-weight: 800;
+  line-height: 1;
+  background: linear-gradient(135deg, #818cf8, #a78bfa);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.rate-name {
+  font-size: 0.7rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  color: rgba(255, 255, 255, 0.5);
+}
+
+/* Table Wrapper - pushes content to bottom */
+.table-wrapper-modern {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  padding: 16px 20px;
+  overflow: auto;
+  min-height: 0;
+}
+
+/* Breakdown Card Container */
+.breakdown-card {
+  background: rgba(0, 0, 0, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+/* Breakdown Rows */
+.breakdown-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 14px 16px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  transition: background 150ms ease;
+}
+
+.breakdown-row:last-child {
+  border-bottom: none;
+}
+
+.breakdown-row .row-label {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.85);
+}
+
+.breakdown-row .row-label svg {
+  color: rgba(255, 255, 255, 0.4);
+}
+
+.breakdown-row .row-value {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.breakdown-row .amount {
+  font-family: 'SF Mono', 'Monaco', 'Menlo', 'Inconsolata', monospace;
+  font-size: 1rem;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.breakdown-row .amount.deduction {
+  color: #f87171;
+}
+
+/* Gross row styling */
+.breakdown-row.gross {
+  background: linear-gradient(90deg, rgba(99, 102, 241, 0.08), transparent);
+  border-bottom: 1px solid rgba(99, 102, 241, 0.15);
+}
+
+.breakdown-row.gross .row-label svg {
+  color: #818cf8;
+}
+
+.breakdown-row.gross .amount {
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: #fff;
+}
+
+/* Tax row styling */
+.breakdown-row.tax {
+  background: rgba(239, 68, 68, 0.03);
+}
+
+.breakdown-row.tax.clickable {
+  cursor: pointer;
+}
+
+.breakdown-row.tax.clickable:hover {
+  background: rgba(239, 68, 68, 0.06);
+}
+
+.breakdown-row.tax .row-label svg {
+  color: rgba(255, 255, 255, 0.5);
+  transition: transform 150ms ease;
+}
+
+/* Net row styling */
+.breakdown-row.net {
+  background: linear-gradient(90deg, rgba(16, 185, 129, 0.12), rgba(16, 185, 129, 0.06));
+  border-top: 2px solid rgba(16, 185, 129, 0.3);
+  padding: 16px;
+}
+
+.breakdown-row.net .row-label {
+  font-weight: 700;
+  font-size: 0.95rem;
+  color: #34d399;
+}
+
+.breakdown-row.net .row-label svg {
+  color: #34d399;
+}
+
+.breakdown-row.net .amount {
+  font-size: 1.15rem;
+  font-weight: 800;
+  color: #34d399;
+}
+
+/* Delta badges */
+.breakdown-row .delta {
+  padding: 4px 8px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  font-family: 'SF Mono', 'Monaco', 'Menlo', monospace;
+  background: rgba(212, 175, 55, 0.15);
+  color: #d4af37;
+  border-radius: 6px;
+}
+
+.breakdown-row .delta.positive {
+  background: rgba(16, 185, 129, 0.15);
+  color: #34d399;
+}
+
+.breakdown-row .delta.negative {
+  background: rgba(239, 68, 68, 0.15);
+  color: #f87171;
+}
+
+/* Tax Breakdown Detail Section */
+.tax-breakdown-detail {
+  padding: 0 16px 16px;
+  background: rgba(0, 0, 0, 0.15);
+}
+
+.detail-section {
+  padding: 12px 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.detail-section:last-child {
+  border-bottom: none;
+}
+
+.detail-header {
+  font-size: 0.65rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  color: rgba(255, 255, 255, 0.45);
+  padding: 8px 0;
+  margin-bottom: 4px;
+}
+
+.detail-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 12px;
+  border-radius: 6px;
+  transition: background 150ms ease;
+}
+
+.detail-row:hover {
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.detail-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.detail-label .band-name {
+  font-size: 0.85rem;
+  color: rgba(255, 255, 255, 0.75);
+}
+
+.detail-label .band-rate {
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.4);
+  padding: 2px 6px;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 4px;
+}
+
+.detail-value {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.detail-value .amount {
+  font-family: 'SF Mono', 'Monaco', 'Menlo', monospace;
+  font-size: 0.85rem;
+  color: #f87171;
+}
+
+.detail-value .delta {
+  padding: 2px 6px;
+  font-size: 0.65rem;
+  font-weight: 700;
+  font-family: 'SF Mono', 'Monaco', 'Menlo', monospace;
+  background: rgba(212, 175, 55, 0.15);
+  color: #d4af37;
+  border-radius: 4px;
+}
+
+.detail-value .delta.positive {
+  background: rgba(16, 185, 129, 0.15);
+  color: #34d399;
+}
+
+.detail-subtotal {
+  display: flex;
+  justify-content: space-between;
+  padding: 10px 12px;
+  margin-top: 8px;
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 6px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.detail-subtotal span:last-child {
+  font-family: 'SF Mono', 'Monaco', 'Menlo', monospace;
+  color: #f87171;
+}
+
+/* ============================================
+   SUMMARY RIBBONS
+   Bottom summary for both panels
+   ============================================ */
+
+.summary-ribbon {
+  display: flex;
+  align-items: stretch;
+  gap: 1px;
+  margin-top: 12px;
+  background: linear-gradient(180deg, rgba(18, 22, 32, 0.95), rgba(12, 15, 22, 0.98));
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.summary-ribbon.baseline {
+  border-color: rgba(99, 102, 241, 0.2);
+}
+
+.summary-ribbon.scenario {
+  border-color: rgba(16, 185, 129, 0.2);
+}
+
+.summary-ribbon .ribbon-stat {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 14px 16px;
+  text-align: center;
+  background: rgba(0, 0, 0, 0.2);
+}
+
+.summary-ribbon .ribbon-divider {
+  width: 1px;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.summary-ribbon .ribbon-label {
+  font-size: 0.65rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  color: rgba(255, 255, 255, 0.45);
+  margin-bottom: 6px;
+}
+
+.summary-ribbon .ribbon-value {
+  font-size: 1.2rem;
+  font-weight: 700;
+  font-family: 'SF Mono', 'Monaco', 'Menlo', monospace;
+  color: rgba(255, 255, 255, 0.95);
+  display: flex;
+  align-items: baseline;
+  gap: 4px;
+}
+
+.summary-ribbon .ribbon-value.highlight {
+  background: linear-gradient(135deg, #818cf8, #a78bfa);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.summary-ribbon .ribbon-period {
+  font-size: 0.7rem;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.4);
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .summary-ribbon {
+    flex-direction: column;
+  }
+  
+  .summary-ribbon .ribbon-divider {
+    width: 100%;
+    height: 1px;
+  }
+  
+  .tax-rates-banner {
+    flex-direction: column;
+    gap: 8px;
   }
 }
 

@@ -105,67 +105,82 @@ export function calculateIncomeTax(
   region: TaxRegion,
   pensionContributionPercent: number = 0
 ): TaxCalculationResult {
-  // Calculate pension contribution
+  // Calculate pension contribution (your contribution only - reduces taxable income)
   const pensionContribution = (grossSalary * pensionContributionPercent) / 100;
   const taxableIncomeBeforeAllowance = grossSalary - pensionContribution;
   
   // Get adjusted personal allowance
   const personalAllowance = calculatePersonalAllowance(grossSalary, pensionContribution);
   
-  // Select appropriate tax bands and adjust for personal allowance
+  // Select appropriate tax bands
   const baseBands = region === 'scotland' ? SCOTLAND_TAX_BANDS : ENGLAND_TAX_BANDS;
   
-  // Adjust bands based on personal allowance
-  const taxBands: TaxBand[] = baseBands.map((band, index) => {
-    if (index === 0) {
-      return { ...band, max: personalAllowance };
-    }
-    // Adjust subsequent bands based on personal allowance
-    const diff = PERSONAL_ALLOWANCE - personalAllowance;
-    return {
-      ...band,
-      min: Math.max(0, band.min - diff),
-      max: band.max ? Math.max(0, band.max - diff) : null,
-    };
-  });
+  // Calculate tax for each band properly
+  // The taxable income after personal allowance
+  const taxableIncome = Math.max(0, taxableIncomeBeforeAllowance - personalAllowance);
   
-  // Calculate tax for each band
   let totalTax = 0;
-  let remainingIncome = taxableIncomeBeforeAllowance;
+  const calculatedBands: TaxBand[] = [];
   
-  const calculatedBands = taxBands.map(band => {
-    const bandWidth = band.max !== null ? band.max - band.min : Infinity;
-    const incomeInBand = Math.min(Math.max(0, remainingIncome - band.min), bandWidth);
-    const taxDue = (incomeInBand * band.rate) / 100;
+  // For each band, calculate the income that falls within it
+  for (const band of baseBands) {
+    // Skip personal allowance band for tax calculation (rate is 0 anyway)
+    if (band.rate === 0) {
+      calculatedBands.push({
+        ...band,
+        incomeInBand: Math.min(taxableIncomeBeforeAllowance, personalAllowance),
+        taxDue: 0,
+      });
+      continue;
+    }
     
-    remainingIncome = Math.max(0, remainingIncome - incomeInBand);
-    totalTax += taxDue;
+    // Calculate the effective band boundaries relative to taxable income
+    // Bands in tax tables are absolute, but we calculate relative to PA
+    const bandStart = band.min - PERSONAL_ALLOWANCE;
+    const bandEnd = band.max !== null ? band.max - PERSONAL_ALLOWANCE : Infinity;
     
-    return {
-      ...band,
-      incomeInBand,
-      taxDue,
-    };
-  }).filter(band => band.incomeInBand > 0 || band.rate === 0);
+    // How much income falls in this band?
+    const incomeInBand = Math.max(0, 
+      Math.min(taxableIncome, bandEnd) - Math.max(0, bandStart)
+    );
+    
+    if (incomeInBand > 0) {
+      const taxDue = (incomeInBand * band.rate) / 100;
+      totalTax += taxDue;
+      
+      calculatedBands.push({
+        ...band,
+        incomeInBand,
+        taxDue,
+      });
+    }
+  }
   
-  // Calculate National Insurance
+  // Calculate National Insurance (on gross minus pension)
   let totalNI = 0;
-  remainingIncome = grossSalary - pensionContribution; // NI is on salary minus pension
+  const niableIncome = grossSalary - pensionContribution;
+  const calculatedNIBands: NIBand[] = [];
   
-  const calculatedNIBands = NI_BANDS.map(band => {
-    const bandWidth = band.max !== null ? band.max - band.min : Infinity;
-    const incomeInBand = Math.min(Math.max(0, remainingIncome - band.min), bandWidth);
-    const niDue = (incomeInBand * band.rate) / 100;
+  for (const band of NI_BANDS) {
+    const bandStart = band.min;
+    const bandEnd = band.max !== null ? band.max : Infinity;
     
-    remainingIncome = Math.max(0, remainingIncome - incomeInBand);
-    totalNI += niDue;
+    // How much income falls in this band?
+    const incomeInBand = Math.max(0,
+      Math.min(niableIncome, bandEnd) - bandStart
+    );
     
-    return {
-      ...band,
-      incomeInBand,
-      niDue,
-    };
-  }).filter(band => band.incomeInBand > 0 || band.rate === 0);
+    if (incomeInBand > 0 || band.rate === 0) {
+      const niDue = (incomeInBand * band.rate) / 100;
+      totalNI += niDue;
+      
+      calculatedNIBands.push({
+        ...band,
+        incomeInBand,
+        niDue,
+      });
+    }
+  }
   
   // Calculate pension tax and NI savings
   const taxWithoutPension = calculateTaxOnly(grossSalary, region, 0);
@@ -177,14 +192,13 @@ export function calculateIncomeTax(
   const netPay = grossSalary - totalTax - totalNI - pensionContribution;
   
   // Calculate marginal rate (for next £1 earned)
-  const marginalBand = calculatedBands.find(b => 
-    b.max === null || taxableIncomeBeforeAllowance < b.max
-  );
-  const marginalTaxRate = marginalBand ? marginalBand.rate : 0;
+  // Find the highest band with income
+  const lastBandWithIncome = [...calculatedBands].reverse().find(b => b.incomeInBand && b.incomeInBand > 0);
+  const marginalTaxRate = lastBandWithIncome?.rate ?? 0;
   
   return {
     grossSalary,
-    taxableIncome: Math.max(0, taxableIncomeBeforeAllowance - personalAllowance),
+    taxableIncome,
     totalTax,
     totalNI,
     netPay,
@@ -210,21 +224,27 @@ export function calculateIncomeTax(
  */
 function calculateTaxOnly(grossSalary: number, region: TaxRegion, pensionPercent: number): number {
   const pensionContribution = (grossSalary * pensionPercent) / 100;
-  const taxableIncome = grossSalary - pensionContribution;
+  const incomeAfterPension = grossSalary - pensionContribution;
   const personalAllowance = calculatePersonalAllowance(grossSalary, pensionContribution);
+  const taxableIncome = Math.max(0, incomeAfterPension - personalAllowance);
   
   const bands = region === 'scotland' ? SCOTLAND_TAX_BANDS : ENGLAND_TAX_BANDS;
   let totalTax = 0;
-  let remainingIncome = taxableIncome;
   
-  bands.forEach((band, index) => {
-    const adjustedMin = index === 0 ? 0 : Math.max(0, band.min - (PERSONAL_ALLOWANCE - personalAllowance));
-    const adjustedMax = band.max ? Math.max(0, band.max - (PERSONAL_ALLOWANCE - personalAllowance)) : Infinity;
-    const bandWidth = adjustedMax - adjustedMin;
-    const incomeInBand = Math.min(Math.max(0, remainingIncome - adjustedMin), bandWidth);
-    totalTax += (incomeInBand * band.rate) / 100;
-    remainingIncome = Math.max(0, remainingIncome - incomeInBand);
-  });
+  for (const band of bands) {
+    if (band.rate === 0) continue;
+    
+    const bandStart = band.min - PERSONAL_ALLOWANCE;
+    const bandEnd = band.max !== null ? band.max - PERSONAL_ALLOWANCE : Infinity;
+    
+    const incomeInBand = Math.max(0, 
+      Math.min(taxableIncome, bandEnd) - Math.max(0, bandStart)
+    );
+    
+    if (incomeInBand > 0) {
+      totalTax += (incomeInBand * band.rate) / 100;
+    }
+  }
   
   return totalTax;
 }
@@ -237,14 +257,19 @@ function calculateNIOnly(grossSalary: number, pensionPercent: number): number {
   const niableIncome = grossSalary - pensionContribution;
   
   let totalNI = 0;
-  let remainingIncome = niableIncome;
   
-  NI_BANDS.forEach(band => {
-    const bandWidth = band.max !== null ? band.max - band.min : Infinity;
-    const incomeInBand = Math.min(Math.max(0, remainingIncome - band.min), bandWidth);
-    totalNI += (incomeInBand * band.rate) / 100;
-    remainingIncome = Math.max(0, remainingIncome - incomeInBand);
-  });
+  for (const band of NI_BANDS) {
+    const bandStart = band.min;
+    const bandEnd = band.max !== null ? band.max : Infinity;
+    
+    const incomeInBand = Math.max(0,
+      Math.min(niableIncome, bandEnd) - bandStart
+    );
+    
+    if (incomeInBand > 0) {
+      totalNI += (incomeInBand * band.rate) / 100;
+    }
+  }
   
   return totalNI;
 }
