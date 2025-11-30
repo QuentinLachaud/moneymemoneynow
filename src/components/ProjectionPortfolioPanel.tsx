@@ -391,11 +391,12 @@ export function ProjectionPortfolioPanel({ accounts }: ProjectionPortfolioPanelP
             </div>
           )}
 
-          {/* Volatility Control */}
-          {!isDeterministic && (
-            <div className="control-group volatility-control-compact">
-              <label>Volatility: {globalVolatilityOverride}%</label>
-              <div className="slider-with-presets">
+          {/* Stacked Volatility & Projection Sliders */}
+          <div className="control-group stacked-sliders">
+            {/* Volatility Control */}
+            {!isDeterministic && (
+              <div className="slider-row">
+                <label>Volatility: {globalVolatilityOverride}%</label>
                 <input
                   type="range"
                   min="0"
@@ -403,49 +404,38 @@ export function ProjectionPortfolioPanel({ accounts }: ProjectionPortfolioPanelP
                   step="1"
                   value={globalVolatilityOverride}
                   onChange={(e) => handleGlobalVolatilityChange(parseInt(e.target.value))}
-                  className="compact-slider"
+                  className="wide-slider"
                 />
-                <div className="preset-btns">
-                  {[0, 10, 20, 30].map(v => (
-                    <button
-                      key={v}
-                      className={`preset-btn-sm ${globalVolatilityOverride === v ? 'active' : ''}`}
-                      onClick={() => handleGlobalVolatilityChange(v)}
-                    >
-                      {v}
-                    </button>
-                  ))}
-                </div>
               </div>
+            )}
+
+            {/* Projection Years */}
+            <div className="slider-row">
+              <label>
+                Projection: {effectiveProjectionYears}y
+                {projectionYearsOverride !== null && (
+                  <button 
+                    className="reset-btn-inline" 
+                    onClick={() => setProjectionYearsOverride(null)}
+                    title="Reset to natural horizon"
+                  >
+                    ↺
+                  </button>
+                )}
+              </label>
+              <input
+                type="range"
+                min="1"
+                max="100"
+                step="1"
+                value={effectiveProjectionYears}
+                onChange={(e) => setProjectionYearsOverride(parseInt(e.target.value))}
+                className="wide-slider"
+              />
             </div>
-          )}
+          </div>
 
           <div className="controls-divider" />
-
-          {/* Projection Years */}
-          <div className="control-group projection-control">
-            <label>
-              Projection: {effectiveProjectionYears}y
-              {projectionYearsOverride !== null && (
-                <button 
-                  className="reset-btn-inline" 
-                  onClick={() => setProjectionYearsOverride(null)}
-                  title="Reset to natural horizon"
-                >
-                  ↺
-                </button>
-              )}
-            </label>
-            <input
-              type="range"
-              min="1"
-              max="100"
-              step="1"
-              value={effectiveProjectionYears}
-              onChange={(e) => setProjectionYearsOverride(parseInt(e.target.value))}
-              className="projection-slider-wide"
-            />
-          </div>
 
           {/* Inflation Toggle */}
           <div className="control-group toggle-slider-group">

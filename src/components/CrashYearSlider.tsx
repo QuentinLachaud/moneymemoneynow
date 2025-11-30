@@ -49,15 +49,20 @@ export function CrashYearSlider({ startYear, endYear }: CrashYearSliderProps) {
   }, [totalYears]);
 
   return (
-    <div className="crash-year-slider-container">
+    <div className="crash-year-slider-container compact">
       <div className="crash-slider-header">
         <div className="crash-slider-label">
-          <Zap size={14} className="crash-icon" />
+          <Zap size={12} className="crash-icon" />
           <span className="crash-name">{activeCrash.name}</span>
+          <span className="crash-stats">
+            <span className="severity-inline">-{(activeCrash.severity * 100).toFixed(0)}%</span>
+            <span className="recovery-inline">{activeCrash.recoveryYears}y</span>
+          </span>
         </div>
         <div className="crash-slider-value">
-          Crash Year: <strong>{activeCrash.crashYear}</strong>
-          <span className="year-offset">(Year {yearFromStart})</span>
+          <span className="crash-year-label">Crash in</span>
+          <strong>{activeCrash.crashYear + 1}</strong>
+          <span className="year-offset">({yearFromStart + 1}y)</span>
         </div>
       </div>
       
@@ -65,7 +70,7 @@ export function CrashYearSlider({ startYear, endYear }: CrashYearSliderProps) {
         <input
           type="range"
           min={0}
-          max={totalYears}
+          max={totalYears - 1}
           value={yearFromStart}
           onChange={handleSliderChange}
           className="crash-year-input"
@@ -77,22 +82,13 @@ export function CrashYearSlider({ startYear, endYear }: CrashYearSliderProps) {
             <div
               key={tick}
               className="tick-mark"
-              style={{ left: `${(tick / totalYears) * 100}%` }}
+              style={{ left: `${(tick / (totalYears - 1)) * 100}%` }}
             >
               <div className="tick-line" />
               <span className="tick-label">{startYear + tick}</span>
             </div>
           ))}
         </div>
-      </div>
-
-      <div className="crash-slider-info">
-        <span className="severity-badge">
-          -{(activeCrash.severity * 100).toFixed(0)}% drop
-        </span>
-        <span className="recovery-badge">
-          {activeCrash.recoveryYears}y recovery
-        </span>
       </div>
     </div>
   );

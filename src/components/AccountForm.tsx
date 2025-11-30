@@ -46,7 +46,8 @@ export function AccountForm({
 }: AccountFormProps) {
   const [transactionType, setTransactionType] = useState<'deposit' | 'withdraw'>(initialData?.transactionType || defaultTransactionType);
   const [name, setName] = useState(initialData?.name || '');
-  const [amount, setAmount] = useState(initialData?.amount?.toString() || '');
+  // Default starting value to 0 for drawdowns
+  const [amount, setAmount] = useState(initialData?.amount?.toString() || (defaultTransactionType === 'withdraw' ? '0' : ''));
   const [date, setDate] = useState(initialData?.date || new Date().toISOString().split('T')[0]);
   const [expectedReturn, setExpectedReturn] = useState(initialData?.expectedReturn?.toString() || '7');
   const [volatility, setVolatility] = useState(initialData?.volatility || '');
@@ -227,17 +228,29 @@ export function AccountForm({
       </div>
 
       <div className="border-t pt-4">
-        <label className="block text-sm text-gray-700 mb-1">Transaction Frequency</label>
-        <select
-          value={frequency}
-          onChange={(e) => setFrequency(e.target.value as 'monthly' | 'annual')}
-          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 mb-3"
-        >
-          <option value="monthly">Monthly</option>
-          <option value="annual">Annual</option>
-        </select>
+        <label className="block text-sm text-gray-700 mb-2">Transaction Frequency</label>
+        <div className="frequency-toggle">
+          <button
+            type="button"
+            className={`frequency-option ${frequency === 'annual' ? 'active' : ''}`}
+            onClick={() => setFrequency('annual')}
+          >
+            Annual
+          </button>
+          <button
+            type="button"
+            className={`frequency-option ${frequency === 'monthly' ? 'active' : ''}`}
+            onClick={() => setFrequency('monthly')}
+          >
+            Monthly
+          </button>
+          <div 
+            className="frequency-indicator" 
+            style={{ transform: frequency === 'monthly' ? 'translateX(100%)' : 'translateX(0)' }}
+          />
+        </div>
 
-        <label className="block text-sm text-gray-700 mb-1">
+        <label className="block text-sm text-gray-700 mb-1 mt-4">
           {transactionType === 'deposit' ? 'Deposit' : 'Drawdown'} Amount ($)
         </label>
         <input
@@ -249,24 +262,28 @@ export function AccountForm({
           step="0.01"
         />
         
-        <label className="block text-sm text-gray-700 mb-1 mt-3">
-          Annual Increase (%)
+        <label className="block text-sm text-gray-700 mb-2 mt-4">
+          Annual Increase
         </label>
-        <div className="relative">
-          <input
-            type="number"
-            value={annualIncreaseRate}
-            onChange={(e) => setAnnualIncreaseRate(e.target.value)}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-            placeholder="0"
-            step="0.5"
-            min="0"
-            max="20"
-          />
-          <span className="text-xs text-gray-500 mt-1 block">
-            Increase {transactionType === 'deposit' ? 'contributions' : 'withdrawals'} by this % each year
-          </span>
+        <div className="annual-increase-toggle">
+          {[0, 1, 2, 3, 5].map((rate, index) => (
+            <button
+              key={rate}
+              type="button"
+              className={`annual-increase-option ${parseFloat(annualIncreaseRate) === rate ? 'active' : ''}`}
+              onClick={() => setAnnualIncreaseRate(rate.toString())}
+              style={{
+                '--increase-color': `rgba(${34 + index * 20}, ${197 - index * 10}, ${94 - index * 5}, ${0.4 + index * 0.15})`,
+                '--increase-color-active': `rgba(${34 + index * 20}, ${197 - index * 10}, ${94 - index * 5}, 1)`,
+              } as React.CSSProperties}
+            >
+              {rate}%
+            </button>
+          ))}
         </div>
+        <span className="text-xs text-gray-500 mt-1 block">
+          Increase {transactionType === 'deposit' ? 'contributions' : 'withdrawals'} by this % each year
+        </span>
       </div>
 
       <button

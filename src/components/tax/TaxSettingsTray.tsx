@@ -21,8 +21,8 @@ interface TaxSettingsTrayProps {
   onPensionEmployerMatchChange: (percent: number) => void;
 }
 
-// Preset buttons for quick selection
-const PENSION_PRESETS = [0, 3, 5, 8, 10, 15];
+// Preset buttons for quick selection (removed 15% per user request)
+const PENSION_PRESETS = [0, 3, 5, 8, 10];
 
 // Satisfying pension input with slider + stepper + presets
 function PensionSliderInput({
@@ -157,7 +157,7 @@ export function TaxSettingsTray({
               label="Base (employer)"
               value={pensionBase}
               onChange={onPensionBaseChange}
-              max={15}
+              max={10}
             />
             
             <PensionSliderInput
@@ -170,8 +170,8 @@ export function TaxSettingsTray({
             <PensionSliderInput
               label="Employer Match"
               value={pensionEmployerMatch}
-              onChange={onPensionEmployerMatchChange}
-              max={15}
+              onChange={(v) => onPensionEmployerMatchChange(Math.min(v, pensionYourContribution))}
+              max={Math.min(pensionYourContribution, 20)}
             />
           </div>
 

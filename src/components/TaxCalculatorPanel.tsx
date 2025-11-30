@@ -11,61 +11,66 @@
  * - TaxSettingsTray
  * - SalaryBreakdownTable
  * - ScenarioPanel
+ * 
+ * State persisted via Zustand store
  */
 
-import { useState, useMemo, useCallback } from 'react';
+import { useMemo, useCallback, useEffect } from 'react';
 import { Calculator, RotateCcw } from 'lucide-react';
 import {
-  TaxRegion,
   calculateIncomeTax,
   calculateEmployerPension,
   calculateCompoundGrowth,
   TaxCalculationResult,
 } from '../utils/ukTaxCalculator';
+import { useTaxStore } from '../store/useTaxStore';
 import { TaxSettingsTray } from './tax/TaxSettingsTray';
 import { SalaryBreakdownTable } from './tax/SalaryBreakdownTable';
 import { ScenarioPanel } from './tax/ScenarioPanel';
 
-// Default constants
-const DEFAULT_STATE_PENSION_AGE = 67;
-const DEFAULT_AGE = 38;
-const DEFAULT_PENSION_BASE = 3;
-const DEFAULT_PENSION_YOUR_CONTRIBUTION = 3;
-const DEFAULT_PENSION_EMPLOYER_MATCH = 0;
-const DEFAULT_SALARY_SACRIFICE = 0;
+// Growth rate for compound projections
 const GROWTH_RATE = 7;
 
-// View mode type
-type ViewMode = 'annual' | 'monthly';
-
 export function TaxCalculatorPanel() {
-  // Core inputs
-  const [grossSalary, setGrossSalary] = useState<number | null>(null);
-  const [salaryInput, setSalaryInput] = useState<string>('');
-  
-  // Tax settings state
-  const [region, setRegion] = useState<TaxRegion>('england');
-  
-  // Pension settings
-  const [pensionBase, setPensionBase] = useState<number>(DEFAULT_PENSION_BASE);
-  const [pensionYourContribution, setPensionYourContribution] = useState<number>(DEFAULT_PENSION_YOUR_CONTRIBUTION);
-  const [pensionEmployerMatch, setPensionEmployerMatch] = useState<number>(DEFAULT_PENSION_EMPLOYER_MATCH);
-  
-  // Age settings
-  const [age, setAge] = useState<number>(DEFAULT_AGE);
-  const [retirementAge, setRetirementAge] = useState<number>(DEFAULT_STATE_PENSION_AGE);
-
-  // View mode (annual or monthly) - shared across both panels
-  const [viewMode, setViewMode] = useState<ViewMode>('annual');
-
-  // Scenario panel state (lifted up from ScenarioPanel)
-  type ScenarioType = 'salary-change' | 'salary-sacrifice';
-  const [scenarioType, setScenarioType] = useState<ScenarioType>('salary-sacrifice');
-  const [salarySacrificePercent, setSalarySacrificePercent] = useState<number>(DEFAULT_SALARY_SACRIFICE);
-  const [salaryChangePercent, setSalaryChangePercent] = useState<number>(5);
+  // Get all state from Zustand store (persisted)
+  const {
+    grossSalary,
+    salaryInput,
+    region,
+    pensionBase,
+    pensionYourContribution,
+    pensionEmployerMatch,
+    age,
+    retirementAge,
+    viewMode,
+    scenarioType,
+    salarySacrificePercent,
+    salaryChangePercent,
+    // Actions
+    setGrossSalary,
+    setSalaryInput,
+    setRegion,
+    setPensionBase,
+    setPensionYourContribution,
+    setPensionEmployerMatch,
+    setAge,
+    setRetirementAge,
+    setViewMode,
+    setScenarioType,
+    setSalarySacrificePercent,
+    setSalaryChangePercent,
+    resetToDefaults,
+  } = useTaxStore();
 
   // Years to retirement
   const yearsToRetirement = Math.max(0, retirementAge - age);
+
+  // Automatically reduce employer match if it exceeds your contribution
+  useEffect(() => {
+    if (pensionEmployerMatch > pensionYourContribution) {
+      setPensionEmployerMatch(pensionYourContribution);
+    }
+  }, [pensionYourContribution, pensionEmployerMatch, setPensionEmployerMatch]);
 
   // Total employee pension contribution (from left panel settings)
   const totalBasePension = pensionBase + pensionYourContribution + pensionEmployerMatch;
@@ -175,20 +180,13 @@ export function TaxCalculatorPanel() {
     return num.toLocaleString('en-GB');
   };
 
-  // Reset all values to defaults EXCEPT salary
+  // Get the reset function from store
+  // resetToDefaults is already destructured from useTaxStore above
+
+  // Reset all values to defaults EXCEPT salary (handled by store)
   const handleReset = useCallback(() => {
-    // Keep salary as is
-    setAge(DEFAULT_AGE);
-    setRetirementAge(DEFAULT_STATE_PENSION_AGE);
-    setPensionBase(DEFAULT_PENSION_BASE);
-    setPensionYourContribution(DEFAULT_PENSION_YOUR_CONTRIBUTION);
-    setPensionEmployerMatch(DEFAULT_PENSION_EMPLOYER_MATCH);
-    setSalarySacrificePercent(DEFAULT_SALARY_SACRIFICE);
-    setSalaryChangePercent(5);
-    setScenarioType('salary-sacrifice');
-    setViewMode('annual');
-    setRegion('england');
-  }, []);
+    resetToDefaults();
+  }, [resetToDefaults]);
 
   // Format currency helper
   const formatCurrency = (value: number): string => {
@@ -254,7 +252,7 @@ export function TaxCalculatorPanel() {
                 id="age-input"
                 type="number"
                 value={age}
-                onChange={(e) => handleAgeChange(parseInt(e.target.value) || DEFAULT_AGE)}
+                onChange={(e) => handleAgeChange(parseInt(e.target.value) || 38)}
                 min={16}
                 max={100}
                 className="age-input"

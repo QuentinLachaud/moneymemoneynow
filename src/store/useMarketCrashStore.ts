@@ -216,6 +216,9 @@ export const useMarketCrashStore = create<MarketCrashStore>()(
 /**
  * Apply market crashes to a portfolio value at a given year
  * Returns the crash-adjusted value
+ * 
+ * Note: crashYear is the year BEFORE the crash occurs.
+ * The actual crash happens at crashYear + 1.
  */
 export function applyCrashesToValue(
   value: number,
@@ -227,7 +230,9 @@ export function applyCrashesToValue(
   crashes.forEach((crash) => {
     if (!crash.isEnabled) return;
     
-    const yearsSinceCrash = year - crash.crashYear;
+    // Actual crash occurs one year after crashYear
+    const actualCrashYear = crash.crashYear + 1;
+    const yearsSinceCrash = year - actualCrashYear;
     
     if (yearsSinceCrash < 0) {
       // Before crash - no effect
