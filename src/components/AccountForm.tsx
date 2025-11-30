@@ -187,31 +187,37 @@ export function AccountForm({
         />
       </div>
 
-      <div>
-        <label className="block text-sm text-gray-700 mb-1">Expected Return (%)</label>
-        <input
-          type="number"
-          value={expectedReturn}
-          onChange={(e) => setExpectedReturn(e.target.value)}
-          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-          placeholder="7"
-          step="0.1"
-        />
-      </div>
+      {/* Expected Return - only shown for deposits */}
+      {transactionType === 'deposit' && (
+        <div>
+          <label className="block text-sm text-gray-700 mb-1">Expected Return (%)</label>
+          <input
+            type="number"
+            value={expectedReturn}
+            onChange={(e) => setExpectedReturn(e.target.value)}
+            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            placeholder="7"
+            step="0.1"
+          />
+        </div>
+      )}
 
-      <div>
-        <label className="block text-sm text-gray-700 mb-1">Volatility (Optional)</label>
-        <select
-          value={volatility}
-          onChange={(e) => setVolatility(e.target.value)}
-          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-        >
-          <option value="">None</option>
-          <option value="low">Low (5%)</option>
-          <option value="medium">Medium (15%)</option>
-          <option value="high">High (25%)</option>
-        </select>
-      </div>
+      {/* Volatility - only shown for deposits */}
+      {transactionType === 'deposit' && (
+        <div>
+          <label className="block text-sm text-gray-700 mb-1">Volatility (Optional)</label>
+          <select
+            value={volatility}
+            onChange={(e) => setVolatility(e.target.value)}
+            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+          >
+            <option value="">None</option>
+            <option value="low">Low (5%)</option>
+            <option value="medium">Medium (15%)</option>
+            <option value="high">High (25%)</option>
+          </select>
+        </div>
+      )}
 
       <div>
         <label className="block text-sm text-gray-700 mb-2">

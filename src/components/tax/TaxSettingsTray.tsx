@@ -175,10 +175,20 @@ export function TaxSettingsTray({
             />
           </div>
 
-          {/* Total Summary */}
-          <div className="pension-total-summary">
-            <span className="pension-total-label">Total pension:</span>
-            <span className="pension-total-value">{totalPension}%</span>
+          {/* Pension Breakdown Summary */}
+          <div className="pension-breakdown">
+            <div className="pension-breakdown-row">
+              <span className="breakdown-label">Your contribution</span>
+              <span className="breakdown-value yours">{pensionBase + pensionYourContribution}%</span>
+            </div>
+            <div className="pension-breakdown-row">
+              <span className="breakdown-label">Employer contribution</span>
+              <span className="breakdown-value employer">{pensionBase + pensionEmployerMatch}%</span>
+            </div>
+            <div className="pension-breakdown-row total">
+              <span className="breakdown-label">Total pension</span>
+              <span className="breakdown-value total">{totalPension}%</span>
+            </div>
           </div>
         </div>
       </div>

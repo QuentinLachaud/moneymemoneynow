@@ -6973,8 +6973,8 @@ html {
    ───────────────────────────────────────────────────────────────────────────── */
 
 .tax-settings-tray {
-  width: 280px;
-  min-width: 280px;
+  width: 365px;
+  min-width: 365px;
   display: flex;
   flex-direction: column;
   background: linear-gradient(180deg, rgba(15, 19, 28, 0.98), rgba(12, 16, 22, 0.99));
@@ -7312,6 +7312,7 @@ html {
   gap: 16px;
   min-height: 0;
   overflow: hidden;
+  align-items: start;
 }
 
 .breakdown-section,
@@ -7320,6 +7321,20 @@ html {
   flex-direction: column;
   min-height: 0;
   overflow: hidden;
+}
+
+/* Ensure tax panels align their content */
+.breakdown-section .tax-breakdown-panel,
+.scenario-section .scenario-panel {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+/* Align tax rates banners at same height */
+.tax-breakdown-panel .tax-rates-banner,
+.scenario-panel .tax-rates-banner {
+  min-height: 90px;
 }
 
 /* ─────────────────────────────────────────────────────────────────────────────
@@ -7384,6 +7399,7 @@ html {
 .salary-breakdown-table .table-wrapper {
   flex: 1;
   overflow-y: auto;
+  max-height: 400px;
 }
 
 .breakdown-table {
@@ -7757,6 +7773,13 @@ html {
   border: none;
   border-radius: 0;
   background: transparent;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.scenario-panel .salary-breakdown-table .table-wrapper {
+  max-height: 100%;
+  overflow-y: auto;
 }
 
 /* ─────────────────────────────────────────────────────────────────────────────
@@ -8995,6 +9018,61 @@ html {
 }
 
 .pension-total-summary .summary-value {
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: #a855f7;
+}
+
+/* Pension Breakdown Summary */
+.pension-breakdown {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 12px;
+  padding: 12px;
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.04);
+}
+
+.pension-breakdown-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 4px 0;
+}
+
+.pension-breakdown-row.total {
+  padding-top: 8px;
+  margin-top: 4px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.pension-breakdown .breakdown-label {
+  font-size: 0.72rem;
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.pension-breakdown-row.total .breakdown-label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.pension-breakdown .breakdown-value {
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.pension-breakdown .breakdown-value.yours {
+  color: #60a5fa;
+}
+
+.pension-breakdown .breakdown-value.employer {
+  color: #4ade80;
+}
+
+.pension-breakdown .breakdown-value.total {
   font-size: 0.9rem;
   font-weight: 700;
   color: #a855f7;
