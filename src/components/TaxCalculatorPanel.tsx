@@ -5,6 +5,7 @@
  * - Left tray: Tax settings (region, pension percentages)
  * - Top controls: Salary + Age + Retirement Age + Calculate + Reset
  * - Main area: Two equal-width panels (Current vs Scenario)
+ * - Bottom summary ribbons showing tax savings and sacrifice projections
  * 
  * Uses modular components:
  * - TaxSettingsTray
@@ -18,6 +19,7 @@ import {
   TaxRegion,
   calculateIncomeTax,
   calculateEmployerPension,
+  calculateCompoundGrowth,
   TaxCalculationResult,
 } from '../utils/ukTaxCalculator';
 import { TaxSettingsTray } from './tax/TaxSettingsTray';
@@ -31,6 +33,7 @@ const DEFAULT_PENSION_BASE = 3;
 const DEFAULT_PENSION_YOUR_CONTRIBUTION = 3;
 const DEFAULT_PENSION_EMPLOYER_MATCH = 0;
 const DEFAULT_SALARY_SACRIFICE = 0;
+const GROWTH_RATE = 7;
 
 // View mode type
 type ViewMode = 'annual' | 'monthly';
@@ -58,6 +61,9 @@ export function TaxCalculatorPanel() {
   // Salary sacrifice percent (for scenario panel)
   const [salarySacrificePercent, setSalarySacrificePercent] = useState<number>(DEFAULT_SALARY_SACRIFICE);
 
+  // Years to retirement
+  const yearsToRetirement = Math.max(0, retirementAge - age);
+
   // Total employee pension contribution (from left panel settings)
   const totalBasePension = pensionBase + pensionYourContribution + pensionEmployerMatch;
   
@@ -66,6 +72,31 @@ export function TaxCalculatorPanel() {
     if (grossSalary === null || grossSalary <= 0) return null;
     return calculateIncomeTax(grossSalary, region, pensionYourContribution);
   }, [grossSalary, region, pensionYourContribution]);
+
+  // Scenario tax calculation (with sacrifice)
+  const scenarioResult = useMemo<TaxCalculationResult | null>(() => {
+    if (grossSalary === null || grossSalary <= 0) return null;
+    const effectivePercent = Math.min(50, pensionYourContribution + salarySacrificePercent);
+    return calculateIncomeTax(grossSalary, region, effectivePercent);
+  }, [grossSalary, region, pensionYourContribution, salarySacrificePercent]);
+
+  // Calculate tax saved and sacrifice amounts for summary ribbon
+  const summaryData = useMemo(() => {
+    if (!taxResult || !scenarioResult || !grossSalary) return null;
+    
+    const taxSaved = (taxResult.totalTax + taxResult.totalNI) - (scenarioResult.totalTax + scenarioResult.totalNI);
+    const sacrificeAmount = scenarioResult.pensionContribution - taxResult.pensionContribution;
+    const totalAddedToPension = sacrificeAmount + taxSaved; // What goes to pension pot
+    const futureValue = calculateCompoundGrowth(totalAddedToPension, yearsToRetirement, GROWTH_RATE);
+    
+    return {
+      taxSaved,
+      sacrificeAmount,
+      totalAddedToPension,
+      futureValue,
+      yearsToRetirement,
+    };
+  }, [taxResult, scenarioResult, grossSalary, yearsToRetirement]);
 
   // Employer pension calculation
   const employerPension = useMemo(() => {
@@ -100,10 +131,9 @@ export function TaxCalculatorPanel() {
     return num.toLocaleString('en-GB');
   };
 
-  // Reset all values to defaults
+  // Reset all values to defaults EXCEPT salary
   const handleReset = useCallback(() => {
-    setSalaryInput('');
-    setGrossSalary(null);
+    // Keep salary as is
     setAge(DEFAULT_AGE);
     setRetirementAge(DEFAULT_STATE_PENSION_AGE);
     setPensionBase(DEFAULT_PENSION_BASE);
@@ -113,6 +143,25 @@ export function TaxCalculatorPanel() {
     setViewMode('annual');
     setRegion('england');
   }, []);
+
+  // Format currency helper
+  const formatCurrency = (value: number): string => {
+    return new Intl.NumberFormat('en-GB', {
+      style: 'currency',
+      currency: 'GBP',
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0,
+    }).format(value);
+  };
+
+  // Handle age change with retirement age constraint
+  const handleAgeChange = (newAge: number) => {
+    setAge(newAge);
+    // If retirement age is now less than age, update it
+    if (retirementAge < newAge) {
+      setRetirementAge(newAge);
+    }
+  };
 
   return (
     <div className="tax-calculator-panel">
@@ -159,7 +208,7 @@ export function TaxCalculatorPanel() {
                 id="age-input"
                 type="number"
                 value={age}
-                onChange={(e) => setAge(parseInt(e.target.value) || DEFAULT_AGE)}
+                onChange={(e) => handleAgeChange(parseInt(e.target.value) || DEFAULT_AGE)}
                 min={16}
                 max={100}
                 className="age-input"
@@ -173,9 +222,9 @@ export function TaxCalculatorPanel() {
                 id="retirement-input"
                 type="number"
                 value={retirementAge}
-                onChange={(e) => setRetirementAge(parseInt(e.target.value) || DEFAULT_STATE_PENSION_AGE)}
-                min={55}
-                max={75}
+                onChange={(e) => setRetirementAge(Math.max(age, parseInt(e.target.value) || age))}
+                min={age}
+                max={100}
                 className="retirement-input"
               />
             </div>
@@ -209,6 +258,24 @@ export function TaxCalculatorPanel() {
                 viewMode={viewMode}
                 onViewModeChange={setViewMode}
               />
+              {/* Left Summary Ribbon - Current pension contribution */}
+              <div className="summary-ribbon baseline">
+                <div className="ribbon-stat">
+                  <span className="ribbon-label">Your Pension Contribution</span>
+                  <span className="ribbon-value">
+                    {formatCurrency(viewMode === 'annual' ? taxResult.pensionContribution : taxResult.pensionContribution / 12)}
+                    <span className="ribbon-period">/{viewMode === 'annual' ? 'year' : 'month'}</span>
+                  </span>
+                </div>
+                <div className="ribbon-divider" />
+                <div className="ribbon-stat">
+                  <span className="ribbon-label">Tax Rate</span>
+                  <span className="ribbon-value highlight">
+                    {((taxResult.totalTax + taxResult.totalNI) / taxResult.grossSalary * 100).toFixed(1)}%
+                    <span className="ribbon-period">effective</span>
+                  </span>
+                </div>
+              </div>
             </div>
 
             {/* Right: Scenario Panel */}
@@ -229,6 +296,29 @@ export function TaxCalculatorPanel() {
                 viewMode={viewMode}
                 onViewModeChange={setViewMode}
               />
+              {/* Right Summary Ribbon - Sacrifice projections */}
+              {summaryData && salarySacrificePercent > 0 && (
+                <div className="summary-ribbon scenario">
+                  <div className="ribbon-message">
+                    <span className="ribbon-highlight">
+                      By sacrificing {formatCurrency(viewMode === 'annual' ? summaryData.sacrificeAmount : summaryData.sacrificeAmount / 12)} per {viewMode === 'annual' ? 'year' : 'month'},
+                    </span>
+                    {' '}you add{' '}
+                    <span className="ribbon-highlight golden">
+                      {formatCurrency(summaryData.futureValue)}
+                    </span>
+                    {' '}to your pension in {summaryData.yearsToRetirement} years
+                  </div>
+                </div>
+              )}
+              {/* Show placeholder when no sacrifice */}
+              {(!summaryData || salarySacrificePercent === 0) && (
+                <div className="summary-ribbon scenario empty">
+                  <div className="ribbon-message muted">
+                    Adjust salary sacrifice to see pension projection
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         )}

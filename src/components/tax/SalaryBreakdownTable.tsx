@@ -2,16 +2,16 @@
  * TaxBreakdownTable — Comprehensive salary breakdown table
  * 
  * Features:
- * - Gross Salary (prominent)
+ * - Prominent effective/marginal tax rates at top
+ * - Modern, clean table design with rounded corners
  * - Collapsible Tax section with breakdown
  * - Net Take-Home (highlighted)
- * - Annual/Monthly pill-switch toggle (single selection)
- * - Optional delta display for scenario comparison
- * - Improved font sizing and legibility
+ * - Annual/Monthly pill-switch toggle
+ * - Professional styling with better typography
  */
 
 import { useState } from 'react';
-import { Wallet, TrendingUp, ChevronDown, ChevronRight } from 'lucide-react';
+import { Wallet, TrendingUp, ChevronDown, ChevronRight, Percent } from 'lucide-react';
 import { TaxCalculationResult } from '../../utils/ukTaxCalculator';
 
 type ViewMode = 'annual' | 'monthly';
@@ -71,7 +71,6 @@ export function SalaryBreakdownTable({
 
   // Total tax = Income Tax + NI
   const totalTax = result.totalTax + result.totalNI;
-  const monthlyTotalTax = totalTax / 12;
 
   // Get deltas if baseline provided
   const getDelta = (current: number, baseline: number | undefined): number | null => {
@@ -88,25 +87,13 @@ export function SalaryBreakdownTable({
   const getDisplayValue = (annual: number) => annual * displayMultiplier;
 
   return (
-    <div className={`tax-breakdown-panel ${isScenario ? 'scenario' : 'baseline'}`}>
-      {/* Header */}
-      <div className="panel-header">
-        <h4 className="panel-title">{title}</h4>
-        <div className="header-rates">
-          <div className="rate-badge">
-            <span className="rate-value">{effectiveRate.toFixed(1)}%</span>
-            <span className="rate-label">Effective</span>
-          </div>
-          <div className="rate-badge">
-            <span className="rate-value">{marginalRate}%</span>
-            <span className="rate-label">Marginal</span>
-          </div>
-        </div>
-      </div>
-
-      {/* Pill Switch Toggle - Annual/Monthly */}
-      <div className="table-controls">
-        <div className="pill-switch">
+    <div className={`tax-breakdown-panel modern ${isScenario ? 'scenario' : 'baseline'}`}>
+      {/* Header with Title */}
+      <div className="panel-header-modern">
+        <h4 className="panel-title-modern">{title}</h4>
+        
+        {/* Pill Switch Toggle - Annual/Monthly */}
+        <div className="pill-switch compact">
           <button
             className={`pill-option ${viewMode === 'annual' ? 'active' : ''}`}
             onClick={() => setViewMode('annual')}
@@ -126,143 +113,141 @@ export function SalaryBreakdownTable({
         </div>
       </div>
 
-      {/* Table */}
-      <div className="table-wrapper">
-        <table className="breakdown-table single-column">
-          <thead>
-            <tr>
-              <th className="label-col"></th>
-              <th className="amount-col">{viewMode === 'annual' ? 'Annual' : 'Monthly'}</th>
-            </tr>
-          </thead>
-          <tbody>
-            {/* Gross Salary Row */}
-            <tr className="gross-row">
-              <td className="label-cell">
-                <Wallet size={16} />
-                <span>Gross Salary</span>
-              </td>
-              <td className="amount-cell gross single">
-                {formatCurrency(getDisplayValue(result.grossSalary))}
-                {grossDelta !== null && (
-                  <span className="delta">{formatDelta(getDisplayValue(grossDelta))}</span>
-                )}
-              </td>
-            </tr>
+      {/* Prominent Tax Rates Section */}
+      <div className="tax-rates-banner">
+        <div className="rate-card effective">
+          <Percent size={18} />
+          <div className="rate-content">
+            <span className="rate-number">{effectiveRate.toFixed(1)}%</span>
+            <span className="rate-name">Effective Rate</span>
+          </div>
+        </div>
+        <div className="rate-card marginal">
+          <Percent size={18} />
+          <div className="rate-content">
+            <span className="rate-number">{marginalRate}%</span>
+            <span className="rate-name">Marginal Rate</span>
+          </div>
+        </div>
+      </div>
 
-            {/* Total Tax Row (collapsible) */}
-            <tr 
-              className="total-tax-row clickable"
-              onClick={() => setTaxExpanded(!taxExpanded)}
-            >
-              <td className="label-cell">
-                {taxExpanded ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
-                <span>Total Tax</span>
-              </td>
-              <td className="amount-cell deduction single">
-                -{formatCurrency(getDisplayValue(totalTax))}
-                {taxDelta !== null && (
-                  <span className={`delta ${taxDelta < 0 ? 'positive' : ''}`}>
-                    {formatDelta(getDisplayValue(taxDelta))}
-                  </span>
-                )}
-              </td>
-            </tr>
+      {/* Modern Table */}
+      <div className="table-wrapper-modern">
+        <div className="breakdown-card">
+          {/* Gross Salary Row */}
+          <div className="breakdown-row gross">
+            <div className="row-label">
+              <Wallet size={18} />
+              <span>Gross Salary</span>
+            </div>
+            <div className="row-value">
+              <span className="amount">{formatCurrency(getDisplayValue(result.grossSalary))}</span>
+              {grossDelta !== null && (
+                <span className="delta">{formatDelta(getDisplayValue(grossDelta))}</span>
+              )}
+            </div>
+          </div>
 
-            {/* Expanded Tax Breakdown */}
-            {taxExpanded && (
-              <>
-                {/* Income Tax Header */}
-                <tr className="section-header">
-                  <td colSpan={2}>Income Tax</td>
-                </tr>
-                
-                {/* Tax Bands */}
+          {/* Total Tax Row (collapsible) */}
+          <div 
+            className="breakdown-row tax clickable"
+            onClick={() => setTaxExpanded(!taxExpanded)}
+          >
+            <div className="row-label">
+              {taxExpanded ? <ChevronDown size={18} /> : <ChevronRight size={18} />}
+              <span>Total Tax & NI</span>
+            </div>
+            <div className="row-value">
+              <span className="amount deduction">-{formatCurrency(getDisplayValue(totalTax))}</span>
+              {taxDelta !== null && (
+                <span className={`delta ${taxDelta < 0 ? 'positive' : ''}`}>
+                  {formatDelta(getDisplayValue(taxDelta))}
+                </span>
+              )}
+            </div>
+          </div>
+
+          {/* Expanded Tax Breakdown */}
+          {taxExpanded && (
+            <div className="tax-breakdown-detail">
+              {/* Income Tax Section */}
+              <div className="detail-section">
+                <div className="detail-header">Income Tax</div>
                 {result.taxBands.filter(b => b.taxDue && b.taxDue > 0).map((band, i) => {
                   const baselineBand = baselineResult?.taxBands.find(b => b.name === band.name);
                   const bandDelta = getDelta(band.taxDue || 0, baselineBand?.taxDue);
                   
                   return (
-                    <tr key={`tax-${i}`} className="band-row">
-                      <td className="label-cell band">
+                    <div key={`tax-${i}`} className="detail-row">
+                      <div className="detail-label">
                         <span className="band-name">{band.name}</span>
                         <span className="band-rate">{band.rate}%</span>
-                      </td>
-                      <td className="amount-cell deduction">
-                        -{formatCurrency(getDisplayValue(band.taxDue || 0))}
+                      </div>
+                      <div className="detail-value">
+                        <span className="amount">-{formatCurrency(getDisplayValue(band.taxDue || 0))}</span>
                         {bandDelta !== null && bandDelta !== 0 && (
                           <span className={`delta ${bandDelta < 0 ? 'positive' : ''}`}>
                             {formatDelta(getDisplayValue(bandDelta))}
                           </span>
                         )}
-                      </td>
-                    </tr>
+                      </div>
+                    </div>
                   );
                 })}
+                <div className="detail-subtotal">
+                  <span>Income Tax Total</span>
+                  <span>-{formatCurrency(getDisplayValue(result.totalTax))}</span>
+                </div>
+              </div>
 
-                {/* Income Tax Subtotal */}
-                <tr className="subtotal-row">
-                  <td className="label-cell">Income Tax Subtotal</td>
-                  <td className="amount-cell deduction">
-                    -{formatCurrency(getDisplayValue(result.totalTax))}
-                  </td>
-                </tr>
-
-                {/* National Insurance Header */}
-                <tr className="section-header">
-                  <td colSpan={2}>National Insurance</td>
-                </tr>
-                
-                {/* NI Bands */}
+              {/* National Insurance Section */}
+              <div className="detail-section">
+                <div className="detail-header">National Insurance</div>
                 {result.niBands.filter(b => b.niDue && b.niDue > 0).map((band, i) => {
                   const baselineBand = baselineResult?.niBands.find(b => b.name === band.name);
                   const bandDelta = getDelta(band.niDue || 0, baselineBand?.niDue);
                   
                   return (
-                    <tr key={`ni-${i}`} className="band-row">
-                      <td className="label-cell band">
+                    <div key={`ni-${i}`} className="detail-row">
+                      <div className="detail-label">
                         <span className="band-name">{band.name}</span>
                         <span className="band-rate">{band.rate}%</span>
-                      </td>
-                      <td className="amount-cell deduction">
-                        -{formatCurrency(getDisplayValue(band.niDue || 0))}
+                      </div>
+                      <div className="detail-value">
+                        <span className="amount">-{formatCurrency(getDisplayValue(band.niDue || 0))}</span>
                         {bandDelta !== null && bandDelta !== 0 && (
                           <span className={`delta ${bandDelta < 0 ? 'positive' : ''}`}>
                             {formatDelta(getDisplayValue(bandDelta))}
                           </span>
                         )}
-                      </td>
-                    </tr>
+                      </div>
+                    </div>
                   );
                 })}
+                <div className="detail-subtotal">
+                  <span>NI Total</span>
+                  <span>-{formatCurrency(getDisplayValue(result.totalNI))}</span>
+                </div>
+              </div>
+            </div>
+          )}
 
-                {/* NI Subtotal */}
-                <tr className="subtotal-row">
-                  <td className="label-cell">NI Subtotal</td>
-                  <td className="amount-cell deduction">
-                    -{formatCurrency(getDisplayValue(result.totalNI))}
-                  </td>
-                </tr>
-              </>
-            )}
-
-            {/* Net Take-Home Row */}
-            <tr className="net-row">
-              <td className="label-cell">
-                <TrendingUp size={16} />
-                <span>Net Take-Home</span>
-              </td>
-              <td className="amount-cell net single">
-                {formatCurrency(getDisplayValue(result.netPay))}
-                {netDelta !== null && (
-                  <span className={`delta ${netDelta > 0 ? 'positive' : 'negative'}`}>
-                    {formatDelta(getDisplayValue(netDelta))}
-                  </span>
-                )}
-              </td>
-            </tr>
-          </tbody>
-        </table>
+          {/* Net Take-Home Row */}
+          <div className="breakdown-row net">
+            <div className="row-label">
+              <TrendingUp size={18} />
+              <span>Net Take-Home</span>
+            </div>
+            <div className="row-value">
+              <span className="amount">{formatCurrency(getDisplayValue(result.netPay))}</span>
+              {netDelta !== null && (
+                <span className={`delta ${netDelta > 0 ? 'positive' : 'negative'}`}>
+                  {formatDelta(getDisplayValue(netDelta))}
+                </span>
+              )}
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   );
