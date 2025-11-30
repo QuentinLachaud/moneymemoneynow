@@ -9255,9 +9255,10 @@ html {
   display: flex;
   gap: 16px;
   min-height: 0;
+  align-items: stretch;
 }
 
-/* Left breakdown section */
+/* Left breakdown section - uses flexbox to push content to bottom */
 .breakdown-section {
   flex: 1;
   display: flex;
@@ -9265,7 +9266,7 @@ html {
   min-height: 0;
 }
 
-/* Right scenario section */
+/* Right scenario section - matches left section */
 .scenario-section {
   flex: 1;
   display: flex;
@@ -9273,7 +9274,20 @@ html {
   min-height: 0;
 }
 
-/* Scenario panel layout */
+/* Both sections should have equal height children */
+.breakdown-section > .tax-breakdown-panel,
+.scenario-section > .scenario-panel {
+  flex: 1;
+  min-height: 0;
+}
+
+/* Summary ribbons should be fixed height at the bottom */
+.breakdown-section > .summary-ribbon,
+.scenario-section > .summary-ribbon {
+  flex-shrink: 0;
+}
+
+/* Scenario panel layout - fills available space */
 .scenario-panel {
   flex: 1;
   display: flex;
@@ -9290,7 +9304,7 @@ html {
   min-height: 0;
 }
 
-/* Tax breakdown panel should fill available space and align content to bottom */
+/* Tax breakdown panel - use flex to push table to bottom */
 .tax-breakdown-panel {
   flex: 1;
   display: flex;
@@ -9301,8 +9315,18 @@ html {
   min-height: 0;
 }
 
+/* Modern variant panel */
+.tax-breakdown-panel.modern {
+  justify-content: flex-end;
+}
+
+/* Table wrapper sits at bottom */
+.tax-breakdown-panel .table-wrapper,
+.tax-breakdown-panel .table-wrapper-modern {
+  margin-top: auto;
+}
+
 .tax-breakdown-panel .table-wrapper {
-  flex: 1;
   display: flex;
   flex-direction: column;
   justify-content: flex-end;
@@ -9744,6 +9768,8 @@ html {
   border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: 16px;
   overflow: hidden;
+  flex: 1;
+  min-height: 0;
 }
 
 .tax-breakdown-panel.modern.scenario {
@@ -9872,11 +9898,15 @@ html {
   color: rgba(255, 255, 255, 0.5);
 }
 
-/* Table Wrapper */
+/* Table Wrapper - pushes content to bottom */
 .table-wrapper-modern {
   flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
   padding: 16px 20px;
   overflow: auto;
+  min-height: 0;
 }
 
 /* Breakdown Card Container */
@@ -10133,7 +10163,6 @@ html {
 
 .summary-ribbon.scenario {
   border-color: rgba(16, 185, 129, 0.2);
-  background: linear-gradient(135deg, rgba(16, 185, 129, 0.05), rgba(99, 102, 241, 0.03));
 }
 
 .summary-ribbon .ribbon-stat {
@@ -10183,43 +10212,6 @@ html {
   font-weight: 500;
   color: rgba(255, 255, 255, 0.4);
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-}
-
-/* Scenario ribbon with message */
-.summary-ribbon.scenario {
-  padding: 16px 20px;
-  background: linear-gradient(135deg, rgba(16, 185, 129, 0.08), rgba(99, 102, 241, 0.06));
-}
-
-.summary-ribbon .ribbon-message {
-  font-size: 0.9rem;
-  color: rgba(255, 255, 255, 0.85);
-  line-height: 1.6;
-  text-align: center;
-  width: 100%;
-}
-
-.summary-ribbon .ribbon-message.muted {
-  color: rgba(255, 255, 255, 0.4);
-  font-style: italic;
-}
-
-.summary-ribbon .ribbon-highlight {
-  font-weight: 700;
-  color: #34d399;
-}
-
-.summary-ribbon .ribbon-highlight.golden {
-  background: linear-gradient(135deg, #fbbf24, #f59e0b);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-}
-
-/* Empty state ribbon */
-.summary-ribbon.empty {
-  background: rgba(0, 0, 0, 0.2);
-  border-style: dashed;
 }
 
 /* Responsive */

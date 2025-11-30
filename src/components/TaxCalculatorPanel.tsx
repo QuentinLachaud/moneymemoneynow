@@ -58,8 +58,11 @@ export function TaxCalculatorPanel() {
   // View mode (annual or monthly) - shared across both panels
   const [viewMode, setViewMode] = useState<ViewMode>('annual');
 
-  // Salary sacrifice percent (for scenario panel)
+  // Scenario panel state (lifted up from ScenarioPanel)
+  type ScenarioType = 'salary-change' | 'salary-sacrifice';
+  const [scenarioType, setScenarioType] = useState<ScenarioType>('salary-sacrifice');
   const [salarySacrificePercent, setSalarySacrificePercent] = useState<number>(DEFAULT_SALARY_SACRIFICE);
+  const [salaryChangePercent, setSalaryChangePercent] = useState<number>(5);
 
   // Years to retirement
   const yearsToRetirement = Math.max(0, retirementAge - age);
@@ -73,12 +76,20 @@ export function TaxCalculatorPanel() {
     return calculateIncomeTax(grossSalary, region, pensionYourContribution);
   }, [grossSalary, region, pensionYourContribution]);
 
-  // Scenario tax calculation (with sacrifice)
+  // Scenario tax calculation - depends on scenario type
   const scenarioResult = useMemo<TaxCalculationResult | null>(() => {
     if (grossSalary === null || grossSalary <= 0) return null;
-    const effectivePercent = Math.min(50, pensionYourContribution + salarySacrificePercent);
-    return calculateIncomeTax(grossSalary, region, effectivePercent);
-  }, [grossSalary, region, pensionYourContribution, salarySacrificePercent]);
+    
+    if (scenarioType === 'salary-sacrifice') {
+      // Salary sacrifice: same gross salary, higher pension contribution
+      const effectivePercent = Math.min(50, pensionYourContribution + salarySacrificePercent);
+      return calculateIncomeTax(grossSalary, region, effectivePercent);
+    } else {
+      // Salary change: different gross salary, same pension percentage
+      const newSalary = Math.max(0, Math.min(grossSalary * (1 + salaryChangePercent / 100), 1000000));
+      return calculateIncomeTax(newSalary, region, pensionYourContribution);
+    }
+  }, [grossSalary, region, pensionYourContribution, salarySacrificePercent, scenarioType, salaryChangePercent]);
 
   // Calculate tax saved and sacrifice amounts for summary ribbon
   const summaryData = useMemo(() => {
@@ -108,6 +119,39 @@ export function TaxCalculatorPanel() {
       pensionYourContribution
     );
   }, [grossSalary, pensionBase, pensionEmployerMatch, pensionYourContribution]);
+
+  // Total pension contributions (employee + employer) for baseline
+  const totalPensionContribution = useMemo(() => {
+    if (!taxResult || grossSalary === null) return 0;
+    return taxResult.pensionContribution + employerPension;
+  }, [taxResult, employerPension, grossSalary]);
+
+  // Scenario pension contribution (adjusted for sacrifice and/or salary change)
+  const scenarioTotalPension = useMemo(() => {
+    if (!scenarioResult || grossSalary === null) return 0;
+    
+    if (scenarioType === 'salary-sacrifice') {
+      // Sacrifice: same gross salary, different pension %
+      const effectivePercent = pensionYourContribution + salarySacrificePercent;
+      const scenarioEmployerPension = calculateEmployerPension(
+        grossSalary,
+        pensionBase,
+        pensionEmployerMatch,
+        effectivePercent
+      );
+      return scenarioResult.pensionContribution + scenarioEmployerPension;
+    } else {
+      // Salary change: different gross salary, same pension %
+      const newSalary = scenarioResult.grossSalary;
+      const scenarioEmployerPension = calculateEmployerPension(
+        newSalary,
+        pensionBase,
+        pensionEmployerMatch,
+        pensionYourContribution
+      );
+      return scenarioResult.pensionContribution + scenarioEmployerPension;
+    }
+  }, [scenarioResult, grossSalary, pensionBase, pensionEmployerMatch, pensionYourContribution, salarySacrificePercent, scenarioType]);
 
   // Handle salary input
   const handleSalarySubmit = useCallback((e: React.FormEvent) => {
@@ -140,6 +184,8 @@ export function TaxCalculatorPanel() {
     setPensionYourContribution(DEFAULT_PENSION_YOUR_CONTRIBUTION);
     setPensionEmployerMatch(DEFAULT_PENSION_EMPLOYER_MATCH);
     setSalarySacrificePercent(DEFAULT_SALARY_SACRIFICE);
+    setSalaryChangePercent(5);
+    setScenarioType('salary-sacrifice');
     setViewMode('annual');
     setRegion('england');
   }, []);
@@ -258,21 +304,20 @@ export function TaxCalculatorPanel() {
                 viewMode={viewMode}
                 onViewModeChange={setViewMode}
               />
-              {/* Left Summary Ribbon - Current pension contribution */}
+              {/* Left Summary Ribbon - Total pension contribution (employee + employer) */}
               <div className="summary-ribbon baseline">
                 <div className="ribbon-stat">
-                  <span className="ribbon-label">Your Pension Contribution</span>
+                  <span className="ribbon-label">Total Pension Contribution</span>
                   <span className="ribbon-value">
-                    {formatCurrency(viewMode === 'annual' ? taxResult.pensionContribution : taxResult.pensionContribution / 12)}
+                    {formatCurrency(viewMode === 'annual' ? totalPensionContribution : totalPensionContribution / 12)}
                     <span className="ribbon-period">/{viewMode === 'annual' ? 'year' : 'month'}</span>
                   </span>
                 </div>
                 <div className="ribbon-divider" />
                 <div className="ribbon-stat">
-                  <span className="ribbon-label">Tax Rate</span>
+                  <span className="ribbon-label">Effective Tax Rate</span>
                   <span className="ribbon-value highlight">
                     {((taxResult.totalTax + taxResult.totalNI) / taxResult.grossSalary * 100).toFixed(1)}%
-                    <span className="ribbon-period">effective</span>
                   </span>
                 </div>
               </div>
@@ -293,32 +338,30 @@ export function TaxCalculatorPanel() {
                 basePensionTotal={totalBasePension}
                 salarySacrificePercent={salarySacrificePercent}
                 onSalarySacrificeChange={setSalarySacrificePercent}
+                salaryChangePercent={salaryChangePercent}
+                onSalaryChangePercentChange={setSalaryChangePercent}
+                scenarioType={scenarioType}
+                onScenarioTypeChange={setScenarioType}
                 viewMode={viewMode}
                 onViewModeChange={setViewMode}
               />
-              {/* Right Summary Ribbon - Sacrifice projections */}
-              {summaryData && salarySacrificePercent > 0 && (
-                <div className="summary-ribbon scenario">
-                  <div className="ribbon-message">
-                    <span className="ribbon-highlight">
-                      By sacrificing {formatCurrency(viewMode === 'annual' ? summaryData.sacrificeAmount : summaryData.sacrificeAmount / 12)} per {viewMode === 'annual' ? 'year' : 'month'},
-                    </span>
-                    {' '}you add{' '}
-                    <span className="ribbon-highlight golden">
-                      {formatCurrency(summaryData.futureValue)}
-                    </span>
-                    {' '}to your pension in {summaryData.yearsToRetirement} years
-                  </div>
+              {/* Right Summary Ribbon - Same format as left, adjusted for scenario */}
+              <div className="summary-ribbon scenario">
+                <div className="ribbon-stat">
+                  <span className="ribbon-label">Total Pension Contribution</span>
+                  <span className="ribbon-value">
+                    {formatCurrency(viewMode === 'annual' ? scenarioTotalPension : scenarioTotalPension / 12)}
+                    <span className="ribbon-period">/{viewMode === 'annual' ? 'year' : 'month'}</span>
+                  </span>
                 </div>
-              )}
-              {/* Show placeholder when no sacrifice */}
-              {(!summaryData || salarySacrificePercent === 0) && (
-                <div className="summary-ribbon scenario empty">
-                  <div className="ribbon-message muted">
-                    Adjust salary sacrifice to see pension projection
-                  </div>
+                <div className="ribbon-divider" />
+                <div className="ribbon-stat">
+                  <span className="ribbon-label">Effective Tax Rate</span>
+                  <span className="ribbon-value highlight">
+                    {scenarioResult ? ((scenarioResult.totalTax + scenarioResult.totalNI) / scenarioResult.grossSalary * 100).toFixed(1) : '0.0'}%
+                  </span>
                 </div>
-              )}
+              </div>
             </div>
           </div>
         )}

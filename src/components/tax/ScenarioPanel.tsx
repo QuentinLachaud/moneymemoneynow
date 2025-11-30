@@ -34,6 +34,10 @@ interface ScenarioPanelProps {
   basePensionTotal: number;
   salarySacrificePercent: number;
   onSalarySacrificeChange: (percent: number) => void;
+  salaryChangePercent: number;
+  onSalaryChangePercentChange: (percent: number) => void;
+  scenarioType: ScenarioType;
+  onScenarioTypeChange: (type: ScenarioType) => void;
   viewMode: ViewMode;
   onViewModeChange: (mode: ViewMode) => void;
 }
@@ -52,14 +56,18 @@ export function ScenarioPanel({
   basePensionTotal,
   salarySacrificePercent,
   onSalarySacrificeChange,
+  salaryChangePercent,
+  onSalaryChangePercentChange,
+  scenarioType,
+  onScenarioTypeChange,
   viewMode,
   onViewModeChange,
 }: ScenarioPanelProps) {
-  // Scenario selection
-  const [scenario, setScenario] = useState<ScenarioType>('salary-sacrifice');
-
-  // Salary change state (percentage only, stepped)
-  const [changePercent, setChangePercent] = useState<number>(5);
+  // Use external scenario state
+  const scenario = scenarioType;
+  const setScenario = onScenarioTypeChange;
+  const changePercent = salaryChangePercent;
+  const setChangePercent = onSalaryChangePercentChange;
 
   // Format currency
   const formatCurrency = (value: number): string => {
