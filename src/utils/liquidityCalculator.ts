@@ -17,12 +17,12 @@ export interface LiquidityResult {
  * Classification thresholds and labels
  */
 const CLASSIFICATIONS = [
-  { min: 0, max: 2, label: 'Very Risky', color: '#ef4444', description: 'Highly illiquid portfolio - emergency access extremely limited' },
-  { min: 2, max: 4, label: 'Risky', color: '#f97316', description: 'Mostly illiquid assets - limited emergency access' },
-  { min: 4, max: 5.5, label: 'Okay', color: '#eab308', description: 'Moderate liquidity - some emergency access available' },
-  { min: 5.5, max: 7, label: 'Optimal', color: '#84cc16', description: 'Good balance of liquid and illiquid assets' },
-  { min: 7, max: 8.5, label: 'Safe', color: '#22c55e', description: 'Highly liquid portfolio - good emergency access' },
-  { min: 8.5, max: 10.1, label: 'Very Safe', color: '#10b981', description: 'Extremely liquid - immediate access to most funds' },
+  { min: 0, max: 2, label: 'Very Illiquid', color: '#ef4444', description: 'Highly illiquid portfolio — emergency access extremely limited' },
+  { min: 2, max: 4, label: 'Illiquid', color: '#f97316', description: 'Mostly illiquid assets — limited emergency access' },
+  { min: 4, max: 5.5, label: 'Moderately Liquid', color: '#eab308', description: 'Moderate liquidity — some emergency access available' },
+  { min: 5.5, max: 7, label: 'Balanced', color: '#84cc16', description: 'Good balance of liquid and illiquid assets' },
+  { min: 7, max: 8.5, label: 'Liquid', color: '#22c55e', description: 'Highly liquid portfolio — good emergency access' },
+  { min: 8.5, max: 10.1, label: 'Very Liquid', color: '#10b981', description: 'Extremely liquid — immediate access to most funds' },
 ];
 
 /**

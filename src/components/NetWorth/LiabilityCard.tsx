@@ -38,7 +38,7 @@ export function LiabilityCard({ liability, onEdit, onDelete }: LiabilityCardProp
               onClick={() => onEdit(liability)}
               title="Edit"
             >
-              <Pencil size={12} />
+              <Pencil size={14} className="edit-icon" />
             </button>
           </div>
           <span className="item-value negative">{formatCurrency(liability.value)}</span>
@@ -62,7 +62,7 @@ export function LiabilityCard({ liability, onEdit, onDelete }: LiabilityCardProp
         onClick={() => onDelete(liability)}
         title="Delete"
       >
-        <Trash2 size={14} />
+        <Trash2 size={16} className="delete-icon" />
       </button>
     </div>
   );

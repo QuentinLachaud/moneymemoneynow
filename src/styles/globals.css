@@ -15880,33 +15880,32 @@ html {
 }
 
 .inline-edit-btn {
-  display: flex;
+  display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 20px;
-  height: 20px;
-  background: transparent;
+  width: 22px;
+  height: 22px;
+  margin-left: 8px;
+  background: rgba(255, 255, 255, 0.02);
   border: none;
-  border-radius: 4px;
-  color: rgba(255, 255, 255, 0.3);
+  border-radius: 6px;
+  color: rgba(255, 255, 255, 0.75);
   cursor: pointer;
-  opacity: 0;
-  transition: all 0.15s ease;
+  opacity: 1;
+  transition: all 0.12s ease;
   flex-shrink: 0;
 }
 
-.item-card:hover .inline-edit-btn {
-  opacity: 1;
-}
-
 .inline-edit-btn:hover {
-  background: rgba(99, 102, 241, 0.2);
-  color: #8b5cf6;
+  background: rgba(255, 255, 255, 0.06);
+  color: rgba(248, 250, 252, 0.92); /* lighter gray/near-white on hover */
+  transform: translateY(-1px);
 }
 
+/* Liability edit button follows same hover behavior (dark -> lighter gray) */
 .inline-edit-btn.liability:hover {
-  background: rgba(239, 68, 68, 0.2);
-  color: #ef4444;
+  background: rgba(255, 255, 255, 0.04);
+  color: rgba(248, 250, 252, 0.92);
 }
 
 .item-value {
@@ -15982,27 +15981,75 @@ html {
   position: absolute;
   bottom: 8px;
   right: 8px;
-  display: flex;
+  display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 24px;
-  height: 24px;
-  background: transparent;
+  width: 28px;
+  height: 28px;
+  background: rgba(255, 255, 255, 0.015);
   border: none;
-  border-radius: 4px;
-  color: rgba(255, 255, 255, 0.3);
+  border-radius: 6px;
+  color: rgba(255, 255, 255, 0.42); /* dark gray icon by default */
   cursor: pointer;
-  opacity: 0;
-  transition: all 0.15s ease;
-}
-
-.item-card:hover .card-delete-btn {
   opacity: 1;
+  transition: all 0.12s ease;
 }
 
+/* Hover state: icon turns red and button shows subtle red background */
 .card-delete-btn:hover {
-  background: rgba(239, 68, 68, 0.2);
-  color: #ef4444;
+  background: rgba(239, 68, 68, 0.12);
+  color: #ef4444; /* icon becomes red on hover */
+  transform: translateY(-1px);
+}
+
+/* Allow the icon to visually overflow the small button while keeping the
+   clickable button footprint unchanged. Scale the SVG to 300% for visual
+   prominence. */
+.card-delete-btn {
+  overflow: visible;
+}
+
+/* Ensure svgs inherit currentColor */
+.inline-edit-btn svg,
+.card-delete-btn svg,
+.card-delete-btn .delete-icon {
+  stroke: currentColor;
+  color: inherit;
+  display: block;
+}
+
+/* Make the delete (trash) icon much larger visually (300%) but keep the
+   button dimensions the same. Stroke width increased for better readability. */
+.card-delete-btn .delete-icon,
+.card-delete-btn svg {
+  width: 18px;
+  height: 18px;
+  transform: scale(3);
+  transform-origin: center;
+  stroke-width: 1.6;
+}
+
+
+/* Make edit icon darker by default and lighter on hover */
+.inline-edit-btn {
+  color: rgba(255, 255, 255, 0.38); /* dark gray */
+  background: rgba(255,255,255,0.015);
+  padding: 4px;
+}
+
+.inline-edit-btn .edit-icon,
+.inline-edit-btn svg {
+  stroke: currentColor;
+  width: 16px;
+  height: 16px;
+}
+
+/* Make delete icon larger and centered inside its red box */
+.card-delete-btn .delete-icon,
+.card-delete-btn svg {
+  stroke: currentColor;
+  width: 18px;
+  height: 18px;
 }
 
 /* ─── Delete Confirmation Modal ──────────────────────────────────────────── */
@@ -16179,7 +16226,7 @@ html {
 }
 
 .liquidity-index-number {
-  font-size: 2.5rem;
+  font-size: 1.6rem;
   font-weight: 800;
   line-height: 1;
 }
@@ -16192,7 +16239,7 @@ html {
 }
 
 .liquidity-index-bar {
-  height: 10px;
+  height: 8px;
   background: rgba(0, 0, 0, 0.3);
   border-radius: 5px;
   overflow: hidden;
@@ -16210,6 +16257,43 @@ html {
   align-items: center;
   justify-content: center;
   gap: 8px;
+}
+
+/* Header inside liquidity panel */
+.liquidity-header {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+
+.liquidity-title {
+  font-size: 0.85rem;
+  color: rgba(255,255,255,0.85);
+}
+
+.liquidity-info-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  background: rgba(255,255,255,0.02);
+  border: none;
+  border-radius: 6px;
+  color: rgba(255,255,255,0.6);
+  cursor: pointer;
+}
+
+.liquidity-info-btn:hover {
+  color: rgba(255,255,255,0.95);
+  background: rgba(255,255,255,0.04);
+}
+
+.liquidity-info-tooltip {
+  left: 50%;
+  transform: translateX(-50%);
 }
 
 .liquidity-classification-text {
