@@ -268,6 +268,106 @@ function simulateCashPath(
 }
 
 /**
+ * Simulate a single GBM path with contribution escalation
+ * Monthly contribution increases by escalationRate% each year
+ */
+function simulateSinglePathWithEscalation(
+  initialValue: number,
+  monthlyContribution: number,
+  annualReturn: number,
+  annualVolatility: number,
+  annualFee: number,
+  totalMonths: number,
+  escalationRate: number = 0,
+): number[] {
+  const values: number[] = [initialValue];
+  const dt = 1 / 12;
+  
+  const monthlyReturn = annualReturn / 12;
+  const monthlyFee = annualFee / 12;
+  const monthlyVol = annualVolatility / Math.sqrt(12);
+  const drift = monthlyReturn - monthlyFee - 0.5 * monthlyVol * monthlyVol;
+  
+  let currentValue = initialValue;
+  
+  for (let m = 1; m <= totalMonths; m++) {
+    const randomShock = randomNormal();
+    const growthFactor = Math.exp(drift * dt + monthlyVol * Math.sqrt(dt) * randomShock);
+    
+    currentValue = currentValue * growthFactor;
+    
+    // Calculate escalated contribution for this month
+    const yearOfMonth = Math.floor((m - 1) / 12);
+    const escalatedContribution = monthlyContribution * Math.pow(1 + escalationRate, yearOfMonth);
+    currentValue += escalatedContribution;
+    
+    values.push(Math.max(0, currentValue));
+  }
+  
+  return values;
+}
+
+/**
+ * Simulate deterministic path with contribution escalation
+ */
+function simulateDeterministicPathWithEscalation(
+  initialValue: number,
+  monthlyContribution: number,
+  annualReturn: number,
+  annualFee: number,
+  totalMonths: number,
+  escalationRate: number = 0,
+): number[] {
+  const values: number[] = [initialValue];
+  const monthlyRate = (annualReturn - annualFee) / 12;
+  
+  let currentValue = initialValue;
+  
+  for (let m = 1; m <= totalMonths; m++) {
+    currentValue = currentValue * (1 + monthlyRate);
+    
+    // Calculate escalated contribution for this month
+    const yearOfMonth = Math.floor((m - 1) / 12);
+    const escalatedContribution = monthlyContribution * Math.pow(1 + escalationRate, yearOfMonth);
+    currentValue += escalatedContribution;
+    
+    values.push(Math.max(0, currentValue));
+  }
+  
+  return values;
+}
+
+/**
+ * Simulate cash with optional inflation decay and contribution escalation
+ */
+function simulateCashPathWithEscalation(
+  initialValue: number,
+  monthlyContribution: number,
+  totalMonths: number,
+  applyInflation: boolean,
+  annualInflation: number,
+  escalationRate: number = 0,
+): number[] {
+  const values: number[] = [initialValue];
+  const monthlyInflation = applyInflation ? annualInflation / 12 : 0;
+  
+  let nominalValue = initialValue;
+  
+  for (let m = 1; m <= totalMonths; m++) {
+    // Calculate escalated contribution for this month
+    const yearOfMonth = Math.floor((m - 1) / 12);
+    const escalatedContribution = monthlyContribution * Math.pow(1 + escalationRate, yearOfMonth);
+    nominalValue += escalatedContribution;
+    
+    // Show real value loss due to inflation
+    const realValue = nominalValue * Math.pow(1 - monthlyInflation, m);
+    values.push(applyInflation ? realValue : nominalValue);
+  }
+  
+  return values;
+}
+
+/**
  * Compute percentile from array of values
  */
 function percentile(values: number[], p: number): number {
@@ -315,6 +415,11 @@ function computePercentilePath(paths: number[][], p: number): number[] {
 
 /**
  * Main simulation function for a single asset
+ * 
+ * Supports:
+ * - Combined lump sum + monthly contributions
+ * - Annual contribution escalation (monthly amount grows by escalation % each year)
+ * - Per-asset volatility (no global override)
  */
 export function simulateAsset(
   config: AssetConfig,
@@ -326,49 +431,57 @@ export function simulateAsset(
   globalVolatility?: number,
   cashConfig?: { applyInflation: boolean; inflationRate: number },
   pensionConfig?: { netSacrifice: number; marginalTaxRate: number },
+  escalationRate: number = 0, // Annual % increase in monthly contributions
 ): SimulationResult {
   const timePoints = generateTimePoints(horizonYears);
   const totalMonths = horizonYears * 12;
   
-  // Calculate effective values based on mode
-  let effectiveInitial = mode === 'lump-sum' ? initialAmount : 0;
-  let effectiveMonthly = mode === 'monthly' ? monthlyAmount : 0;
+  // Combined mode: always use both lump sum and monthly
+  // (For backwards compatibility, if mode is 'monthly' we set initial to 0)
+  let effectiveInitial = initialAmount;
+  let effectiveMonthly = monthlyAmount;
   
-  // Special handling for pension: gross up the contribution
+  // Special handling for pension: gross up the monthly contribution
   if (config.id === 'pension' && pensionConfig) {
     const grossContribution = pensionConfig.netSacrifice / (1 - pensionConfig.marginalTaxRate);
     effectiveMonthly = grossContribution;
+    effectiveInitial = 0; // Pension doesn't typically have lump sum
   }
   
-  // Calculate total contributed
-  const totalContributed = effectiveInitial + effectiveMonthly * totalMonths;
+  // Calculate total contributed with escalation
+  let totalContributed = effectiveInitial;
+  for (let m = 1; m <= totalMonths; m++) {
+    const yearOfMonth = Math.floor((m - 1) / 12);
+    const escalatedMonthly = effectiveMonthly * Math.pow(1 + escalationRate, yearOfMonth);
+    totalContributed += escalatedMonthly;
+  }
   
-  // Use global volatility override for index funds if provided
-  const effectiveVolatility = (config.id === 'index-fund' && globalVolatility !== undefined)
-    ? globalVolatility
-    : config.volatility;
+  // Each asset uses its own volatility (no global override needed anymore)
+  const effectiveVolatility = config.volatility;
   
   let paths: number[][];
   
   // Cash uses special inflation-aware simulation
   if (config.id === 'cash' && cashConfig) {
-    const path = simulateCashPath(
+    const path = simulateCashPathWithEscalation(
       effectiveInitial,
       effectiveMonthly,
       totalMonths,
       cashConfig.applyInflation,
       cashConfig.inflationRate,
+      escalationRate,
     );
     paths = [path];
   }
   // Deterministic path for zero-volatility assets
   else if (effectiveVolatility === 0 || numPaths === 1) {
-    const path = simulateDeterministicPath(
+    const path = simulateDeterministicPathWithEscalation(
       effectiveInitial,
       effectiveMonthly,
       config.expectedReturn,
       config.fee,
       totalMonths,
+      escalationRate,
     );
     paths = [path];
   }
@@ -376,13 +489,14 @@ export function simulateAsset(
   else {
     paths = [];
     for (let i = 0; i < numPaths; i++) {
-      const path = simulateSinglePath(
+      const path = simulateSinglePathWithEscalation(
         effectiveInitial,
         effectiveMonthly,
         config.expectedReturn,
         effectiveVolatility,
         config.fee,
         totalMonths,
+        escalationRate,
       );
       paths.push(path);
     }
