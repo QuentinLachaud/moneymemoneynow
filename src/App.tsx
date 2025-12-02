@@ -7,11 +7,11 @@
  * ├─────────────────────────────────────────────────────────────────┤
  * │  Tab Toggle (glass-style slider)                                │
  * ├──────────┬──────────────────────────────────────────────────────┤
- * │          │  Graph 1: Net Worth Projection (full width)         │
+ * │          │  Graph 1: Net Worth Projection (full width)          │
  * │  Add     ├──────────────────────────────────────────────────────┤
- * │  Account │  Graph 2: Cash Flow (full width)                    │
+ * │  Account │  Graph 2: Cash Flow (full width)                     │
  * │  Panel   ├──────────────────────────────────────────────────────┤
- * │          │  Accounts Strip (horizontal scrollable)             │
+ * │          │  Accounts Strip (horizontal scrollable)              │
  * └──────────┴──────────────────────────────────────────────────────┘
  *
  * STATE MANAGEMENT:
@@ -31,6 +31,7 @@ import { ProjectionsPanelV2 } from './components/ProjectionsPanelV2';
 import { ProjectionPortfolioPanel } from './components/ProjectionPortfolioPanel';
 import { TaxCalculatorPanel } from './components/TaxCalculatorPanel';
 import { InvestmentOutcomesTab } from './components/InvestmentOutcomesTab';
+import { NetWorthTab } from './components/NetWorthTab';
 import { AccountsStrip } from './components/AccountsStrip';
 
 // Import Zustand store and Account type
@@ -145,18 +146,20 @@ export default function App() {
         
         {/* Tab Toggle inline with header */}
         <div className="tab-container">
-          <div className="tab-toggle four-tabs">
+          <div className="tab-toggle five-tabs">
             <div 
               className="tab-slider" 
               style={{ 
-                width: '25%',
+                width: '20%',
                 transform: tab === 'projections' 
                   ? 'translateX(0)' 
                   : tab === 'projection-portfolio'
                     ? 'translateX(100%)'
                     : tab === 'tax-calculator'
                       ? 'translateX(200%)'
-                      : 'translateX(300%)'
+                      : tab === 'investment-outcomes'
+                        ? 'translateX(300%)'
+                        : 'translateX(400%)'
               }} 
             />
             <button
@@ -183,14 +186,20 @@ export default function App() {
             >
               Investment Outcomes
             </button>
+            <button
+              onClick={() => setTab('net-worth')}
+              className={`tab-button ${tab === 'net-worth' ? 'active' : ''}`}
+            >
+              Net Worth
+            </button>
           </div>
         </div>
       </header>
 
       {/* ─── MAIN LAYOUT: Left panel + Content area ─────────────────── */}
-      <div className={`main-grid ${(tab === 'tax-calculator' || tab === 'investment-outcomes') ? 'full-width' : ''}`}>
-        {/* Left Panel: Add Account Form (collapsible on mobile) - Hidden on Tax Calculator and Investment Outcomes */}
-        {tab !== 'tax-calculator' && tab !== 'investment-outcomes' && (
+      <div className={`main-grid ${(tab === 'tax-calculator' || tab === 'investment-outcomes' || tab === 'net-worth') ? 'full-width' : ''}`}>
+        {/* Left Panel: Add Account Form (collapsible on mobile) - Hidden on Tax Calculator, Investment Outcomes, and Net Worth */}
+        {tab !== 'tax-calculator' && tab !== 'investment-outcomes' && tab !== 'net-worth' && (
           <aside 
             className={`left-panel card ${leftPanelCollapsed ? 'collapsed' : ''}`}
             ref={(el) => { leftTrayRef.current = el as HTMLDivElement | null; }}
@@ -254,15 +263,20 @@ export default function App() {
             <div className="tax-calculator-tab-content">
               <TaxCalculatorPanel />
             </div>
-          ) : (
+          ) : tab === 'investment-outcomes' ? (
             /* Investment Outcomes Tab: Compare investment types */
             <div className="investment-outcomes-tab-content">
               <InvestmentOutcomesTab />
             </div>
+          ) : (
+            /* Net Worth Tab: Assets, Liabilities and Net Worth calculation */
+            <div className="net-worth-tab-content">
+              <NetWorthTab />
+            </div>
           )}
 
           {/* Unified Accounts Strip - Only show on projections/portfolio tabs */}
-          {tab !== 'tax-calculator' && tab !== 'investment-outcomes' && (
+          {(tab === 'projections' || tab === 'projection-portfolio') && (
             <AccountsStrip
               accounts={accounts}
               tab={tab}

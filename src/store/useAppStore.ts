@@ -34,7 +34,7 @@ export interface Account {
 }
 
 /** Tab types for navigation */
-export type TabType = 'projections' | 'projection-portfolio' | 'tax-calculator' | 'investment-outcomes';
+export type TabType = 'projections' | 'projection-portfolio' | 'tax-calculator' | 'investment-outcomes' | 'net-worth';
 
 /**
  * Simulation settings - persisted for user convenience
