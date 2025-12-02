@@ -13,6 +13,7 @@ import { persist, createJSONStorage } from 'zustand/middleware';
 export interface Asset {
   id: string;
   type: string;
+  customName?: string;
   value: number;
   date: string;
   liquidityIndex: number;
@@ -24,6 +25,7 @@ export interface Asset {
 export interface Liability {
   id: string;
   type: string;
+  customName?: string;
   value: number; // Should be negative
   interestRate?: number;
   date: string;
@@ -43,22 +45,24 @@ export const ASSET_TYPES = [
   { label: 'Pension', value: 'pension', liquidityIndex: 1 },
   { label: 'Current Account', value: 'current-account', liquidityIndex: 10 },
   { label: 'Premium Bonds', value: 'premium-bonds', liquidityIndex: 9 },
+  { label: 'Custom Type', value: 'custom', liquidityIndex: 5 },
 ] as const;
 
 /**
  * Liability types
  */
 export const LIABILITY_TYPES = [
-  { label: 'Mortgage – Home', value: 'mortgage-home' },
-  { label: 'Mortgage – Rental Property', value: 'mortgage-rental' },
-  { label: 'Credit Card', value: 'credit-card' },
-  { label: 'Personal Loan', value: 'personal-loan' },
-  { label: 'Car Loan', value: 'car-loan' },
-  { label: 'Student Loan', value: 'student-loan' },
-  { label: 'Overdraft', value: 'overdraft' },
-  { label: 'Tax Liability (HMRC)', value: 'tax-liability' },
-  { label: 'Business Liability', value: 'business-liability' },
-  { label: 'Other Liability', value: 'other-liability' },
+  { label: 'Mortgage – Home', value: 'mortgage-home', defaultRate: 4.5 },
+  { label: 'Mortgage – Rental Property', value: 'mortgage-rental', defaultRate: 5.0 },
+  { label: 'Credit Card', value: 'credit-card', defaultRate: 19.9 },
+  { label: 'Personal Loan', value: 'personal-loan', defaultRate: 7.0 },
+  { label: 'Car Loan', value: 'car-loan', defaultRate: 6.5 },
+  { label: 'Student Loan', value: 'student-loan', defaultRate: 7.3 },
+  { label: 'Overdraft', value: 'overdraft', defaultRate: 15.0 },
+  { label: 'Tax Liability (HMRC)', value: 'tax-liability', defaultRate: 0 },
+  { label: 'Business Liability', value: 'business-liability', defaultRate: 8.0 },
+  { label: 'Other Liability', value: 'other-liability', defaultRate: 5.0 },
+  { label: 'Custom Type', value: 'custom', defaultRate: 5.0 },
 ] as const;
 
 /**
@@ -67,6 +71,14 @@ export const LIABILITY_TYPES = [
 export function getLiquidityIndex(assetType: string): number {
   const found = ASSET_TYPES.find(a => a.value === assetType);
   return found?.liquidityIndex ?? 5;
+}
+
+/**
+ * Get default interest rate for a liability type
+ */
+export function getLiabilityDefaultRate(liabilityType: string): number {
+  const found = LIABILITY_TYPES.find(l => l.value === liabilityType);
+  return found?.defaultRate ?? 5;
 }
 
 /**

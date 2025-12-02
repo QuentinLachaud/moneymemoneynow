@@ -31,7 +31,7 @@ import { ProjectionsPanelV2 } from './components/ProjectionsPanelV2';
 import { ProjectionPortfolioPanel } from './components/ProjectionPortfolioPanel';
 import { TaxCalculatorPanel } from './components/TaxCalculatorPanel';
 import { InvestmentOutcomesTab } from './components/InvestmentOutcomesTab';
-import { NetWorthTab } from './components/NetWorthTab';
+import { NetWorthPage } from './components/NetWorth/NetWorthPage';
 import { AccountsStrip } from './components/AccountsStrip';
 
 // Import Zustand store and Account type
@@ -271,7 +271,7 @@ export default function App() {
           ) : (
             /* Net Worth Tab: Assets, Liabilities and Net Worth calculation */
             <div className="net-worth-tab-content">
-              <NetWorthTab />
+              <NetWorthPage />
             </div>
           )}
 
