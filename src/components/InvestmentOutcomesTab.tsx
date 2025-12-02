@@ -42,9 +42,6 @@ type InvestmentMode = 'lump-sum' | 'monthly' | 'both';
 /** View mode type */
 type ViewMode = 'graph' | 'table';
 
-/** Contribution display mode */
-type ContributionDisplayMode = 'contributions' | 'lines-only' | 'bars-lines';
-
 /** Contribution escalation options (annual % increase) */
 const ESCALATION_OPTIONS = [0, 0.01, 0.02, 0.03, 0.04, 0.05];
 
@@ -211,7 +208,34 @@ export function InvestmentOutcomesTab() {
   const [editingAsset, setEditingAsset] = useState<AssetTypeId | null>(null);
   const [showOverrideModal, setShowOverrideModal] = useState(false);
   const [pendingEditAsset, setPendingEditAsset] = useState<AssetTypeId | null>(null);
-  const [contributionDisplay, setContributionDisplay] = useState<ContributionDisplayMode>('lines-only');
+  
+  // Graph display toggles (independent)
+  const [showContributions, setShowContributions] = useState(false);  // Show contribution bars
+  const [showRunningBalance, setShowRunningBalance] = useState(true); // Show asset lines (default ON)
+  
+  // Handler to toggle contributions (prevent both being OFF)
+  const toggleContributions = useCallback(() => {
+    setShowContributions(prev => {
+      const newVal = !prev;
+      // If turning off contributions and running balance is also off, turn running balance on
+      if (!newVal && !showRunningBalance) {
+        setShowRunningBalance(true);
+      }
+      return newVal;
+    });
+  }, [showRunningBalance]);
+  
+  // Handler to toggle running balance (prevent both being OFF)
+  const toggleRunningBalance = useCallback(() => {
+    setShowRunningBalance(prev => {
+      const newVal = !prev;
+      // If turning off running balance and contributions is also off, turn contributions on
+      if (!newVal && !showContributions) {
+        setShowContributions(true);
+      }
+      return newVal;
+    });
+  }, [showContributions]);
   
   // Modal ref for focus trap
   const modalRef = useRef<HTMLDivElement>(null);
@@ -389,26 +413,42 @@ export function InvestmentOutcomesTab() {
         barYear: year + BAR_X_OFFSET,
       };
       
-      // Calculate cumulative contributions for this year
-      let cumulativeContribution = effectiveLumpSum;
-      for (let m = 1; m <= year * 12; m++) {
-        const yearOfMonth = Math.floor((m - 1) / 12);
-        const escalatedMonthly = effectiveMonthly * Math.pow(1 + effectiveEscalation, yearOfMonth);
-        cumulativeContribution += escalatedMonthly;
+      // Calculate per-year contributions (not cumulative) so a lump-sum
+      // is applied only once in year 0 and monthly contributions feed
+      // the subsequent years. Escalation applies to monthly amounts.
+      const monthsInYearStart = year === 0 ? 1 : (year - 1) * 12 + 1;
+      const monthsInYearEnd = year === 0 ? 0 : year * 12;
+
+      // Sum of monthly contributions that occur within this calendar year
+      let monthlyNetThisYear = 0;
+      if (monthsInYearEnd >= monthsInYearStart) {
+        for (let m = monthsInYearStart; m <= monthsInYearEnd; m++) {
+          const yearOfMonth = Math.floor((m - 1) / 12);
+          const escalatedMonthly = effectiveMonthly * Math.pow(1 + effectiveEscalation, yearOfMonth);
+          monthlyNetThisYear += escalatedMonthly;
+        }
       }
-      
-      // For pension, calculate tax relief (grossed up portion)
-      // Gross = Net / (1 - taxRate), so relief = Gross - Net = Net * taxRate / (1 - taxRate)
+
       if (pensionActive) {
-        const grossContribution = cumulativeContribution / (1 - pensionTaxRate);
-        const taxRelief = grossContribution - cumulativeContribution;
-        point.contributionBase = cumulativeContribution;  // User's actual contribution
-        point.contributionRelief = taxRelief;             // Tax relief portion (stacked on top)
-        point.contribution = grossContribution;           // Total (base + relief)
+        const initialNet = year === 0 ? effectiveLumpSum : 0; // apply lump-sum only in year 0
+
+        // Gross-up the one-off initial lump-sum (only in year 0)
+        const grossInitial = initialNet > 0 ? initialNet / (1 - pensionTaxRate) : 0;
+        const reliefInitial = grossInitial - initialNet;
+
+        // Gross-up only the monthly contributions that fall in this year
+        const grossMonthlyThisYear = monthlyNetThisYear > 0 ? monthlyNetThisYear / (1 - pensionTaxRate) : 0;
+        const reliefMonthlyThisYear = grossMonthlyThisYear - monthlyNetThisYear;
+
+        point.contributionBase = initialNet + monthlyNetThisYear; // net money coming from user this year
+        point.contributionRelief = reliefInitial + reliefMonthlyThisYear; // tax relief stacked on top (if pension)
+        point.contribution = point.contributionBase + point.contributionRelief;
       } else {
-        point.contribution = cumulativeContribution;
-        point.contributionBase = cumulativeContribution;
+        // Non-pension: per-year contributions — initial only in year 0, monthly sums for other years
+        const initialThisYear = year === 0 ? effectiveLumpSum : 0;
+        point.contributionBase = initialThisYear + monthlyNetThisYear;
         point.contributionRelief = 0;
+        point.contribution = point.contributionBase;
       }
       
       activeList.forEach(assetId => {
@@ -747,24 +787,18 @@ export function InvestmentOutcomesTab() {
 
               {/* Top controls row */}
               <div className="graph-controls-v4">
-                <div className="contribution-display-toggle">
+                <div className="graph-toggles-v4">
                   <button
-                    className={contributionDisplay === 'contributions' ? 'active' : ''}
-                    onClick={() => setContributionDisplay('contributions')}
+                    className={`toggle-btn-v4 ${showContributions ? 'active' : ''}`}
+                    onClick={toggleContributions}
                   >
                     Contributions
                   </button>
                   <button
-                    className={contributionDisplay === 'lines-only' ? 'active' : ''}
-                    onClick={() => setContributionDisplay('lines-only')}
+                    className={`toggle-btn-v4 ${showRunningBalance ? 'active' : ''}`}
+                    onClick={toggleRunningBalance}
                   >
-                    Lines
-                  </button>
-                  <button
-                    className={contributionDisplay === 'bars-lines' ? 'active' : ''}
-                    onClick={() => setContributionDisplay('bars-lines')}
-                  >
-                    Bars + Lines
+                    Running Balance
                   </button>
                 </div>
                 <button className="export-btn-v4" onClick={handleDownloadPNG} title="Download PNG">
@@ -775,7 +809,7 @@ export function InvestmentOutcomesTab() {
 
               {/* Chart */}
               <div className="chart-wrapper-v4">
-                <ResponsiveContainer width="100%" height={300}>
+                <ResponsiveContainer width="100%" height={510}>
                   <ComposedChart data={chartData} margin={{ top: 10, right: 20, bottom: 25, left: 10 }}>
                     <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
                     <XAxis
@@ -786,7 +820,7 @@ export function InvestmentOutcomesTab() {
                       tick={{ fontSize: 10 }}
                       axisLine={{ stroke: 'rgba(255,255,255,0.15)' }}
                       type="number"
-                      domain={[0, horizonYears]}
+                      domain={[-0.5, horizonYears + 0.5]}
                       allowDecimals={false}
                       interval={0}
                     />
@@ -817,21 +851,22 @@ export function InvestmentOutcomesTab() {
                         const assetId = name.replace('_median', '') as AssetTypeId;
                         return [formatFullNumber(value, currency), assetConfigs[assetId]?.name || name];
                       }}
-                      labelFormatter={(label) => `Year ${label}`}
+                      labelFormatter={(label) => `Year ${Math.round(label)}`}
                     />
                     
-                    {/* Stacked contribution bars (base + tax relief) */}
-                    {(contributionDisplay === 'contributions' || contributionDisplay === 'bars-lines') && (
+                    {/* Stacked contribution bars (base + tax relief) - shown when showContributions is ON */}
+                    {showContributions && (
                       <>
                         {/* Base contribution (user's actual money) */}
                         <Bar
                           dataKey="contributionBase"
                           name="contributionBase"
                           stackId="contributions"
-                          fill="rgba(34, 197, 94, 0.35)"
+                          fill={showRunningBalance ? "rgba(34, 197, 94, 0.25)" : "rgba(34, 197, 94, 0.45)"}
                           stroke="rgba(34, 197, 94, 0.6)"
                           strokeWidth={1}
                           radius={pensionActive ? [0, 0, 0, 0] : [4, 4, 0, 0]}
+                          xAxisId={0}
                         />
                         {/* Tax relief portion (stacked on top, lighter tint) */}
                         {pensionActive && (
@@ -839,17 +874,18 @@ export function InvestmentOutcomesTab() {
                             dataKey="contributionRelief"
                             name="contributionRelief"
                             stackId="contributions"
-                            fill="rgba(147, 197, 253, 0.4)"
+                            fill={showRunningBalance ? "rgba(147, 197, 253, 0.3)" : "rgba(147, 197, 253, 0.5)"}
                             stroke="rgba(147, 197, 253, 0.7)"
                             strokeWidth={1}
                             radius={[4, 4, 0, 0]}
+                            xAxisId={0}
                           />
                         )}
                       </>
                     )}
                     
-                    {/* Lines for each active asset */}
-                    {contributionDisplay !== 'contributions' && activeList.map(assetId => {
+                    {/* Lines for each active asset - shown when showRunningBalance is ON */}
+                    {showRunningBalance && activeList.map(assetId => {
                       const config = assetConfigs[assetId];
                       return (
                         <Line

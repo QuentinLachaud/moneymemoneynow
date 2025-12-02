@@ -443,9 +443,17 @@ export function simulateAsset(
   
   // Special handling for pension: gross up the monthly contribution
   if (config.id === 'pension' && pensionConfig) {
-    const grossContribution = pensionConfig.netSacrifice / (1 - pensionConfig.marginalTaxRate);
-    effectiveMonthly = grossContribution;
-    effectiveInitial = 0; // Pension doesn't typically have lump sum
+    const grossMonthly = pensionConfig.netSacrifice / (1 - pensionConfig.marginalTaxRate);
+    effectiveMonthly = grossMonthly;
+    // If a lump-sum initialAmount is provided for pension, gross it up too
+    // so the pension starts at the grossed value (net + tax relief).
+    if (initialAmount && initialAmount > 0) {
+      const grossInitial = initialAmount / (1 - pensionConfig.marginalTaxRate);
+      effectiveInitial = grossInitial;
+    } else {
+      // default: no initial lump-sum for pension
+      effectiveInitial = 0;
+    }
   }
   
   // Calculate total contributed with escalation
