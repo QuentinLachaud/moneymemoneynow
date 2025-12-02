@@ -633,6 +633,11 @@ input:focus, textarea:focus, select:focus {
   width: calc(33.333% - 2.67px);
 }
 
+/* Four-tab variant */
+.tab-toggle.four-tabs .tab-slider {
+  width: calc(25% - 2px);
+}
+
 /* Tab Button — Individual tab */
 .tab-button {
   position: relative;
@@ -651,6 +656,11 @@ input:focus, textarea:focus, select:focus {
 
 .tab-toggle.three-tabs .tab-button {
   padding: 8px 20px;
+}
+
+.tab-toggle.four-tabs .tab-button {
+  padding: 8px 14px;
+  font-size: 0.75rem;
 }
 
 .tab-button:hover {
@@ -1803,6 +1813,15 @@ html {
 
 /* Tax Calculator Tab Content */
 .tax-calculator-tab-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  overflow: auto;
+  padding: 0;
+}
+
+.investment-outcomes-tab-content {
   flex: 1;
   display: flex;
   flex-direction: column;
@@ -10491,6 +10510,1272 @@ html {
   .tax-rates-banner {
     flex-direction: column;
     gap: 8px;
+  }
+}
+
+/* ============================================
+   INVESTMENT OUTCOMES TAB
+   Premium, minimal investment comparison interface
+   ============================================ */
+
+.investment-outcomes-tab {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  background: linear-gradient(180deg, #0a0c14 0%, #080a10 100%);
+  padding: 24px;
+  gap: 20px;
+  overflow-y: auto;
+}
+
+/* Top Controls Ribbon */
+.controls-ribbon {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px;
+  background: linear-gradient(180deg, rgba(18, 22, 32, 0.95), rgba(12, 15, 22, 0.98));
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 16px;
+  gap: 24px;
+  flex-wrap: wrap;
+}
+
+.controls-ribbon .control-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.controls-ribbon .control-label {
+  font-size: 0.65rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  color: rgba(255, 255, 255, 0.4);
+}
+
+.controls-ribbon .control-value {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* Currency Selector */
+.currency-selector {
+  display: flex;
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 10px;
+  padding: 3px;
+  gap: 2px;
+}
+
+.currency-selector button {
+  padding: 6px 12px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.5);
+  background: transparent;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.currency-selector button:hover {
+  color: rgba(255, 255, 255, 0.7);
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.currency-selector button.active {
+  color: #fff;
+  background: linear-gradient(135deg, #6366f1, #8b5cf6);
+  box-shadow: 0 2px 8px rgba(99, 102, 241, 0.3);
+}
+
+/* Mode Toggle (Lump Sum / Monthly) */
+.mode-toggle {
+  display: flex;
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 10px;
+  padding: 3px;
+  gap: 2px;
+}
+
+.mode-toggle button {
+  padding: 8px 16px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.5);
+  background: transparent;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.mode-toggle button:hover {
+  color: rgba(255, 255, 255, 0.7);
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.mode-toggle button.active {
+  color: #fff;
+  background: linear-gradient(135deg, #10b981, #059669);
+  box-shadow: 0 2px 8px rgba(16, 185, 129, 0.3);
+}
+
+/* Horizon Slider */
+.horizon-slider-container {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 180px;
+}
+
+.horizon-slider-container .slider-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.horizon-slider-container .slider-value {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.9);
+  font-family: 'SF Mono', 'Monaco', 'Menlo', monospace;
+}
+
+.horizon-slider-container input[type="range"] {
+  width: 100%;
+  height: 6px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 3px;
+  appearance: none;
+  cursor: pointer;
+}
+
+.horizon-slider-container input[type="range"]::-webkit-slider-thumb {
+  appearance: none;
+  width: 16px;
+  height: 16px;
+  background: linear-gradient(135deg, #818cf8, #a78bfa);
+  border-radius: 50%;
+  box-shadow: 0 2px 8px rgba(129, 140, 248, 0.4);
+  cursor: grab;
+}
+
+.horizon-slider-container input[type="range"]::-webkit-slider-thumb:active {
+  cursor: grabbing;
+}
+
+/* Volatility Preset Selector */
+.volatility-preset-selector {
+  display: flex;
+  gap: 6px;
+}
+
+.volatility-preset-selector button {
+  padding: 6px 14px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.5);
+  background: rgba(0, 0, 0, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.volatility-preset-selector button:hover {
+  color: rgba(255, 255, 255, 0.7);
+  border-color: rgba(255, 255, 255, 0.15);
+}
+
+.volatility-preset-selector button.active {
+  color: #fbbf24;
+  background: rgba(251, 191, 36, 0.1);
+  border-color: rgba(251, 191, 36, 0.3);
+}
+
+/* Asset Selector Section */
+.asset-selector-section {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.asset-selector-section .section-label {
+  font-size: 0.7rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  color: rgba(255, 255, 255, 0.35);
+}
+
+.asset-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.asset-chip {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 16px;
+  background: rgba(0, 0, 0, 0.25);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.asset-chip:hover {
+  border-color: rgba(255, 255, 255, 0.15);
+  background: rgba(0, 0, 0, 0.35);
+}
+
+.asset-chip.active {
+  border-color: var(--chip-color, rgba(99, 102, 241, 0.5));
+  background: rgba(var(--chip-color-rgb, 99, 102, 241), 0.1);
+}
+
+.asset-chip .chip-color {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.asset-chip .chip-name {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.75);
+}
+
+.asset-chip.active .chip-name {
+  color: rgba(255, 255, 255, 0.95);
+}
+
+.asset-chip .chip-info {
+  width: 16px;
+  height: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: rgba(255, 255, 255, 0.3);
+  cursor: help;
+  transition: color 0.2s ease;
+}
+
+.asset-chip .chip-info:hover {
+  color: rgba(255, 255, 255, 0.6);
+}
+
+/* Asset Config Panel */
+.asset-config-panel {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  padding: 16px 20px;
+  background: linear-gradient(180deg, rgba(18, 22, 32, 0.6), rgba(12, 15, 22, 0.7));
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 14px;
+}
+
+.asset-config-card {
+  flex: 1;
+  min-width: 200px;
+  max-width: 280px;
+  padding: 14px 16px;
+  background: rgba(0, 0, 0, 0.25);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.asset-config-card .card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.asset-config-card .asset-name {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.asset-config-card .asset-name .color-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+}
+
+.asset-config-card .edit-btn {
+  padding: 4px 10px;
+  font-size: 0.65rem;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.4);
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.asset-config-card .edit-btn:hover {
+  color: rgba(255, 255, 255, 0.7);
+  border-color: rgba(255, 255, 255, 0.15);
+}
+
+.asset-config-card .config-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.asset-config-card .config-label {
+  font-size: 0.7rem;
+  color: rgba(255, 255, 255, 0.4);
+}
+
+.asset-config-card .config-value {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.8);
+  font-family: 'SF Mono', 'Monaco', 'Menlo', monospace;
+}
+
+.asset-config-card .config-input {
+  width: 80px;
+  padding: 4px 8px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.9);
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 6px;
+  text-align: right;
+  font-family: 'SF Mono', 'Monaco', 'Menlo', monospace;
+}
+
+.asset-config-card .config-input:focus {
+  outline: none;
+  border-color: rgba(99, 102, 241, 0.5);
+}
+
+/* Chart Section */
+.outcomes-chart-section {
+  flex: 1;
+  min-height: 350px;
+  display: flex;
+  flex-direction: column;
+  background: linear-gradient(180deg, rgba(18, 22, 32, 0.5), rgba(12, 15, 22, 0.6));
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 16px;
+  padding: 20px;
+  gap: 12px;
+}
+
+.outcomes-chart-section .chart-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.outcomes-chart-section .chart-title {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.outcomes-chart-section .chart-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+.outcomes-chart-section .legend-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.7rem;
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.outcomes-chart-section .legend-color {
+  width: 12px;
+  height: 3px;
+  border-radius: 2px;
+}
+
+.outcomes-chart-section .chart-container {
+  flex: 1;
+  min-height: 0;
+}
+
+/* Results Table Section */
+.outcomes-table-section {
+  display: flex;
+  flex-direction: column;
+  background: linear-gradient(180deg, rgba(18, 22, 32, 0.5), rgba(12, 15, 22, 0.6));
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 16px;
+  overflow: hidden;
+}
+
+.outcomes-table-section .table-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.outcomes-table-section .table-title {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.outcomes-table-section .table-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.outcomes-table-section .download-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.5);
+  background: rgba(0, 0, 0, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.outcomes-table-section .download-btn:hover {
+  color: rgba(255, 255, 255, 0.8);
+  border-color: rgba(255, 255, 255, 0.15);
+}
+
+.outcomes-table-section .expand-btn {
+  padding: 6px 10px;
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.5);
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  transition: color 0.2s ease;
+}
+
+.outcomes-table-section .expand-btn:hover {
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.outcomes-table-section table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.outcomes-table-section th {
+  padding: 12px 16px;
+  font-size: 0.65rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  color: rgba(255, 255, 255, 0.4);
+  text-align: left;
+  background: rgba(0, 0, 0, 0.2);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.outcomes-table-section th:last-child {
+  text-align: right;
+}
+
+.outcomes-table-section td {
+  padding: 14px 16px;
+  font-size: 0.8rem;
+  color: rgba(255, 255, 255, 0.7);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+}
+
+.outcomes-table-section td:last-child {
+  text-align: right;
+  font-family: 'SF Mono', 'Monaco', 'Menlo', monospace;
+  font-weight: 600;
+}
+
+.outcomes-table-section td.positive {
+  color: #10b981;
+}
+
+.outcomes-table-section td.negative {
+  color: #f87171;
+}
+
+.outcomes-table-section .asset-cell {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.outcomes-table-section .asset-color {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+}
+
+/* Confirm Override Modal */
+.confirm-override-modal {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(4px);
+  z-index: 1000;
+}
+
+.confirm-override-modal .modal-content {
+  width: 90%;
+  max-width: 400px;
+  padding: 24px;
+  background: linear-gradient(180deg, #1a1f2e, #141824);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 16px;
+  box-shadow: 0 24px 48px rgba(0, 0, 0, 0.5);
+}
+
+.confirm-override-modal .modal-title {
+  font-size: 1rem;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.9);
+  margin-bottom: 12px;
+}
+
+.confirm-override-modal .modal-text {
+  font-size: 0.85rem;
+  color: rgba(255, 255, 255, 0.6);
+  line-height: 1.5;
+  margin-bottom: 20px;
+}
+
+.confirm-override-modal .modal-actions {
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+}
+
+.confirm-override-modal .modal-btn {
+  padding: 10px 18px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.confirm-override-modal .modal-btn.cancel {
+  color: rgba(255, 255, 255, 0.6);
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.confirm-override-modal .modal-btn.cancel:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.confirm-override-modal .modal-btn.confirm {
+  color: #fff;
+  background: linear-gradient(135deg, #f59e0b, #d97706);
+  border: none;
+}
+
+.confirm-override-modal .modal-btn.confirm:hover {
+  background: linear-gradient(135deg, #fbbf24, #f59e0b);
+}
+
+/* Principal Input Section */
+.principal-input-section {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 14px 20px;
+  background: linear-gradient(180deg, rgba(18, 22, 32, 0.6), rgba(12, 15, 22, 0.7));
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 14px;
+}
+
+.principal-input-section .input-group {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.principal-input-section .input-label {
+  font-size: 0.65rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  color: rgba(255, 255, 255, 0.4);
+}
+
+.principal-input-section .principal-input {
+  width: 160px;
+  padding: 10px 14px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.95);
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
+  font-family: 'SF Mono', 'Monaco', 'Menlo', monospace;
+}
+
+.principal-input-section .principal-input:focus {
+  outline: none;
+  border-color: rgba(99, 102, 241, 0.5);
+}
+
+/* Responsive */
+@media (max-width: 1024px) {
+  .investment-outcomes-tab {
+    padding: 16px;
+    gap: 16px;
+  }
+  
+  .controls-ribbon {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 16px;
+  }
+  
+  .asset-config-panel {
+    gap: 12px;
+  }
+  
+  .asset-config-card {
+    min-width: 100%;
+  }
+}
+
+@media (max-width: 640px) {
+  .asset-chips {
+    gap: 6px;
+  }
+  
+  .asset-chip {
+    padding: 8px 12px;
+  }
+  
+  .asset-chip .chip-name {
+    font-size: 0.75rem;
+  }
+  
+  .outcomes-chart-section {
+    min-height: 280px;
+  }
+}
+
+/* ============================================
+   INVESTMENT OUTCOMES - RIBBON STYLES
+   Detailed controls ribbon styling
+   ============================================ */
+
+.outcomes-controls-ribbon {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  padding: 18px 24px;
+  background: linear-gradient(180deg, rgba(18, 22, 32, 0.95), rgba(12, 15, 22, 0.98));
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 16px;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+
+.outcomes-controls-ribbon .controls-left,
+.outcomes-controls-ribbon .controls-center,
+.outcomes-controls-ribbon .controls-right {
+  display: flex;
+  align-items: flex-start;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+
+.outcomes-controls-ribbon .control-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.outcomes-controls-ribbon .control-group > label {
+  font-size: 0.65rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  color: rgba(255, 255, 255, 0.4);
+}
+
+/* Currency Buttons */
+.currency-buttons {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex-wrap: wrap;
+}
+
+.currency-btn {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 12px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.5);
+  background: rgba(0, 0, 0, 0.25);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.currency-btn:hover {
+  color: rgba(255, 255, 255, 0.7);
+  border-color: rgba(255, 255, 255, 0.15);
+}
+
+.currency-btn.active {
+  color: #fff;
+  background: linear-gradient(135deg, rgba(99, 102, 241, 0.3), rgba(139, 92, 246, 0.25));
+  border-color: rgba(99, 102, 241, 0.5);
+}
+
+.currency-btn.more {
+  color: rgba(255, 255, 255, 0.4);
+}
+
+.currency-more {
+  position: relative;
+}
+
+.currency-dropdown {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  margin-top: 4px;
+  display: flex;
+  flex-direction: column;
+  background: rgba(18, 22, 32, 0.98);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
+  padding: 4px;
+  z-index: 100;
+  min-width: 100px;
+}
+
+.currency-dropdown-item {
+  padding: 8px 12px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.5);
+  background: transparent;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  text-align: left;
+  transition: all 0.15s ease;
+}
+
+.currency-dropdown-item:hover {
+  color: rgba(255, 255, 255, 0.8);
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.currency-dropdown-item.active {
+  color: #818cf8;
+  background: rgba(99, 102, 241, 0.1);
+}
+
+/* Mode Selector */
+.mode-selector .mode-toggle {
+  position: relative;
+  display: flex;
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 10px;
+  padding: 3px;
+}
+
+.mode-btn {
+  position: relative;
+  z-index: 1;
+  padding: 8px 16px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.5);
+  background: transparent;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: color 0.2s ease;
+  white-space: nowrap;
+}
+
+.mode-btn:hover {
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.mode-btn.active {
+  color: #fff;
+}
+
+.mode-indicator {
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: calc(50% - 1.5px);
+  height: calc(100% - 6px);
+  background: linear-gradient(135deg, #10b981, #059669);
+  border-radius: 7px;
+  transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  z-index: 0;
+}
+
+/* Amount Input */
+.amount-input .input-with-symbol {
+  display: flex;
+  align-items: center;
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
+  padding: 0 12px;
+}
+
+.amount-input .input-with-symbol .symbol {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.5);
+  margin-right: 6px;
+}
+
+.amount-input .input-with-symbol input {
+  width: 100px;
+  padding: 10px 0;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.95);
+  background: transparent;
+  border: none;
+  font-family: 'SF Mono', 'Monaco', 'Menlo', monospace;
+}
+
+.amount-input .input-with-symbol input:focus {
+  outline: none;
+}
+
+/* Horizon Control */
+.horizon-control {
+  min-width: 200px;
+}
+
+.horizon-control label {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.horizon-slider {
+  width: 100%;
+  height: 6px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 3px;
+  appearance: none;
+  cursor: pointer;
+}
+
+.horizon-slider::-webkit-slider-thumb {
+  appearance: none;
+  width: 16px;
+  height: 16px;
+  background: linear-gradient(135deg, #818cf8, #a78bfa);
+  border-radius: 50%;
+  box-shadow: 0 2px 8px rgba(129, 140, 248, 0.4);
+  cursor: grab;
+}
+
+.horizon-slider::-webkit-slider-thumb:active {
+  cursor: grabbing;
+}
+
+/* Volatility Preset */
+.volatility-preset .volatility-buttons {
+  display: flex;
+  gap: 6px;
+}
+
+.vol-btn {
+  padding: 6px 14px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.5);
+  background: rgba(0, 0, 0, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.vol-btn:hover {
+  color: rgba(255, 255, 255, 0.7);
+  border-color: rgba(255, 255, 255, 0.15);
+}
+
+.vol-btn.active {
+  color: #fbbf24;
+  background: rgba(251, 191, 36, 0.1);
+  border-color: rgba(251, 191, 36, 0.3);
+}
+
+/* Asset Selector Section */
+.asset-selector-section h3 {
+  font-size: 0.7rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  color: rgba(255, 255, 255, 0.35);
+  margin: 0;
+}
+
+.chip-toggle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+}
+
+.chip-indicator {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  border: 2px solid var(--asset-color);
+  transition: background-color 0.2s ease;
+}
+
+.chip-settings {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  background: rgba(255, 255, 255, 0.05);
+  border: none;
+  border-radius: 6px;
+  color: rgba(255, 255, 255, 0.4);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.chip-settings:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.chip-info {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  background: transparent;
+  border: none;
+  color: rgba(255, 255, 255, 0.3);
+  cursor: help;
+  transition: color 0.2s ease;
+}
+
+.chip-info:hover {
+  color: rgba(255, 255, 255, 0.6);
+}
+
+/* Config Panel */
+.asset-config-panel .config-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+
+.asset-config-panel .config-header h4 {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.9);
+  margin: 0;
+}
+
+.asset-config-panel .config-header button {
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.2rem;
+  color: rgba(255, 255, 255, 0.4);
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  border-radius: 4px;
+  transition: all 0.2s ease;
+}
+
+.asset-config-panel .config-header button:hover {
+  color: rgba(255, 255, 255, 0.8);
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.asset-config-panel .config-content {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.asset-config-panel .config-row {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.asset-config-panel .config-row label {
+  font-size: 0.75rem;
+  color: rgba(255, 255, 255, 0.6);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.asset-config-panel .config-row input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+  accent-color: #818cf8;
+}
+
+.asset-config-panel .config-row input[type="range"] {
+  width: 100%;
+  height: 4px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 2px;
+  appearance: none;
+}
+
+.asset-config-panel .config-row input[type="range"]::-webkit-slider-thumb {
+  appearance: none;
+  width: 14px;
+  height: 14px;
+  background: #818cf8;
+  border-radius: 50%;
+  cursor: pointer;
+}
+
+.asset-config-panel .config-row input[type="number"],
+.asset-config-panel .config-row select {
+  padding: 8px 12px;
+  font-size: 0.8rem;
+  color: rgba(255, 255, 255, 0.9);
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  font-family: 'SF Mono', 'Monaco', 'Menlo', monospace;
+}
+
+.asset-config-panel .config-row input[type="number"]:focus,
+.asset-config-panel .config-row select:focus {
+  outline: none;
+  border-color: rgba(99, 102, 241, 0.5);
+}
+
+.asset-config-panel .config-hint {
+  font-size: 0.7rem;
+  color: #10b981;
+  font-family: 'SF Mono', 'Monaco', 'Menlo', monospace;
+  padding: 8px 12px;
+  background: rgba(16, 185, 129, 0.1);
+  border-radius: 6px;
+}
+
+/* Chart Legend */
+.chart-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  padding-top: 12px;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.legend-color {
+  width: 12px;
+  height: 4px;
+  border-radius: 2px;
+}
+
+.legend-name {
+  font-size: 0.75rem;
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.legend-value {
+  font-size: 0.8rem;
+  font-weight: 700;
+  font-family: 'SF Mono', 'Monaco', 'Menlo', monospace;
+}
+
+.legend-value.gain {
+  color: #22c55e;
+}
+
+.legend-value.loss {
+  color: #ef4444;
+}
+
+/* Results Table */
+.outcomes-table-section .table-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.outcomes-table-section .table-header h3 {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.7);
+  margin: 0;
+}
+
+.download-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.5);
+  background: rgba(0, 0, 0, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.download-btn:hover {
+  color: rgba(255, 255, 255, 0.8);
+  border-color: rgba(255, 255, 255, 0.15);
+  background: rgba(0, 0, 0, 0.3);
+}
+
+.table-wrapper {
+  max-height: 180px;
+  overflow: hidden;
+  transition: max-height 0.3s ease;
+}
+
+.table-wrapper.expanded {
+  max-height: 600px;
+  overflow-y: auto;
+}
+
+.outcomes-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.outcomes-table th {
+  padding: 12px 16px;
+  font-size: 0.65rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  color: rgba(255, 255, 255, 0.4);
+  text-align: left;
+  background: rgba(0, 0, 0, 0.15);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.outcomes-table td {
+  padding: 12px 16px;
+  font-size: 0.8rem;
+  color: rgba(255, 255, 255, 0.7);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+  font-family: 'SF Mono', 'Monaco', 'Menlo', monospace;
+}
+
+.expand-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  width: 100%;
+  padding: 12px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.5);
+  background: rgba(0, 0, 0, 0.15);
+  border: none;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.expand-btn:hover {
+  color: rgba(255, 255, 255, 0.8);
+  background: rgba(0, 0, 0, 0.25);
+}
+
+/* Responsive for Investment Outcomes */
+@media (max-width: 1024px) {
+  .outcomes-controls-ribbon {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  
+  .outcomes-controls-ribbon .controls-left,
+  .outcomes-controls-ribbon .controls-center,
+  .outcomes-controls-ribbon .controls-right {
+    width: 100%;
+    justify-content: flex-start;
+  }
+  
+  .horizon-control {
+    width: 100%;
+    min-width: auto;
   }
 }
 

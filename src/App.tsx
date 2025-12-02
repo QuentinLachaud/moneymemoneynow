@@ -30,6 +30,7 @@ import { AccountForm } from './components/AccountForm';
 import { ProjectionsPanelV2 } from './components/ProjectionsPanelV2';
 import { ProjectionPortfolioPanel } from './components/ProjectionPortfolioPanel';
 import { TaxCalculatorPanel } from './components/TaxCalculatorPanel';
+import { InvestmentOutcomesTab } from './components/InvestmentOutcomesTab';
 import { AccountsStrip } from './components/AccountsStrip';
 
 // Import Zustand store and Account type
@@ -144,16 +145,18 @@ export default function App() {
         
         {/* Tab Toggle inline with header */}
         <div className="tab-container">
-          <div className="tab-toggle three-tabs">
+          <div className="tab-toggle four-tabs">
             <div 
               className="tab-slider" 
               style={{ 
-                width: '33.333%',
+                width: '25%',
                 transform: tab === 'projections' 
                   ? 'translateX(0)' 
                   : tab === 'projection-portfolio'
                     ? 'translateX(100%)'
-                    : 'translateX(200%)'
+                    : tab === 'tax-calculator'
+                      ? 'translateX(200%)'
+                      : 'translateX(300%)'
               }} 
             />
             <button
@@ -174,14 +177,20 @@ export default function App() {
             >
               Tax Calculator
             </button>
+            <button
+              onClick={() => setTab('investment-outcomes')}
+              className={`tab-button ${tab === 'investment-outcomes' ? 'active' : ''}`}
+            >
+              Investment Outcomes
+            </button>
           </div>
         </div>
       </header>
 
       {/* ─── MAIN LAYOUT: Left panel + Content area ─────────────────── */}
-      <div className={`main-grid ${tab === 'tax-calculator' ? 'full-width' : ''}`}>
-        {/* Left Panel: Add Account Form (collapsible on mobile) - Hidden on Tax Calculator */}
-        {tab !== 'tax-calculator' && (
+      <div className={`main-grid ${(tab === 'tax-calculator' || tab === 'investment-outcomes') ? 'full-width' : ''}`}>
+        {/* Left Panel: Add Account Form (collapsible on mobile) - Hidden on Tax Calculator and Investment Outcomes */}
+        {tab !== 'tax-calculator' && tab !== 'investment-outcomes' && (
           <aside 
             className={`left-panel card ${leftPanelCollapsed ? 'collapsed' : ''}`}
             ref={(el) => { leftTrayRef.current = el as HTMLDivElement | null; }}
@@ -240,15 +249,20 @@ export default function App() {
             <div className="projection-portfolio-tab-content">
               <ProjectionPortfolioPanel accounts={accounts} />
             </div>
-          ) : (
+          ) : tab === 'tax-calculator' ? (
             /* Tax Calculator Tab: UK Income Tax Calculator */
             <div className="tax-calculator-tab-content">
               <TaxCalculatorPanel />
             </div>
+          ) : (
+            /* Investment Outcomes Tab: Compare investment types */
+            <div className="investment-outcomes-tab-content">
+              <InvestmentOutcomesTab />
+            </div>
           )}
 
           {/* Unified Accounts Strip - Only show on projections/portfolio tabs */}
-          {tab !== 'tax-calculator' && (
+          {tab !== 'tax-calculator' && tab !== 'investment-outcomes' && (
             <AccountsStrip
               accounts={accounts}
               tab={tab}
