@@ -55,12 +55,23 @@ const ASSET_ORDER: AssetTypeId[] = ['cash', 'savings', 'bonds', 'index-fund', 'p
 const PRIMARY_CURRENCIES: Currency[] = ['USD', 'GBP', 'EUR'];
 const SECONDARY_CURRENCIES: Currency[] = ['JPY', 'INR', 'CHF', 'CAD', 'AUD'];
 
-/** Tax brackets for pension */
-const TAX_BRACKETS = [
-  { rate: 0.20, label: '20% (Basic)' },
-  { rate: 0.40, label: '40% (Higher)' },
-  { rate: 0.45, label: '45% (Additional)' },
+/** Tax brackets for pension - England */
+const ENGLAND_TAX_BRACKETS = [
+  { rate: 0.20, label: '20% Basic', band: 'basic' },
+  { rate: 0.40, label: '40% Higher', band: 'higher' },
+  { rate: 0.45, label: '45% Additional', band: 'additional' },
 ];
+
+/** Tax brackets for pension - Scotland */
+const SCOTLAND_TAX_BRACKETS = [
+  { rate: 0.19, label: '19% Starter', band: 'starter' },
+  { rate: 0.20, label: '20% Basic', band: 'basic' },
+  { rate: 0.21, label: '21% Intermediate', band: 'intermediate' },
+  { rate: 0.42, label: '42% Higher', band: 'higher' },
+  { rate: 0.47, label: '47% Top', band: 'top' },
+];
+
+type TaxRegion = 'england' | 'scotland';
 
 /** Pension mix options for editing */
 const PENSION_MIX_OPTIONS = [
@@ -139,11 +150,13 @@ export function InvestmentOutcomesTab() {
   // ─── HORIZON WITH DYNAMIC EXTENSION ───────────────────────────────
   const [horizonYears, setHorizonYears] = useState(20);
   const [horizonMax, setHorizonMax] = useState(30);
+  const HORIZON_MIN = 5; // Minimum 5 years
   
   // Handle dynamic horizon extension: when user reaches 30, extend to 60
   const handleHorizonChange = useCallback((value: number) => {
-    setHorizonYears(value);
-    if (value >= 30 && horizonMax === 30) {
+    const clampedValue = Math.max(HORIZON_MIN, value);
+    setHorizonYears(clampedValue);
+    if (clampedValue >= 30 && horizonMax === 30) {
       setHorizonMax(60);
     }
   }, [horizonMax]);
@@ -176,6 +189,10 @@ export function InvestmentOutcomesTab() {
   const [pensionNetSacrifice, setPensionNetSacrifice] = useState(100);
   const [pensionTaxRate, setPensionTaxRate] = useState(0.40);
   const [pensionEquityMix, setPensionEquityMix] = useState(0.8);
+  const [pensionTaxRegion, setPensionTaxRegion] = useState<TaxRegion>('england');
+  const [showPensionTaxModal, setShowPensionTaxModal] = useState(false);
+  const [pendingPensionTaxRate, setPendingPensionTaxRate] = useState(0.40);
+  const [pendingPensionTaxRegion, setPendingPensionTaxRegion] = useState<TaxRegion>('england');
   
   // ─── SAVINGS INTEREST RATE ────────────────────────────────────────
   const [savingsRate, setSavingsRate] = useState(0.04);
@@ -212,6 +229,14 @@ export function InvestmentOutcomesTab() {
   
   // ─── TOGGLE ASSET (with minimum 1 enforcement) ────────────────────
   const toggleAsset = useCallback((assetId: AssetTypeId) => {
+    // If activating pension, show tax modal first
+    if (assetId === 'pension' && !activeAssets.has('pension')) {
+      setPendingPensionTaxRate(pensionTaxRate);
+      setPendingPensionTaxRegion(pensionTaxRegion);
+      setShowPensionTaxModal(true);
+      return;
+    }
+    
     setActiveAssets(prev => {
       const next = new Set(prev);
       if (next.has(assetId)) {
@@ -225,6 +250,18 @@ export function InvestmentOutcomesTab() {
       }
       return next;
     });
+  }, [activeAssets, pensionTaxRate, pensionTaxRegion]);
+  
+  // ─── PENSION TAX MODAL HANDLERS ──────────────────────────────────
+  const confirmPensionTax = useCallback(() => {
+    setPensionTaxRate(pendingPensionTaxRate);
+    setPensionTaxRegion(pendingPensionTaxRegion);
+    setActiveAssets(prev => new Set([...prev, 'pension']));
+    setShowPensionTaxModal(false);
+  }, [pendingPensionTaxRate, pendingPensionTaxRegion]);
+  
+  const cancelPensionTax = useCallback(() => {
+    setShowPensionTaxModal(false);
   }, []);
   
   // ─── EDIT ASSET (with confirmation for historical) ────────────────
@@ -324,6 +361,12 @@ export function InvestmentOutcomesTab() {
   ]);
   
   // ─── CHART DATA ───────────────────────────────────────────────────
+  // Offset for bars to avoid y-axis overlap (shift right by 0.4 years)
+  const BAR_X_OFFSET = 0.4;
+  
+  // Check if pension is active (for tax relief visualization)
+  const pensionActive = activeAssets.has('pension');
+  
   const chartData = useMemo(() => {
     const activeList = Array.from(activeAssets);
     if (activeList.length === 0) return [];
@@ -342,6 +385,8 @@ export function InvestmentOutcomesTab() {
       
       const point: Record<string, number> = {
         year: year,
+        // Offset year for bar positioning to avoid y-axis overlap
+        barYear: year + BAR_X_OFFSET,
       };
       
       // Calculate cumulative contributions for this year
@@ -351,7 +396,20 @@ export function InvestmentOutcomesTab() {
         const escalatedMonthly = effectiveMonthly * Math.pow(1 + effectiveEscalation, yearOfMonth);
         cumulativeContribution += escalatedMonthly;
       }
-      point.contribution = cumulativeContribution;
+      
+      // For pension, calculate tax relief (grossed up portion)
+      // Gross = Net / (1 - taxRate), so relief = Gross - Net = Net * taxRate / (1 - taxRate)
+      if (pensionActive) {
+        const grossContribution = cumulativeContribution / (1 - pensionTaxRate);
+        const taxRelief = grossContribution - cumulativeContribution;
+        point.contributionBase = cumulativeContribution;  // User's actual contribution
+        point.contributionRelief = taxRelief;             // Tax relief portion (stacked on top)
+        point.contribution = grossContribution;           // Total (base + relief)
+      } else {
+        point.contribution = cumulativeContribution;
+        point.contributionBase = cumulativeContribution;
+        point.contributionRelief = 0;
+      }
       
       activeList.forEach(assetId => {
         const result = simulations.get(assetId);
@@ -364,7 +422,7 @@ export function InvestmentOutcomesTab() {
     }
     
     return yearlyData;
-  }, [simulations, activeAssets, horizonYears, effectiveLumpSum, effectiveMonthly, contributionEscalation, investmentMode]);
+  }, [simulations, activeAssets, horizonYears, effectiveLumpSum, effectiveMonthly, contributionEscalation, investmentMode, pensionActive, pensionTaxRate]);
   
   // ─── TABLE DATA (yearly snapshots) ────────────────────────────────
   const tableData = useMemo(() => {
@@ -471,31 +529,31 @@ export function InvestmentOutcomesTab() {
   }, [horizonYears]);
   
   return (
-    <div className="investment-outcomes-tab v3">
-      {/* ─── ULTRA-COMPACT TOP RIBBON ─────────────────────────────────── */}
-      <div className="outcomes-ribbon-v3">
-        {/* Currency */}
-        <div className="ribbon-section">
-          <span className="ribbon-label">Currency</span>
-          <div className="currency-buttons-compact">
+    <div className="investment-outcomes-tab v4">
+      {/* ─── PREMIUM RIBBON (3-section layout) ─────────────────────────── */}
+      <div className="outcomes-ribbon-v4">
+        {/* GROUP A: Currency Selector (left) */}
+        <div className="ribbon-group ribbon-group-left">
+          <div className="currency-selector-large">
             {PRIMARY_CURRENCIES.map(c => (
               <button
                 key={c}
-                className={`curr-btn ${currency === c ? 'active' : ''}`}
+                className={`currency-btn-lg ${currency === c ? 'active' : ''}`}
                 onClick={() => setCurrency(c)}
               >
-                {CURRENCY_SYMBOLS[c]}
+                <span className="currency-symbol">{CURRENCY_SYMBOLS[c]}</span>
+                <span className="currency-code">{c}</span>
               </button>
             ))}
-            <div className="currency-more">
+            <div className="currency-more-lg">
               <button
-                className="curr-btn more"
+                className="currency-btn-lg more"
                 onClick={() => setShowMoreCurrencies(!showMoreCurrencies)}
               >
-                <ChevronDown size={12} />
+                <ChevronDown size={14} />
               </button>
               {showMoreCurrencies && (
-                <div className="currency-dropdown">
+                <div className="currency-dropdown-lg">
                   {SECONDARY_CURRENCIES.map(c => (
                     <button
                       key={c}
@@ -511,105 +569,109 @@ export function InvestmentOutcomesTab() {
           </div>
         </div>
 
-        {/* Mode Toggle */}
-        <div className="ribbon-section">
-          <span className="ribbon-label">Mode</span>
-          <div className="mode-toggle-compact">
+        {/* GROUP B: Mode + Amounts (center) */}
+        <div className="ribbon-group ribbon-group-center">
+          {/* Mode Toggle */}
+          <div className="mode-toggle-v4">
             <button
-              className={`mode-btn-sm ${investmentMode === 'lump-sum' ? 'active' : ''}`}
+              className={`mode-btn-v4 ${investmentMode === 'lump-sum' ? 'active' : ''}`}
               onClick={() => setInvestmentMode('lump-sum')}
             >
-              Lump
+              Lump Sum
             </button>
             <button
-              className={`mode-btn-sm ${investmentMode === 'monthly' ? 'active' : ''}`}
+              className={`mode-btn-v4 ${investmentMode === 'monthly' ? 'active' : ''}`}
               onClick={() => setInvestmentMode('monthly')}
             >
               Monthly
             </button>
             <button
-              className={`mode-btn-sm ${investmentMode === 'both' ? 'active' : ''}`}
+              className={`mode-btn-v4 ${investmentMode === 'both' ? 'active' : ''}`}
               onClick={() => setInvestmentMode('both')}
             >
               Both
             </button>
           </div>
-        </div>
-
-        {/* Amounts Row - All inline */}
-        <div className="ribbon-section amounts-section">
-          <span className="ribbon-label">Amounts</span>
-          <div className="amounts-inline">
+          
+          {/* Amounts Inline */}
+          <div className="amounts-row-v4">
             {(investmentMode === 'lump-sum' || investmentMode === 'both') && (
-              <div className="amount-field">
-                <span className="field-prefix">{symbol}</span>
-                <input
-                  type="number"
-                  value={lumpSumAmount}
-                  onChange={(e) => setLumpSumAmount(parseFloat(e.target.value) || 0)}
-                  min={0}
-                  placeholder="Initial"
-                />
-                {investmentMode === 'both' && <span className="field-suffix">lump</span>}
+              <div className="amount-input-v4">
+                <span className="input-label">Initial</span>
+                <div className="input-wrapper">
+                  <span className="symbol">{symbol}</span>
+                  <input
+                    type="number"
+                    value={lumpSumAmount}
+                    onChange={(e) => setLumpSumAmount(parseFloat(e.target.value) || 0)}
+                    min={0}
+                  />
+                </div>
               </div>
             )}
             {(investmentMode === 'monthly' || investmentMode === 'both') && (
-              <div className="amount-field">
-                <span className="field-prefix">{symbol}</span>
-                <input
-                  type="number"
-                  value={monthlyAmount}
-                  onChange={(e) => setMonthlyAmount(parseFloat(e.target.value) || 0)}
-                  min={0}
-                  placeholder="Monthly"
-                />
-                {investmentMode === 'both' && <span className="field-suffix">/mo</span>}
+              <div className="amount-input-v4">
+                <span className="input-label">Monthly</span>
+                <div className="input-wrapper">
+                  <span className="symbol">{symbol}</span>
+                  <input
+                    type="number"
+                    value={monthlyAmount}
+                    onChange={(e) => setMonthlyAmount(parseFloat(e.target.value) || 0)}
+                    min={0}
+                  />
+                </div>
               </div>
             )}
             {(investmentMode === 'monthly' || investmentMode === 'both') && (
-              <select
-                value={contributionEscalation}
-                onChange={(e) => setContributionEscalation(parseFloat(e.target.value))}
-                className="escalation-select-compact"
-              >
-                {ESCALATION_OPTIONS.map(rate => (
-                  <option key={rate} value={rate}>
-                    {rate === 0 ? '+0%' : `+${(rate * 100).toFixed(0)}%`}
-                  </option>
-                ))}
-              </select>
+              <div className="amount-input-v4 escalation">
+                <span className="input-label">Escalation</span>
+                <select
+                  value={contributionEscalation}
+                  onChange={(e) => setContributionEscalation(parseFloat(e.target.value))}
+                >
+                  {ESCALATION_OPTIONS.map(rate => (
+                    <option key={rate} value={rate}>
+                      {rate === 0 ? '+0%/yr' : `+${(rate * 100).toFixed(0)}%/yr`}
+                    </option>
+                  ))}
+                </select>
+              </div>
             )}
           </div>
         </div>
 
-        {/* Horizon Slider */}
-        <div className="ribbon-section horizon-section">
-          <span className="ribbon-label">Horizon <strong>{horizonYears}y</strong></span>
-          <div className="horizon-slider-v3">
-            <span className="horizon-edge">1</span>
-            <input
-              type="range"
-              min={1}
-              max={horizonMax}
-              value={horizonYears}
-              onChange={(e) => handleHorizonChange(parseInt(e.target.value))}
-            />
-            <span className="horizon-edge">{horizonMax}</span>
+        {/* GROUP C: Horizon + View Toggle (right) */}
+        <div className="ribbon-group ribbon-group-right">
+          {/* Horizon Slider */}
+          <div className="horizon-control-v4">
+            <div className="horizon-header">
+              <span className="horizon-label">Horizon</span>
+              <span className="horizon-value">{horizonYears} years</span>
+            </div>
+            <div className="horizon-slider-v4">
+              <span className="slider-edge">{HORIZON_MIN}</span>
+              <input
+                type="range"
+                min={HORIZON_MIN}
+                max={horizonMax}
+                value={horizonYears}
+                onChange={(e) => handleHorizonChange(parseInt(e.target.value))}
+              />
+              <span className="slider-edge">{horizonMax}</span>
+            </div>
           </div>
-        </div>
-
-        {/* View Toggle */}
-        <div className="ribbon-section">
-          <span className="ribbon-label">View</span>
-          <div className="view-toggle-compact">
+          
+          {/* Large View Toggle */}
+          <div className="view-toggle-v4">
             <button
-              className={`view-btn-sm ${viewMode === 'graph' ? 'active' : ''}`}
+              className={`view-btn-v4 ${viewMode === 'graph' ? 'active' : ''}`}
               onClick={() => setViewMode('graph')}
             >
               Graph
             </button>
             <button
-              className={`view-btn-sm ${viewMode === 'table' ? 'active' : ''}`}
+              className={`view-btn-v4 ${viewMode === 'table' ? 'active' : ''}`}
               onClick={() => setViewMode('table')}
             >
               Table
@@ -618,10 +680,10 @@ export function InvestmentOutcomesTab() {
         </div>
       </div>
 
-      {/* ─── MAIN CONTENT: ASSET SIDEBAR + GRAPH ────────────────────────── */}
-      <div className="outcomes-main-layout">
+      {/* ─── MAIN CONTENT: ASSET SIDEBAR + CENTERED GRAPH ───────────────── */}
+      <div className="outcomes-main-layout-v4">
         {/* LEFT: Asset Selector (Vertical Stack) */}
-        <div className="asset-sidebar">
+        <div className="asset-sidebar-v4">
           <h4 className="sidebar-title">Assets</h4>
           <div className="asset-list-vertical">
             {ASSET_ORDER.map(assetId => {
@@ -657,53 +719,19 @@ export function InvestmentOutcomesTab() {
           </div>
         </div>
 
-        {/* RIGHT: Graph or Table */}
-        <div className="outcomes-content">
+        {/* CENTER: Graph or Table (1/3 width, centered) */}
+        <div className={`outcomes-content-v4 assets-${activeList.length}`}>
           {viewMode === 'graph' && (
-            <div className="graph-container" ref={chartRef}>
-              {/* Top controls row */}
-              <div className="graph-top-controls">
-                {/* Left: Contribution display toggle */}
-                <div className="contribution-display-toggle">
-                  <button
-                    className={contributionDisplay === 'contributions' ? 'active' : ''}
-                    onClick={() => setContributionDisplay('contributions')}
-                  >
-                    Contributions
-                  </button>
-                  <button
-                    className={contributionDisplay === 'lines-only' ? 'active' : ''}
-                    onClick={() => setContributionDisplay('lines-only')}
-                  >
-                    Lines Only
-                  </button>
-                  <button
-                    className={contributionDisplay === 'bars-lines' ? 'active' : ''}
-                    onClick={() => setContributionDisplay('bars-lines')}
-                  >
-                    Bars + Lines
-                  </button>
-                </div>
-
-                {/* Right: Legend + Export */}
-                <div className="graph-top-right">
-                  {/* Export Button */}
-                  <button className="export-btn-sm" onClick={handleDownloadPNG} title="Download PNG">
-                    <Download size={14} />
-                    PNG
-                  </button>
-                </div>
-              </div>
-
-              {/* Legend Card (top-right) */}
-              <div className="legend-card">
+            <div className="graph-container-v4" ref={chartRef}>
+              {/* Legend Card (top-left, not overlapping y-axis) */}
+              <div className="legend-card-v4">
+                <div className="legend-title">Final Values</div>
                 {activeList.map(assetId => {
                   const config = assetConfigs[assetId];
                   const result = simulations.get(assetId);
                   if (!result) return null;
                   
                   const isGain = result.finalValue >= result.totalContributed;
-                  const gainLoss = result.finalValue - result.totalContributed;
                   
                   return (
                     <div key={assetId} className="legend-row">
@@ -717,9 +745,37 @@ export function InvestmentOutcomesTab() {
                 })}
               </div>
 
+              {/* Top controls row */}
+              <div className="graph-controls-v4">
+                <div className="contribution-display-toggle">
+                  <button
+                    className={contributionDisplay === 'contributions' ? 'active' : ''}
+                    onClick={() => setContributionDisplay('contributions')}
+                  >
+                    Contributions
+                  </button>
+                  <button
+                    className={contributionDisplay === 'lines-only' ? 'active' : ''}
+                    onClick={() => setContributionDisplay('lines-only')}
+                  >
+                    Lines
+                  </button>
+                  <button
+                    className={contributionDisplay === 'bars-lines' ? 'active' : ''}
+                    onClick={() => setContributionDisplay('bars-lines')}
+                  >
+                    Bars + Lines
+                  </button>
+                </div>
+                <button className="export-btn-v4" onClick={handleDownloadPNG} title="Download PNG">
+                  <Download size={14} />
+                  PNG
+                </button>
+              </div>
+
               {/* Chart */}
-              <div className="chart-wrapper">
-                <ResponsiveContainer width="100%" height={320}>
+              <div className="chart-wrapper-v4">
+                <ResponsiveContainer width="100%" height={300}>
                   <ComposedChart data={chartData} margin={{ top: 10, right: 20, bottom: 25, left: 10 }}>
                     <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
                     <XAxis
@@ -749,8 +805,14 @@ export function InvestmentOutcomesTab() {
                         fontSize: '12px',
                       }}
                       formatter={(value: number, name: string) => {
+                        if (name === 'contributionBase') {
+                          return [formatFullNumber(value, currency), 'Your Contribution'];
+                        }
+                        if (name === 'contributionRelief') {
+                          return [formatFullNumber(value, currency), 'Tax Relief'];
+                        }
                         if (name === 'contribution') {
-                          return [formatFullNumber(value, currency), 'Contributed'];
+                          return [formatFullNumber(value, currency), 'Total Contributed'];
                         }
                         const assetId = name.replace('_median', '') as AssetTypeId;
                         return [formatFullNumber(value, currency), assetConfigs[assetId]?.name || name];
@@ -758,16 +820,32 @@ export function InvestmentOutcomesTab() {
                       labelFormatter={(label) => `Year ${label}`}
                     />
                     
-                    {/* Contribution bars (green, rounded, behind lines) */}
+                    {/* Stacked contribution bars (base + tax relief) */}
                     {(contributionDisplay === 'contributions' || contributionDisplay === 'bars-lines') && (
-                      <Bar
-                        dataKey="contribution"
-                        name="contribution"
-                        fill="rgba(34, 197, 94, 0.25)"
-                        stroke="rgba(34, 197, 94, 0.5)"
-                        strokeWidth={1}
-                        radius={[4, 4, 0, 0]}
-                      />
+                      <>
+                        {/* Base contribution (user's actual money) */}
+                        <Bar
+                          dataKey="contributionBase"
+                          name="contributionBase"
+                          stackId="contributions"
+                          fill="rgba(34, 197, 94, 0.35)"
+                          stroke="rgba(34, 197, 94, 0.6)"
+                          strokeWidth={1}
+                          radius={pensionActive ? [0, 0, 0, 0] : [4, 4, 0, 0]}
+                        />
+                        {/* Tax relief portion (stacked on top, lighter tint) */}
+                        {pensionActive && (
+                          <Bar
+                            dataKey="contributionRelief"
+                            name="contributionRelief"
+                            stackId="contributions"
+                            fill="rgba(147, 197, 253, 0.4)"
+                            stroke="rgba(147, 197, 253, 0.7)"
+                            strokeWidth={1}
+                            radius={[4, 4, 0, 0]}
+                          />
+                        )}
+                      </>
                     )}
                     
                     {/* Lines for each active asset */}
@@ -792,32 +870,32 @@ export function InvestmentOutcomesTab() {
           )}
 
           {viewMode === 'table' && (
-            <div className="table-container">
-              <div className="table-header-row">
-                <h4>Results Over Time</h4>
-                <button className="export-btn-sm" onClick={handleDownloadCSV} title="Download CSV">
+            <div className="table-container-v4">
+              <div className="table-header-v4">
+                <h4>Projected Values by Year</h4>
+                <button className="export-btn-v4" onClick={handleDownloadCSV} title="Download CSV">
                   <Download size={14} />
                   CSV
                 </button>
               </div>
-              <div className={`table-scroll ${tableExpanded ? 'expanded' : ''}`}>
-                <table className="outcomes-table-v3">
+              <div className={`table-scroll-v4 ${tableExpanded ? 'expanded' : ''}`}>
+                <table className="outcomes-table-v4">
                   <thead>
                     <tr>
-                      <th>Year</th>
+                      <th className="year-col">Year</th>
                       {activeList.map(assetId => (
-                        <th key={assetId} style={{ color: assetConfigs[assetId].color }}>
+                        <th key={assetId} className="asset-col" style={{ color: assetConfigs[assetId].color }}>
                           {assetConfigs[assetId].name}
                         </th>
                       ))}
                     </tr>
                   </thead>
                   <tbody>
-                    {(tableExpanded ? tableData : tableData.slice(0, 6)).map((row, idx) => (
+                    {(tableExpanded ? tableData : tableData.slice(0, 8)).map((row, idx) => (
                       <tr key={idx}>
-                        <td>{row.year}</td>
+                        <td className="year-col">{row.year}</td>
                         {activeList.map(assetId => (
-                          <td key={assetId} style={{ color: assetConfigs[assetId].color }}>
+                          <td key={assetId} className="asset-col" style={{ color: assetConfigs[assetId].color }}>
                             {typeof row[assetId] === 'number'
                               ? formatFullNumber(row[assetId] as number, currency)
                               : '-'}
@@ -828,8 +906,8 @@ export function InvestmentOutcomesTab() {
                   </tbody>
                 </table>
               </div>
-              {tableData.length > 6 && (
-                <button className="expand-table-btn" onClick={() => setTableExpanded(!tableExpanded)}>
+              {tableData.length > 8 && (
+                <button className="expand-table-btn-v4" onClick={() => setTableExpanded(!tableExpanded)}>
                   {tableExpanded ? 'Show Less' : `Show All ${tableData.length} Years`}
                   {tableExpanded ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
                 </button>
@@ -946,7 +1024,7 @@ export function InvestmentOutcomesTab() {
                       onChange={(e) => setPensionTaxRate(parseFloat(e.target.value))}
                       className="modal-select"
                     >
-                      {TAX_BRACKETS.map(b => (
+                      {(pensionTaxRegion === 'england' ? ENGLAND_TAX_BRACKETS : SCOTLAND_TAX_BRACKETS).map(b => (
                         <option key={b.rate} value={b.rate}>{b.label}</option>
                       ))}
                     </select>
@@ -1048,6 +1126,91 @@ export function InvestmentOutcomesTab() {
             <div className="modal-actions">
               <button onClick={() => setShowOverrideModal(false)}>Cancel</button>
               <button className="confirm" onClick={confirmOverride}>Yes, Override</button>
+            </div>
+          </div>
+        </div>
+      )}
+      
+      {/* ─── PENSION TAX BAND MODAL ──────────────────────────────────── */}
+      {showPensionTaxModal && (
+        <div className="modal-overlay pension-tax-modal-overlay" onClick={cancelPensionTax}>
+          <div className="modal-content pension-tax-modal" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <h3>Configure Pension Tax Relief</h3>
+              <button className="modal-close" onClick={cancelPensionTax}>
+                <X size={20} />
+              </button>
+            </div>
+            
+            <div className="modal-body">
+              {/* Region Toggle */}
+              <div className="pension-region-toggle">
+                <span className="toggle-label">Tax Region</span>
+                <div className="region-buttons">
+                  <button
+                    className={`region-btn ${pendingPensionTaxRegion === 'england' ? 'active' : ''}`}
+                    onClick={() => {
+                      setPendingPensionTaxRegion('england');
+                      // Reset to first england bracket
+                      setPendingPensionTaxRate(ENGLAND_TAX_BRACKETS[0].rate);
+                    }}
+                  >
+                    England / Wales / NI
+                  </button>
+                  <button
+                    className={`region-btn ${pendingPensionTaxRegion === 'scotland' ? 'active' : ''}`}
+                    onClick={() => {
+                      setPendingPensionTaxRegion('scotland');
+                      // Reset to first scotland bracket
+                      setPendingPensionTaxRate(SCOTLAND_TAX_BRACKETS[0].rate);
+                    }}
+                  >
+                    Scotland
+                  </button>
+                </div>
+              </div>
+              
+              {/* Tax Band Slider */}
+              <div className="pension-tax-band-selector">
+                <span className="toggle-label">Your Tax Band</span>
+                <div className="tax-band-options">
+                  {(pendingPensionTaxRegion === 'england' ? ENGLAND_TAX_BRACKETS : SCOTLAND_TAX_BRACKETS).map(bracket => (
+                    <button
+                      key={bracket.rate}
+                      className={`tax-band-btn ${pendingPensionTaxRate === bracket.rate ? 'active' : ''}`}
+                      onClick={() => setPendingPensionTaxRate(bracket.rate)}
+                    >
+                      {bracket.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+              
+              {/* Preview of effect */}
+              <div className="pension-tax-preview">
+                <div className="preview-row">
+                  <span className="preview-label">Your contribution:</span>
+                  <span className="preview-value">{symbol}{effectiveMonthly || effectiveLumpSum}/mo</span>
+                </div>
+                <div className="preview-row highlight">
+                  <span className="preview-label">Grossed up (with relief):</span>
+                  <span className="preview-value">
+                    {symbol}{((effectiveMonthly || effectiveLumpSum) / (1 - pendingPensionTaxRate)).toFixed(2)}/mo
+                  </span>
+                </div>
+                <p className="preview-note">
+                  Tax relief of {(pendingPensionTaxRate * 100).toFixed(0)}% means your money is worth more in a pension.
+                </p>
+              </div>
+            </div>
+            
+            <div className="modal-footer">
+              <button className="modal-btn cancel" onClick={cancelPensionTax}>
+                Cancel
+              </button>
+              <button className="modal-btn save" onClick={confirmPensionTax}>
+                Add Pension
+              </button>
             </div>
           </div>
         </div>
