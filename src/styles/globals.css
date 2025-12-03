@@ -14350,9 +14350,11 @@ html {
 .outcomes-ribbon-v5 {
   display: flex;
   align-items: center;
-  padding: 14px 28px;
-  background: linear-gradient(180deg, rgba(22, 26, 40, 0.98), rgba(16, 20, 32, 0.99));
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  padding: 18px 32px;
+  background: linear-gradient(180deg, rgba(22, 26, 40, 0.95), rgba(16, 20, 32, 0.96));
+  border: 1px solid rgba(255, 255, 255, 0.04);
+  border-radius: 12px;
+  overflow: hidden;
   flex-shrink: 0;
   gap: 0;
 }
@@ -14360,9 +14362,46 @@ html {
 .ribbon-section {
   display: flex;
   align-items: center;
-  gap: 16px;
-  padding: 0 24px;
+  gap: 20px;
+  padding: 0 28px;
+  background: transparent;
 }
+
+/* Make ribbon section containers transparent while allowing interactive
+  controls to retain subtle UI affordances (borders, tracks, shadows)
+  so sliders, toggles and inputs remain visible. */
+.outcomes-ribbon-v5 .ribbon-section { background: transparent; }
+
+/* Currency selector pills: low-contrast surface that visually sits on the
+  ribbon but remains distinguishable. Active state keeps the existing
+  gradient defined elsewhere. */
+.outcomes-ribbon-v5 .currency-selector-v5 {
+  background: rgba(255,255,255,0.02);
+  border-radius: 12px;
+  padding: 6px;
+}
+.outcomes-ribbon-v5 .currency-btn-v5 {
+  background: transparent;
+}
+
+/* Inputs, selects and small control buttons should have a subtle
+  translucent fill and a faint border to remain legible on the ribbon. */
+.outcomes-ribbon-v5 .input-wrapper-v5,
+.outcomes-ribbon-v5 .select-v5,
+.outcomes-ribbon-v5 .toggle-btn-v5 {
+  background: rgba(255,255,255,0.03);
+  border: 1px solid rgba(255,255,255,0.04);
+  box-shadow: none;
+  border-radius: 8px;
+}
+
+/* Mode slider container keeps transparent but individual options show
+  as pills when active (existing .mode-option.active handles that). */
+.outcomes-ribbon-v5 .mode-slider-v5 { background: transparent; }
+
+/* Inflation control uses its own track/thumb visuals; ensure the parent
+  is transparent but the track remains visible (toggle-track rule exists). */
+.outcomes-ribbon-v5 .inflation-btn { background: transparent; border: none; }
 
 .ribbon-section-1 { flex: 0 0 auto; padding-left: 0; }
 .ribbon-section-2 { flex: 0 0 auto; }
@@ -14370,11 +14409,11 @@ html {
 .ribbon-section-4 { flex: 1 1 auto; padding-right: 0; }
 
 .section-label {
-  font-size: 0.7rem;
-  font-weight: 600;
+  font-size: 0.85rem;
+  font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.6px;
-  color: rgba(255, 255, 255, 0.45);
+  color: rgba(255, 255, 255, 0.6);
   white-space: nowrap;
 }
 
@@ -14387,35 +14426,35 @@ html {
 /* Currency Selector V5 */
 .currency-selector-v5 {
   display: flex;
-  gap: 6px;
-  background: rgba(0, 0, 0, 0.25);
-  border-radius: 10px;
-  padding: 5px;
+  gap: 8px;
+  background: transparent;
+  border-radius: 12px;
+  padding: 6px;
 }
 
 .currency-btn-v5 {
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: 8px 14px;
+  padding: 10px 16px;
   background: transparent;
   border: none;
-  border-radius: 8px;
+  border-radius: 10px;
   cursor: pointer;
   transition: all 0.15s ease;
 }
 
 .currency-btn-v5 .currency-symbol {
-  font-size: 1.15rem;
-  font-weight: 700;
-  color: rgba(255, 255, 255, 0.55);
+  font-size: 1.35rem;
+  font-weight: 800;
+  color: rgba(255, 255, 255, 0.65);
   font-family: 'Inter', -apple-system, sans-serif;
 }
 
 .currency-btn-v5 .currency-code {
-  font-size: 0.6rem;
-  font-weight: 500;
-  color: rgba(255, 255, 255, 0.35);
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.45);
   text-transform: uppercase;
   letter-spacing: 0.5px;
 }
@@ -14477,21 +14516,21 @@ html {
 .inflation-btn {
   display: flex;
   align-items: center;
-  gap: 10px;
-  padding: 8px 14px;
-  background: rgba(0, 0, 0, 0.25);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 8px;
+  gap: 12px;
+  padding: 10px 16px;
+  background: transparent;
+  border: none;
+  border-radius: 10px;
   cursor: pointer;
   transition: all 0.2s ease;
 }
 
 .inflation-btn .toggle-track {
   position: relative;
-  width: 36px;
-  height: 20px;
+  width: 42px;
+  height: 22px;
   background: rgba(255, 255, 255, 0.15);
-  border-radius: 10px;
+  border-radius: 11px;
   transition: background 0.2s ease;
 }
 
@@ -14499,8 +14538,8 @@ html {
   position: absolute;
   top: 2px;
   left: 2px;
-  width: 16px;
-  height: 16px;
+  width: 18px;
+  height: 18px;
   background: rgba(255, 255, 255, 0.6);
   border-radius: 50%;
   transition: all 0.2s ease;
@@ -14511,14 +14550,14 @@ html {
 }
 
 .inflation-btn.active .toggle-thumb {
-  left: 18px;
+  left: 22px;
   background: #fff;
 }
 
 .inflation-btn .toggle-label {
-  font-size: 0.78rem;
-  font-weight: 600;
-  color: rgba(255, 255, 255, 0.65);
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.75);
 }
 
 .inflation-btn.active .toggle-label {
@@ -14547,18 +14586,18 @@ html {
 /* Mode Slider V5 */
 .mode-slider-v5 {
   display: flex;
-  gap: 2px;
-  background: rgba(0, 0, 0, 0.3);
-  border-radius: 10px;
-  padding: 4px;
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  gap: 4px;
+  background: transparent;
+  border-radius: 12px;
+  padding: 6px;
+  border: none;
 }
 
 .mode-option {
-  padding: 10px 20px;
-  font-size: 0.82rem;
-  font-weight: 600;
-  color: rgba(255, 255, 255, 0.55);
+  padding: 12px 24px;
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.6);
   background: transparent;
   border: none;
   border-radius: 7px;
@@ -14581,30 +14620,30 @@ html {
 .contribution-inputs-v5 {
   display: flex;
   align-items: flex-end;
-  gap: 18px;
+  gap: 22px;
 }
 
 .input-field-v5 {
   display: flex;
   flex-direction: column;
-  gap: 5px;
+  gap: 6px;
 }
 
 .input-field-v5 .field-label {
-  font-size: 0.65rem;
-  font-weight: 600;
+  font-size: 0.75rem;
+  font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.5px;
-  color: rgba(255, 255, 255, 0.4);
+  color: rgba(255, 255, 255, 0.5);
 }
 
 .input-wrapper-v5 {
   display: flex;
   align-items: center;
-  background: rgba(0, 0, 0, 0.35);
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  border-radius: 8px;
-  padding: 6px 12px;
+  background: transparent;
+  border: none;
+  border-radius: 10px;
+  padding: 8px 14px;
   transition: border-color 0.15s ease;
 }
 
@@ -14624,8 +14663,8 @@ html {
   background: transparent;
   border: none;
   color: #fff;
-  font-size: 0.95rem;
-  font-weight: 600;
+  font-size: 1.05rem;
+  font-weight: 700;
   font-family: 'Inter', -apple-system, sans-serif;
   padding: 6px 0;
 }
@@ -14635,12 +14674,12 @@ html {
 }
 
 .select-v5 {
-  padding: 12px 14px;
-  font-size: 0.82rem;
-  font-weight: 600;
-  background: rgba(0, 0, 0, 0.35);
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  border-radius: 8px;
+  padding: 14px 16px;
+  font-size: 0.9rem;
+  font-weight: 700;
+  background: transparent;
+  border: none;
+  border-radius: 10px;
   color: rgba(255, 255, 255, 0.85);
   cursor: pointer;
 }
@@ -14654,16 +14693,16 @@ html {
 .period-slider-v5 {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 14px;
   flex: 1;
   min-width: 200px;
 }
 
 .period-slider-v5 .slider-min,
 .period-slider-v5 .slider-max {
-  font-size: 0.72rem;
-  font-weight: 600;
-  color: rgba(255, 255, 255, 0.4);
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.5);
   min-width: 32px;
 }
 
@@ -14692,8 +14731,8 @@ html {
 }
 
 .period-slider-v5 .slider-value {
-  font-size: 0.9rem;
-  font-weight: 700;
+  font-size: 1rem;
+  font-weight: 800;
   color: #fff;
   min-width: 70px;
   text-align: right;
@@ -14704,8 +14743,8 @@ html {
   display: flex;
   flex: 1;
   overflow: hidden;
-  padding: 20px 28px;
-  gap: 24px;
+  padding: 24px 32px;
+  gap: 28px;
 }
 
 /* Asset Sidebar V5 */
@@ -14717,34 +14756,34 @@ html {
 }
 
 .asset-sidebar-v5 .sidebar-title {
-  font-size: 0.85rem;
-  font-weight: 700;
+  font-size: 1rem;
+  font-weight: 800;
   text-transform: uppercase;
   letter-spacing: 0.6px;
-  color: rgba(255, 255, 255, 0.9);
-  margin: 0 0 8px 0;
+  color: rgba(255, 255, 255, 0.95);
+  margin: 0 0 12px 0;
 }
 
 .asset-sidebar-v5 .sidebar-hint {
-  font-size: 0.78rem;
-  color: rgba(255, 255, 255, 0.5);
-  margin: 0 0 16px 0;
+  font-size: 0.85rem;
+  color: rgba(255, 255, 255, 0.55);
+  margin: 0 0 20px 0;
   line-height: 1.5;
 }
 
 .asset-list-v5 {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 12px;
 }
 
 .asset-pill-v5 {
   display: flex;
   align-items: center;
-  padding: 14px 16px;
-  background: rgba(0, 0, 0, 0.25);
+  padding: 16px 18px;
+  background: rgba(0, 0, 0, 0.2);
   border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 12px;
+  border-radius: 14px;
   transition: all 0.15s ease;
   position: relative;
 }
@@ -14762,7 +14801,7 @@ html {
 .asset-toggle-v5 {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 14px;
   background: none;
   border: none;
   cursor: pointer;
@@ -14786,16 +14825,16 @@ html {
 }
 
 .asset-toggle-v5 .asset-name {
-  font-size: 0.88rem;
-  font-weight: 600;
-  color: rgba(255, 255, 255, 0.85);
+  font-size: 1rem;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.9);
   white-space: nowrap;
 }
 
 .asset-pill-v5 .growth-rate {
-  font-size: 0.72rem;
-  font-weight: 600;
-  color: rgba(255, 255, 255, 0.45);
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.55);
   margin-left: auto;
   padding-right: 8px;
 }
@@ -14804,17 +14843,17 @@ html {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 28px;
-  height: 28px;
+  width: 32px;
+  height: 32px;
   background: rgba(255, 255, 255, 0.08);
   border: none;
-  border-radius: 6px;
+  border-radius: 8px;
   color: rgba(255, 255, 255, 0.5);
   cursor: pointer;
   opacity: 0;
   transition: all 0.15s ease;
   position: absolute;
-  right: 12px;
+  right: 14px;
 }
 
 .edit-btn-v5.visible {
@@ -14837,7 +14876,7 @@ html {
 .content-header-v5 {
   display: flex;
   justify-content: flex-end;
-  margin-bottom: 16px;
+  margin-bottom: 20px;
 }
 
 .view-toggle-v5 {
@@ -14876,7 +14915,7 @@ html {
   display: flex;
   flex-direction: column;
   position: relative;
-  padding: 20px;
+  padding: 28px;
   background: rgba(0, 0, 0, 0.15);
   border: 1px solid rgba(255, 255, 255, 0.06);
   border-radius: 16px;
@@ -14889,8 +14928,8 @@ html {
   left: 100px;
   background: rgba(20, 24, 36, 0.96);
   border: 1px solid rgba(255, 255, 255, 0.12);
-  border-radius: 12px;
-  padding: 14px 18px;
+  border-radius: 14px;
+  padding: 16px 20px;
   z-index: 10;
   min-width: 180px;
   backdrop-filter: blur(8px);
@@ -14946,7 +14985,7 @@ html {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 12px;
+  margin-bottom: 16px;
 }
 
 .graph-toggles-v5 {
@@ -14955,13 +14994,13 @@ html {
 }
 
 .toggle-btn-v5 {
-  padding: 8px 18px;
-  font-size: 0.8rem;
-  font-weight: 600;
+  padding: 10px 20px;
+  font-size: 0.85rem;
+  font-weight: 700;
   color: rgba(255, 255, 255, 0.55);
-  background: rgba(0, 0, 0, 0.3);
+  background: rgba(0, 0, 0, 0.25);
   border: 1px solid rgba(255, 255, 255, 0.12);
-  border-radius: 8px;
+  border-radius: 10px;
   cursor: pointer;
   transition: all 0.15s ease;
 }
@@ -14981,14 +15020,14 @@ html {
 .export-btn-v5 {
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 8px 16px;
-  font-size: 0.8rem;
-  font-weight: 600;
+  gap: 10px;
+  padding: 10px 18px;
+  font-size: 0.85rem;
+  font-weight: 700;
   color: rgba(255, 255, 255, 0.65);
-  background: rgba(0, 0, 0, 0.3);
+  background: rgba(0, 0, 0, 0.25);
   border: 1px solid rgba(255, 255, 255, 0.12);
-  border-radius: 8px;
+  border-radius: 10px;
   cursor: pointer;
   transition: all 0.15s ease;
 }
@@ -15010,7 +15049,7 @@ html {
   flex: 1;
   display: flex;
   flex-direction: column;
-  padding: 20px;
+  padding: 24px;
   background: rgba(0, 0, 0, 0.15);
   border: 1px solid rgba(255, 255, 255, 0.06);
   border-radius: 16px;
@@ -15020,13 +15059,13 @@ html {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 16px;
+  margin-bottom: 20px;
 }
 
 .table-header-v5 h4 {
-  font-size: 1rem;
-  font-weight: 700;
-  color: rgba(255, 255, 255, 0.9);
+  font-size: 1.25rem;
+  font-weight: 800;
+  color: rgba(255, 255, 255, 0.95);
   margin: 0;
 }
 
@@ -15048,14 +15087,14 @@ html {
 
 .outcomes-table-v5 th,
 .outcomes-table-v5 td {
-  padding: 14px 18px;
+  padding: 16px 20px;
   text-align: right;
   white-space: nowrap;
 }
 
 .outcomes-table-v5 th {
-  font-size: 0.78rem;
-  font-weight: 700;
+  font-size: 0.85rem;
+  font-weight: 800;
   text-transform: uppercase;
   letter-spacing: 0.5px;
   background: rgba(0, 0, 0, 0.35);
@@ -15065,15 +15104,15 @@ html {
 }
 
 .outcomes-table-v5 td {
-  font-size: 0.88rem;
-  font-weight: 600;
+  font-size: 0.95rem;
+  font-weight: 700;
   border-bottom: 1px solid rgba(255, 255, 255, 0.05);
 }
 
 .outcomes-table-v5 .year-col {
   text-align: left;
-  font-weight: 700;
-  color: rgba(255, 255, 255, 0.65);
+  font-weight: 800;
+  color: rgba(255, 255, 255, 0.7);
   min-width: 70px;
 }
 
@@ -15089,15 +15128,15 @@ html {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 8px;
-  padding: 14px;
-  margin-top: 12px;
-  font-size: 0.82rem;
-  font-weight: 600;
+  gap: 10px;
+  padding: 16px;
+  margin-top: 14px;
+  font-size: 0.9rem;
+  font-weight: 700;
   color: rgba(255, 255, 255, 0.65);
-  background: rgba(0, 0, 0, 0.25);
+  background: rgba(0, 0, 0, 0.2);
   border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 10px;
+  border-radius: 12px;
   cursor: pointer;
   transition: all 0.15s ease;
 }
@@ -15134,13 +15173,13 @@ html {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 24px 28px;
+  padding: 28px 32px;
   border-bottom: 1px solid rgba(255, 255, 255, 0.08);
 }
 
 .modal-header-v5 h3 {
-  font-size: 1.15rem;
-  font-weight: 700;
+  font-size: 1.35rem;
+  font-weight: 800;
   color: rgba(255, 255, 255, 0.95);
   margin: 0;
 }
@@ -15165,29 +15204,29 @@ html {
 }
 
 .modal-body-v5 {
-  padding: 28px;
+  padding: 32px;
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: 24px;
 }
 
 .modal-body-v5 .config-field {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 12px;
 }
 
 .modal-body-v5 .config-field label {
-  font-size: 0.85rem;
-  font-weight: 600;
-  color: rgba(255, 255, 255, 0.75);
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.8);
 }
 
 .modal-body-v5 .config-field input,
 .modal-body-v5 .config-field select {
-  padding: 14px 18px;
-  font-size: 0.95rem;
-  font-weight: 600;
+  padding: 16px 20px;
+  font-size: 1rem;
+  font-weight: 700;
   background: rgba(0, 0, 0, 0.35);
   border: 1px solid rgba(255, 255, 255, 0.12);
   border-radius: 10px;
@@ -15202,16 +15241,16 @@ html {
 
 .modal-footer-v5 {
   display: flex;
-  gap: 14px;
+  gap: 16px;
   justify-content: flex-end;
-  padding: 20px 28px;
+  padding: 24px 32px;
   border-top: 1px solid rgba(255, 255, 255, 0.08);
 }
 
 .modal-btn-v5 {
-  padding: 14px 28px;
-  font-size: 0.9rem;
-  font-weight: 600;
+  padding: 16px 32px;
+  font-size: 0.95rem;
+  font-weight: 700;
   border-radius: 10px;
   cursor: pointer;
   transition: all 0.15s ease;
