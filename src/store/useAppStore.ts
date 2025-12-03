@@ -124,7 +124,7 @@ const initialState: AppState = {
   selectedIds: new Set(),
   projectionAccountId: null,
   portfolioSelectedIds: new Set(),
-  tab: 'projections',
+  tab: 'savings-calculator',
   simulationSettings: {
     numSimulations: 1000,
     volatilityOverride: 15,

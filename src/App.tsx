@@ -154,13 +154,13 @@ export default function App() {
                 width: 'calc(100% / 6)',
                 transform: tab === 'savings-calculator'
                   ? 'translateX(0)'
-                  : tab === 'projections' 
+                  : tab === 'investment-outcomes' 
                     ? 'translateX(100%)' 
-                    : tab === 'projection-portfolio'
+                    : tab === 'tax-calculator'
                       ? 'translateX(200%)'
-                      : tab === 'tax-calculator'
+                      : tab === 'net-worth'
                         ? 'translateX(300%)'
-                        : tab === 'investment-outcomes'
+                        : tab === 'projections'
                           ? 'translateX(400%)'
                           : 'translateX(500%)'
               }} 
@@ -170,6 +170,24 @@ export default function App() {
               className={`tab-button ${tab === 'savings-calculator' ? 'active' : ''}`}
             >
               Savings Calculator
+            </button>
+            <button
+              onClick={() => setTab('investment-outcomes')}
+              className={`tab-button ${tab === 'investment-outcomes' ? 'active' : ''}`}
+            >
+              Investment Outcomes
+            </button>
+            <button
+              onClick={() => setTab('tax-calculator')}
+              className={`tab-button ${tab === 'tax-calculator' ? 'active' : ''}`}
+            >
+              Tax Calculator
+            </button>
+            <button
+              onClick={() => setTab('net-worth')}
+              className={`tab-button ${tab === 'net-worth' ? 'active' : ''}`}
+            >
+              Net Worth
             </button>
             <button
               onClick={() => setTab('projections')}
@@ -182,24 +200,6 @@ export default function App() {
               className={`tab-button ${tab === 'projection-portfolio' ? 'active' : ''}`}
             >
               Portfolio
-            </button>
-            <button
-              onClick={() => setTab('tax-calculator')}
-              className={`tab-button ${tab === 'tax-calculator' ? 'active' : ''}`}
-            >
-              Tax Calculator
-            </button>
-            <button
-              onClick={() => setTab('investment-outcomes')}
-              className={`tab-button ${tab === 'investment-outcomes' ? 'active' : ''}`}
-            >
-              Investment Outcomes
-            </button>
-            <button
-              onClick={() => setTab('net-worth')}
-              className={`tab-button ${tab === 'net-worth' ? 'active' : ''}`}
-            >
-              Net Worth
             </button>
           </div>
         </div>
