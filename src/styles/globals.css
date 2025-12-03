@@ -15113,6 +15113,16 @@ html {
   grid-template-columns: repeat(5, 1fr);
 }
 
+/* ─── Tab styles for 6 tabs ────────────────────────────────────────── */
+.tab-toggle.six-tabs {
+  grid-template-columns: repeat(6, 1fr);
+}
+
+.tab-toggle.six-tabs .tab-button {
+  font-size: 0.75rem;
+  padding: 8px 6px;
+}
+
 /* ─── Responsive ───────────────────────────────────────────────────── */
 @media (max-width: 1200px) {
   .net-worth-tab {
@@ -17034,5 +17044,804 @@ html {
     left: auto;
     right: 0;
     transform: none;
+  }
+}
+
+/* ==========================================================================
+ * SECTION: SAVINGS CALCULATOR TAB
+ * ========================================================================== */
+
+/* Main container */
+.savings-calculator-tab {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  background: var(--background);
+}
+
+.savings-calculator-tab-content {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+/* ─── Savings Ribbon (mirrors Investment Outcomes ribbon) ─────────────── */
+.savings-ribbon {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  padding: 16px 24px;
+  background: rgba(0, 0, 0, 0.3);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  flex-shrink: 0;
+}
+
+/* Income input group styling */
+.income-input-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.input-label-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.help-icon-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  background: none;
+  border: none;
+  color: var(--muted-foreground);
+  cursor: pointer;
+  opacity: 0.6;
+  transition: opacity 0.15s ease;
+}
+
+.help-icon-btn:hover {
+  opacity: 1;
+}
+
+.income-input-wrapper {
+  min-width: 160px;
+}
+
+.income-input-wrapper .suffix {
+  color: var(--muted-foreground);
+  font-size: 0.8rem;
+}
+
+/* Bonus button group */
+.bonus-button-group {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.add-bonus-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 16px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  color: var(--foreground);
+  font-size: 0.85rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.add-bonus-btn:hover {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.15);
+}
+
+.add-bonus-btn .bonus-help-icon {
+  display: flex;
+  align-items: center;
+  opacity: 0.5;
+}
+
+.bonus-indicator {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #22c55e;
+  background: rgba(34, 197, 94, 0.1);
+  padding: 4px 10px;
+  border-radius: 6px;
+}
+
+/* ─── Savings Main Layout ─────────────────────────────────────────────── */
+.savings-main-layout {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+  flex: 1;
+  padding: 24px;
+  overflow-y: auto;
+}
+
+/* Left Panel */
+.savings-left-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+/* Total income display */
+.total-income-display {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 20px 24px;
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 12px;
+}
+
+.total-income-display .income-label {
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: var(--muted-foreground);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.total-income-display .income-value {
+  font-size: 2rem;
+  font-weight: 700;
+  color: var(--foreground);
+}
+
+.total-income-display .income-breakdown {
+  font-size: 0.8rem;
+  color: var(--muted-foreground);
+  margin-top: 4px;
+}
+
+/* Expenditure sections container */
+.expenditure-sections {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+/* ─── Savings Category Panel (Collapsible) ────────────────────────────── */
+.savings-category-panel {
+  background: rgba(0, 0, 0, 0.25);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 12px;
+  overflow: hidden;
+  transition: border-color 0.15s ease;
+}
+
+.savings-category-panel.expanded {
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+.category-panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: 14px 18px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.category-panel-header:hover {
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.header-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.section-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  background: rgba(255, 255, 255, 0.06);
+  border-radius: 8px;
+  color: var(--foreground);
+}
+
+.section-title {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--foreground);
+}
+
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.section-total {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--muted-foreground);
+}
+
+.expand-icon {
+  display: flex;
+  align-items: center;
+  color: var(--muted-foreground);
+  transition: transform 0.2s ease;
+}
+
+.savings-category-panel.expanded .expand-icon {
+  transform: rotate(180deg);
+}
+
+/* Panel content with animation */
+.category-panel-content {
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows 0.25s ease;
+}
+
+.savings-category-panel.expanded .category-panel-content {
+  grid-template-rows: 1fr;
+}
+
+.category-panel-content > .category-list {
+  overflow: hidden;
+}
+
+.category-list {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 0 18px;
+}
+
+.savings-category-panel.expanded .category-list {
+  padding-bottom: 14px;
+}
+
+/* Section subtotal */
+.section-subtotal {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 18px;
+  background: rgba(255, 255, 255, 0.03);
+  border-top: 1px solid rgba(255, 255, 255, 0.04);
+  margin-top: 8px;
+}
+
+.subtotal-label {
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: var(--muted-foreground);
+}
+
+.subtotal-value {
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: var(--foreground);
+}
+
+/* ─── Category Input Row ──────────────────────────────────────────────── */
+.category-input-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+}
+
+.category-input-row:last-child {
+  border-bottom: none;
+}
+
+.category-label {
+  font-size: 0.85rem;
+  color: var(--foreground);
+}
+
+.category-input-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.category-input-field {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 8px 12px;
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 8px;
+  transition: all 0.15s ease;
+}
+
+.category-input-field:focus-within {
+  border-color: rgba(255, 255, 255, 0.2);
+  background: rgba(0, 0, 0, 0.4);
+}
+
+.currency-prefix {
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: var(--muted-foreground);
+}
+
+.category-input-field input {
+  width: 80px;
+  background: none;
+  border: none;
+  font-size: 0.9rem;
+  color: var(--foreground);
+  outline: none;
+  text-align: right;
+}
+
+.category-input-field input::placeholder {
+  color: rgba(255, 255, 255, 0.3);
+}
+
+/* Frequency selector (for vehicle items) */
+.frequency-selector {
+  position: relative;
+}
+
+.frequency-toggle {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 10px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 6px;
+  font-size: 0.75rem;
+  color: var(--muted-foreground);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.frequency-toggle:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.frequency-dropdown {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  margin-top: 4px;
+  background: #1a1d24;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+  overflow: hidden;
+  z-index: 100;
+}
+
+.frequency-option {
+  display: block;
+  width: 100%;
+  padding: 10px 16px;
+  background: none;
+  border: none;
+  font-size: 0.85rem;
+  color: var(--foreground);
+  text-align: left;
+  cursor: pointer;
+  transition: background 0.1s ease;
+}
+
+.frequency-option:hover {
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.frequency-option.active {
+  background: rgba(255, 255, 255, 0.1);
+  font-weight: 600;
+}
+
+/* ─── Savings Right Panel (Analysis) ──────────────────────────────────── */
+.savings-right-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  overflow-y: auto;
+}
+
+/* Analysis cards */
+.analysis-card {
+  background: rgba(0, 0, 0, 0.25);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 12px;
+  padding: 20px;
+}
+
+.analysis-card .card-title {
+  font-size: 0.85rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--muted-foreground);
+  margin-bottom: 16px;
+}
+
+/* Summary card */
+.summary-card .summary-rows {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.summary-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.summary-label {
+  font-size: 0.9rem;
+  color: var(--muted-foreground);
+}
+
+.summary-value {
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.summary-value.income {
+  color: var(--foreground);
+}
+
+.summary-value.outgoings {
+  color: #f97316;
+}
+
+.summary-value.savings {
+  font-size: 1.2rem;
+  font-weight: 700;
+}
+
+.summary-divider {
+  height: 1px;
+  background: rgba(255, 255, 255, 0.1);
+  margin: 4px 0;
+}
+
+.savings-row {
+  padding-top: 8px;
+}
+
+/* Savings rate card */
+.savings-rate-card .savings-rate-display {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 24px 0;
+}
+
+.savings-rate-value {
+  font-size: 3rem;
+  font-weight: 800;
+  line-height: 1;
+}
+
+.savings-rate-label {
+  font-size: 1rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.savings-rate-description {
+  font-size: 0.85rem;
+  color: var(--muted-foreground);
+  text-align: center;
+  line-height: 1.5;
+}
+
+/* ─── Pie Chart Styles ────────────────────────────────────────────────── */
+.pie-chart-container {
+  min-height: 280px;
+}
+
+.pie-chart-empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 200px;
+  color: var(--muted-foreground);
+  font-size: 0.9rem;
+}
+
+.pie-tooltip {
+  background: #1a1d24;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  padding: 12px 16px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+}
+
+.pie-tooltip-name {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--foreground);
+  margin-bottom: 4px;
+}
+
+.pie-tooltip-value {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--foreground);
+}
+
+.pie-tooltip-percent {
+  font-size: 0.8rem;
+  color: var(--muted-foreground);
+}
+
+/* ─── Waterfall Chart Styles ──────────────────────────────────────────── */
+.waterfall-chart-container {
+  min-height: 300px;
+}
+
+.waterfall-chart-empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 200px;
+  color: var(--muted-foreground);
+  font-size: 0.9rem;
+}
+
+.waterfall-tooltip {
+  background: #1a1d24;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  padding: 12px 16px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+}
+
+.waterfall-tooltip-name {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--foreground);
+  margin-bottom: 4px;
+}
+
+.waterfall-tooltip-value {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--foreground);
+}
+
+/* ─── Bonus Modal Styles ──────────────────────────────────────────────── */
+.bonus-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  animation: fadeIn 0.15s ease;
+}
+
+.bonus-modal {
+  width: 100%;
+  max-width: 420px;
+  background: #12151a;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 16px;
+  box-shadow: 0 24px 64px rgba(0, 0, 0, 0.5);
+  animation: slideUp 0.2s ease;
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.bonus-modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20px 24px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.bonus-modal-title {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--foreground);
+  margin: 0;
+}
+
+.bonus-modal-close {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  background: none;
+  border: none;
+  color: var(--muted-foreground);
+  cursor: pointer;
+  border-radius: 8px;
+  transition: all 0.15s ease;
+}
+
+.bonus-modal-close:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: var(--foreground);
+}
+
+.bonus-modal-content {
+  padding: 24px;
+}
+
+.bonus-modal-description {
+  font-size: 0.9rem;
+  color: var(--muted-foreground);
+  line-height: 1.5;
+  margin-bottom: 20px;
+}
+
+.bonus-input-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 14px 18px;
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
+  transition: all 0.15s ease;
+}
+
+.bonus-input-wrapper:focus-within {
+  border-color: rgba(255, 255, 255, 0.2);
+  background: rgba(0, 0, 0, 0.4);
+}
+
+.bonus-currency-prefix {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--muted-foreground);
+}
+
+.bonus-input {
+  flex: 1;
+  background: none;
+  border: none;
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--foreground);
+  outline: none;
+}
+
+.bonus-input::placeholder {
+  color: rgba(255, 255, 255, 0.3);
+}
+
+.bonus-suffix {
+  font-size: 0.9rem;
+  color: var(--muted-foreground);
+}
+
+.bonus-monthly-preview {
+  margin-top: 12px;
+  font-size: 0.9rem;
+  color: #22c55e;
+  font-weight: 500;
+}
+
+.bonus-modal-actions {
+  display: flex;
+  gap: 12px;
+  padding: 20px 24px;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.bonus-btn {
+  flex: 1;
+  padding: 12px 24px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.bonus-btn-secondary {
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: var(--foreground);
+}
+
+.bonus-btn-secondary:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.bonus-btn-primary {
+  background: linear-gradient(135deg, #22c55e, #16a34a);
+  border: none;
+  color: #fff;
+}
+
+.bonus-btn-primary:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(34, 197, 94, 0.3);
+}
+
+/* ─── Savings Calculator Responsive ───────────────────────────────────── */
+@media (max-width: 1200px) {
+  .savings-main-layout {
+    grid-template-columns: 1fr;
+  }
+  
+  .savings-right-panel {
+    order: -1;
+  }
+}
+
+@media (max-width: 768px) {
+  .savings-ribbon {
+    flex-direction: column;
+    gap: 16px;
+    padding: 16px;
+  }
+  
+  .savings-ribbon .ribbon-group {
+    width: 100%;
+    justify-content: center;
+  }
+  
+  .savings-ribbon .ribbon-group-center {
+    flex-direction: column;
+    gap: 12px;
+  }
+  
+  .total-income-display .income-value {
+    font-size: 1.5rem;
+  }
+  
+  .savings-rate-value {
+    font-size: 2.5rem;
+  }
+  
+  .bonus-modal {
+    margin: 16px;
+    max-width: calc(100% - 32px);
+  }
+  
+  .tab-toggle.six-tabs {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 4px;
+  }
+  
+  .tab-toggle.six-tabs .tab-button {
+    font-size: 0.7rem;
+    padding: 6px 4px;
   }
 }

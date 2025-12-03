@@ -1,0 +1,239 @@
+/**
+ * useSavingsStore.ts — Zustand store for Savings Calculator state
+ *
+ * Manages:
+ * - Currency selection
+ * - Net income and bonus
+ * - Expenditure sections with category amounts
+ * - Expanded/collapsed section state
+ *
+ * All values persist to localStorage for user convenience.
+ */
+
+import { create } from 'zustand';
+import { persist, createJSONStorage } from 'zustand/middleware';
+import { Currency } from '../utils/investmentSimulation';
+import {
+  ExpenseSection,
+  DEFAULT_EXPENSE_SECTIONS,
+  calculateTotalOutgoings,
+  calculateMonthlySavings,
+  calculateSavingsRate,
+} from '../utils/savingsCalculations';
+
+/**
+ * Store state interface
+ */
+interface SavingsState {
+  // Currency
+  currency: Currency;
+  
+  // Income
+  netIncome: number;
+  netBonus: number;
+  
+  // Expenditure sections (with amounts)
+  expenseSections: ExpenseSection[];
+  
+  // UI state: which sections are expanded
+  expandedSections: Set<string>;
+}
+
+/**
+ * Store actions interface
+ */
+interface SavingsActions {
+  // Currency
+  setCurrency: (currency: Currency) => void;
+  
+  // Income
+  setNetIncome: (income: number) => void;
+  setNetBonus: (bonus: number) => void;
+  
+  // Expenditure
+  updateCategoryAmount: (
+    sectionId: string,
+    categoryId: string,
+    amount: number
+  ) => void;
+  updateCategoryFrequency: (
+    sectionId: string,
+    categoryId: string,
+    frequency: 'annual' | 'monthly'
+  ) => void;
+  
+  // UI
+  toggleSection: (sectionId: string) => void;
+  
+  // Reset
+  resetStore: () => void;
+}
+
+/**
+ * Derived state selectors (computed values)
+ */
+interface SavingsDerived {
+  /** Total monthly income (net + annualized bonus) */
+  totalMonthlyIncome: () => number;
+  /** Total monthly outgoings */
+  totalOutgoings: () => number;
+  /** Monthly savings */
+  monthlySavings: () => number;
+  /** Savings rate (0-1) */
+  savingsRate: () => number;
+}
+
+type SavingsStore = SavingsState & SavingsActions & SavingsDerived;
+
+/**
+ * Initial state
+ */
+const initialState: SavingsState = {
+  currency: 'GBP',
+  netIncome: 0,
+  netBonus: 0,
+  expenseSections: DEFAULT_EXPENSE_SECTIONS,
+  expandedSections: new Set(['household']), // First section expanded by default
+};
+
+/**
+ * Custom storage handler for Sets
+ */
+interface SerializedSet {
+  __type: 'Set';
+  values: string[];
+}
+
+const customStorage = createJSONStorage<SavingsState>(() => localStorage, {
+  reviver: (_key, value) => {
+    if (value && typeof value === 'object' && (value as SerializedSet).__type === 'Set') {
+      return new Set((value as SerializedSet).values);
+    }
+    return value;
+  },
+  replacer: (_key, value) => {
+    if (value instanceof Set) {
+      return { __type: 'Set', values: Array.from(value) } as SerializedSet;
+    }
+    return value;
+  },
+});
+
+/**
+ * Zustand store with persistence
+ */
+export const useSavingsStore = create<SavingsStore>()(
+  persist(
+    (set, get) => ({
+      // ─── Initial State ───────────────────────────────────────────
+      ...initialState,
+
+      // ─── Currency ────────────────────────────────────────────────
+      setCurrency: (currency) => set({ currency }),
+
+      // ─── Income ──────────────────────────────────────────────────
+      setNetIncome: (netIncome) => set({ netIncome }),
+      setNetBonus: (netBonus) => set({ netBonus }),
+
+      // ─── Expenditure ─────────────────────────────────────────────
+      updateCategoryAmount: (sectionId, categoryId, amount) => {
+        set((state) => ({
+          expenseSections: state.expenseSections.map((section) => {
+            if (section.id !== sectionId) return section;
+            return {
+              ...section,
+              categories: section.categories.map((cat) => {
+                if (cat.id !== categoryId) return cat;
+                return { ...cat, amount };
+              }),
+            };
+          }),
+        }));
+      },
+
+      updateCategoryFrequency: (sectionId, categoryId, frequency) => {
+        set((state) => ({
+          expenseSections: state.expenseSections.map((section) => {
+            if (section.id !== sectionId) return section;
+            return {
+              ...section,
+              categories: section.categories.map((cat) => {
+                if (cat.id !== categoryId) return cat;
+                return { ...cat, frequency };
+              }),
+            };
+          }),
+        }));
+      },
+
+      // ─── UI ──────────────────────────────────────────────────────
+      toggleSection: (sectionId) => {
+        set((state) => {
+          const next = new Set(state.expandedSections);
+          if (next.has(sectionId)) {
+            next.delete(sectionId);
+          } else {
+            next.add(sectionId);
+          }
+          return { expandedSections: next };
+        });
+      },
+
+      // ─── Reset ───────────────────────────────────────────────────
+      resetStore: () => set(initialState),
+
+      // ─── Derived Selectors ───────────────────────────────────────
+      totalMonthlyIncome: () => {
+        const { netIncome, netBonus } = get();
+        // Bonus is assumed to be annual, divide by 12
+        return netIncome + netBonus / 12;
+      },
+
+      totalOutgoings: () => {
+        const { expenseSections } = get();
+        return calculateTotalOutgoings(expenseSections);
+      },
+
+      monthlySavings: () => {
+        const income = get().totalMonthlyIncome();
+        const outgoings = get().totalOutgoings();
+        return calculateMonthlySavings(income, outgoings);
+      },
+
+      savingsRate: () => {
+        const savings = get().monthlySavings();
+        const income = get().totalMonthlyIncome();
+        return calculateSavingsRate(savings, income);
+      },
+    }),
+    {
+      name: 'savings-calculator-storage',
+      storage: customStorage,
+      partialize: (state) => ({
+        currency: state.currency,
+        netIncome: state.netIncome,
+        netBonus: state.netBonus,
+        expenseSections: state.expenseSections,
+        expandedSections: state.expandedSections,
+      }),
+    }
+  )
+);
+
+// ─── Selector Hooks (for performance) ─────────────────────────────────
+
+/** Get total monthly income */
+export const useTotalMonthlyIncome = () =>
+  useSavingsStore((state) => state.totalMonthlyIncome());
+
+/** Get total outgoings */
+export const useTotalOutgoings = () =>
+  useSavingsStore((state) => state.totalOutgoings());
+
+/** Get monthly savings */
+export const useMonthlySavings = () =>
+  useSavingsStore((state) => state.monthlySavings());
+
+/** Get savings rate */
+export const useSavingsRate = () =>
+  useSavingsStore((state) => state.savingsRate());

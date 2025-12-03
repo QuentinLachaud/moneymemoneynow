@@ -32,6 +32,7 @@ import { ProjectionPortfolioPanel } from './components/ProjectionPortfolioPanel'
 import { TaxCalculatorPanel } from './components/TaxCalculatorPanel';
 import { InvestmentOutcomesTab } from './components/InvestmentOutcomesTab';
 import { NetWorthPage } from './components/NetWorth/NetWorthPage';
+import { SavingsCalculatorTab } from './components/SavingsCalculatorTab';
 import { AccountsStrip } from './components/AccountsStrip';
 
 // Import Zustand store and Account type
@@ -146,22 +147,30 @@ export default function App() {
         
         {/* Tab Toggle inline with header */}
         <div className="tab-container">
-          <div className="tab-toggle five-tabs">
+          <div className="tab-toggle six-tabs">
             <div 
               className="tab-slider" 
               style={{ 
-                width: '20%',
-                transform: tab === 'projections' 
-                  ? 'translateX(0)' 
-                  : tab === 'projection-portfolio'
-                    ? 'translateX(100%)'
-                    : tab === 'tax-calculator'
+                width: 'calc(100% / 6)',
+                transform: tab === 'savings-calculator'
+                  ? 'translateX(0)'
+                  : tab === 'projections' 
+                    ? 'translateX(100%)' 
+                    : tab === 'projection-portfolio'
                       ? 'translateX(200%)'
-                      : tab === 'investment-outcomes'
+                      : tab === 'tax-calculator'
                         ? 'translateX(300%)'
-                        : 'translateX(400%)'
+                        : tab === 'investment-outcomes'
+                          ? 'translateX(400%)'
+                          : 'translateX(500%)'
               }} 
             />
+            <button
+              onClick={() => setTab('savings-calculator')}
+              className={`tab-button ${tab === 'savings-calculator' ? 'active' : ''}`}
+            >
+              Savings Calculator
+            </button>
             <button
               onClick={() => setTab('projections')}
               className={`tab-button ${tab === 'projections' ? 'active' : ''}`}
@@ -197,9 +206,9 @@ export default function App() {
       </header>
 
       {/* ─── MAIN LAYOUT: Left panel + Content area ─────────────────── */}
-      <div className={`main-grid ${(tab === 'tax-calculator' || tab === 'investment-outcomes' || tab === 'net-worth') ? 'full-width' : ''}`}>
-        {/* Left Panel: Add Account Form (collapsible on mobile) - Hidden on Tax Calculator, Investment Outcomes, and Net Worth */}
-        {tab !== 'tax-calculator' && tab !== 'investment-outcomes' && tab !== 'net-worth' && (
+      <div className={`main-grid ${(tab === 'savings-calculator' || tab === 'tax-calculator' || tab === 'investment-outcomes' || tab === 'net-worth') ? 'full-width' : ''}`}>
+        {/* Left Panel: Add Account Form (collapsible on mobile) - Hidden on full-width tabs */}
+        {tab !== 'savings-calculator' && tab !== 'tax-calculator' && tab !== 'investment-outcomes' && tab !== 'net-worth' && (
           <aside 
             className={`left-panel card ${leftPanelCollapsed ? 'collapsed' : ''}`}
             ref={(el) => { leftTrayRef.current = el as HTMLDivElement | null; }}
@@ -239,7 +248,12 @@ export default function App() {
 
         {/* Right Content: Tab-specific content */}
         <div className="content-area">
-          {tab === 'projections' ? (
+          {tab === 'savings-calculator' ? (
+            /* Savings Calculator Tab: Monthly budgeting and savings analysis */
+            <div className="savings-calculator-tab-content">
+              <SavingsCalculatorTab />
+            </div>
+          ) : tab === 'projections' ? (
             /* Projections Tab: Monte Carlo Simulation */
             <div className="projections-tab-content">
               {projectionAccount ? (
