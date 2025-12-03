@@ -149,7 +149,7 @@ export function InvestmentOutcomesTab() {
   const INFLATION_ADJUSTMENT_RATE = -0.025;
   
   // ─── INVESTMENT MODE & VIEW MODE ──────────────────────────────────
-  const [investmentMode, setInvestmentMode] = useState<InvestmentMode>('both');
+  const [investmentMode, setInvestmentMode] = useState<InvestmentMode>('monthly');
   const [viewMode, setViewMode] = useState<ViewMode>('graph');
   
   // ─── INVESTMENT AMOUNTS ───────────────────────────────────────────
@@ -179,7 +179,13 @@ export function InvestmentOutcomesTab() {
       }
     }
   }, [consumeInvestmentOutcomesPrefill]);
-  
+
+  // Auto-configure for cash-only with inflation adjustment on mount
+  useEffect(() => {
+    setInflationAdjustEnabled(true);
+    setActiveAssets(new Set(['cash']));
+  }, []);
+
   // Handle dynamic horizon extension: when user reaches 30, extend to 60
   const handleHorizonChange = useCallback((value: number) => {
     const clampedValue = Math.max(HORIZON_MIN, value);
@@ -287,14 +293,6 @@ export function InvestmentOutcomesTab() {
   
   // ─── TOGGLE ASSET (with minimum 1 enforcement) ────────────────────
   const toggleAsset = useCallback((assetId: AssetTypeId) => {
-    // If activating pension, show tax modal first
-    if (assetId === 'pension' && !activeAssets.has('pension')) {
-      setPendingPensionTaxRate(pensionTaxRate);
-      setPendingPensionTaxRegion(pensionTaxRegion);
-      setShowPensionTaxModal(true);
-      return;
-    }
-    
     setActiveAssets(prev => {
       const next = new Set(prev);
       if (next.has(assetId)) {
@@ -314,9 +312,16 @@ export function InvestmentOutcomesTab() {
   const confirmPensionTax = useCallback(() => {
     setPensionTaxRate(pendingPensionTaxRate);
     setPensionTaxRegion(pendingPensionTaxRegion);
-    setActiveAssets(prev => new Set([...prev, 'pension']));
+    // For editing, open the edit modal; for activation, add to active assets
+    if (activeAssets.has('pension')) {
+      // Editing existing pension
+      setEditingAsset('pension');
+    } else {
+      // Activating pension
+      setActiveAssets(prev => new Set([...prev, 'pension']));
+    }
     setShowPensionTaxModal(false);
-  }, [pendingPensionTaxRate, pendingPensionTaxRegion]);
+  }, [pendingPensionTaxRate, pendingPensionTaxRegion, activeAssets]);
   
   const cancelPensionTax = useCallback(() => {
     setShowPensionTaxModal(false);
@@ -324,6 +329,14 @@ export function InvestmentOutcomesTab() {
   
   // ─── EDIT ASSET (with confirmation for historical) ────────────────
   const handleEditAsset = useCallback((assetId: AssetTypeId) => {
+    // If editing pension, show tax modal first
+    if (assetId === 'pension') {
+      setPendingPensionTaxRate(pensionTaxRate);
+      setPendingPensionTaxRegion(pensionTaxRegion);
+      setShowPensionTaxModal(true);
+      return;
+    }
+    
     const config = assetConfigs[assetId];
     if (config.isHistorical && !config.customOverride) {
       setPendingEditAsset(assetId);
@@ -331,7 +344,7 @@ export function InvestmentOutcomesTab() {
     } else {
       setEditingAsset(assetId);
     }
-  }, [assetConfigs]);
+  }, [assetConfigs, pensionTaxRate, pensionTaxRegion]);
   
   const confirmOverride = useCallback(() => {
     if (pendingEditAsset) {
@@ -1121,18 +1134,6 @@ export function InvestmentOutcomesTab() {
               {editingAsset === 'pension' && (
                 <>
                   <div className="config-field">
-                    <label>Marginal Tax Rate</label>
-                    <select
-                      value={pensionTaxRate}
-                      onChange={(e) => setPensionTaxRate(parseFloat(e.target.value))}
-                      className="modal-select"
-                    >
-                      {(pensionTaxRegion === 'england' ? ENGLAND_TAX_BRACKETS : SCOTLAND_TAX_BRACKETS).map(b => (
-                        <option key={b.rate} value={b.rate}>{b.label}</option>
-                      ))}
-                    </select>
-                  </div>
-                  <div className="config-field">
                     <label>Investment Mix</label>
                     <select
                       value={pensionEquityMix}
@@ -1311,7 +1312,7 @@ export function InvestmentOutcomesTab() {
                 Cancel
               </button>
               <button className="modal-btn save" onClick={confirmPensionTax}>
-                Add Pension
+                {activeAssets.has('pension') ? 'Update Settings' : 'Add Pension'}
               </button>
             </div>
           </div>
