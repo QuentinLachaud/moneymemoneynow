@@ -17187,7 +17187,7 @@ html {
 }
 
 .total-income-display .income-label {
-  font-size: 0.85rem;
+  font-size: 0.9rem;
   font-weight: 500;
   color: var(--muted-foreground);
   text-transform: uppercase;
@@ -17201,7 +17201,7 @@ html {
 }
 
 .total-income-display .income-breakdown {
-  font-size: 0.8rem;
+  font-size: 0.85rem;
   color: var(--muted-foreground);
   margin-top: 4px;
 }
@@ -17260,7 +17260,7 @@ html {
 }
 
 .section-title {
-  font-size: 0.95rem;
+  font-size: 1.1rem;
   font-weight: 600;
   color: var(--foreground);
 }
@@ -17272,20 +17272,14 @@ html {
 }
 
 .section-total {
-  font-size: 0.85rem;
-  font-weight: 600;
-  color: var(--muted-foreground);
-}
-
-.expand-icon {
-  display: flex;
-  align-items: center;
-  color: var(--muted-foreground);
-  transition: transform 0.2s ease;
-}
-
-.savings-category-panel.expanded .expand-icon {
-  transform: rotate(180deg);
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #10b981;
+  text-shadow: 0 0 12px rgba(16, 185, 129, 0.6), 0 0 24px rgba(16, 185, 129, 0.3), 0 0 36px rgba(16, 185, 129, 0.1);
+  background: linear-gradient(135deg, rgba(16, 185, 129, 0.1), rgba(5, 150, 105, 0.05));
+  padding: 4px 8px;
+  border-radius: 6px;
+  border: 1px solid rgba(16, 185, 129, 0.2);
 }
 
 /* Panel content with animation */
@@ -17339,11 +17333,12 @@ html {
 
 /* ─── Category Input Row ──────────────────────────────────────────────── */
 .category-input-row {
-  display: flex;
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
   align-items: center;
-  justify-content: space-between;
   padding: 10px 0;
   border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+  gap: 16px;
 }
 
 .category-input-row:last-child {
@@ -17351,14 +17346,16 @@ html {
 }
 
 .category-label {
-  font-size: 0.85rem;
+  font-size: 1.2rem;
   color: var(--foreground);
+  justify-self: start;
 }
 
 .category-input-wrapper {
   display: flex;
   align-items: center;
   gap: 8px;
+  justify-self: center;
 }
 
 .category-input-field {
@@ -17378,81 +17375,73 @@ html {
 }
 
 .currency-prefix {
-  font-size: 0.85rem;
+  font-size: 1rem;
   font-weight: 500;
   color: var(--muted-foreground);
 }
 
 .category-input-field input {
-  width: 80px;
+  width: 160px;
   background: none;
   border: none;
-  font-size: 0.9rem;
+  font-size: 1.2rem;
+  font-weight: 600;
   color: var(--foreground);
   outline: none;
-  text-align: right;
+  text-align: center;
+  /* Remove spinner arrows */
+  -webkit-appearance: none;
+  -moz-appearance: textfield;
+  appearance: none;
+}
+
+.category-input-field input::-webkit-outer-spin-button,
+.category-input-field input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
 }
 
 .category-input-field input::placeholder {
   color: rgba(255, 255, 255, 0.3);
 }
 
-/* Frequency selector (for vehicle items) */
-.frequency-selector {
-  position: relative;
-}
-
-.frequency-toggle {
+/* Frequency toggle slider (for vehicle items) */
+.frequency-toggle-slider {
   display: flex;
-  align-items: center;
-  gap: 4px;
-  padding: 6px 10px;
   background: rgba(255, 255, 255, 0.06);
   border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: 6px;
-  font-size: 0.75rem;
-  color: var(--muted-foreground);
-  cursor: pointer;
-  transition: all 0.15s ease;
-}
-
-.frequency-toggle:hover {
-  background: rgba(255, 255, 255, 0.1);
-}
-
-.frequency-dropdown {
-  position: absolute;
-  top: 100%;
-  right: 0;
-  margin-top: 4px;
-  background: #1a1d24;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 8px;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
   overflow: hidden;
-  z-index: 100;
+  height: 100%; /* Match the height of the input field */
 }
 
-.frequency-option {
-  display: block;
-  width: 100%;
-  padding: 10px 16px;
+.frequency-toggle-slider .frequency-option {
+  padding: 4px 8px;
   background: none;
   border: none;
-  font-size: 0.85rem;
-  color: var(--foreground);
-  text-align: left;
+  color: var(--muted-foreground);
+  font-size: 0.75rem;
+  font-weight: 500;
   cursor: pointer;
-  transition: background 0.1s ease;
+  transition: all 0.15s ease;
+  border-right: 1px solid rgba(255, 255, 255, 0.08);
 }
 
-.frequency-option:hover {
-  background: rgba(255, 255, 255, 0.06);
+.frequency-toggle-slider .frequency-option:last-child {
+  border-right: none;
 }
 
-.frequency-option.active {
+.frequency-toggle-slider .frequency-option.active {
+  background: rgba(16, 185, 129, 0.2);
+  color: #10b981;
+}
+
+.frequency-toggle-slider .frequency-option:hover {
   background: rgba(255, 255, 255, 0.1);
-  font-weight: 600;
+}
+
+.frequency-toggle-slider .frequency-option.active:hover {
+  background: rgba(16, 185, 129, 0.3);
 }
 
 /* ─── Savings Right Panel (Analysis) ──────────────────────────────────── */
@@ -17527,32 +17516,51 @@ html {
 }
 
 /* Savings rate card */
+.savings-rate-card {
+  position: relative;
+}
+
+.savings-rate-card .card-title.inline {
+  position: absolute;
+  top: 50%;
+  left: 16px;
+  transform: translateY(-50%);
+  font-size: 0.9rem;
+  font-weight: 600;
+  margin: 0;
+  color: var(--foreground);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  z-index: 1;
+}
+
 .savings-rate-card .savings-rate-display {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 8px;
-  padding: 24px 0;
+  gap: 4px;
+  padding: 8px 0;
 }
 
 .savings-rate-value {
-  font-size: 3rem;
+  font-size: 2.5rem;
   font-weight: 800;
   line-height: 1;
 }
 
 .savings-rate-label {
-  font-size: 1rem;
+  font-size: 0.9rem;
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 1px;
 }
 
 .savings-rate-description {
-  font-size: 0.85rem;
+  font-size: 0.75rem;
   color: var(--muted-foreground);
   text-align: center;
-  line-height: 1.5;
+  line-height: 1.4;
+  margin-top: 8px;
 }
 
 /* ─── Pie Chart Styles ────────────────────────────────────────────────── */
@@ -17882,17 +17890,45 @@ html {
 
 /* ─── Subcategory Row ─────────────────────────────────────────────────── */
 .subcategory-row {
-  display: flex;
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
   align-items: center;
-  justify-content: space-between;
   padding: 10px 0;
   border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+  position: relative;
+  gap: 16px;
+}
+
+.subcategory-name {
+  justify-self: start;
+  font-size: 1.1rem;
+  color: var(--foreground);
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 4px;
+  transition: background-color 0.15s ease;
+}
+
+.subcategory-name:hover {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.subcategory-input-group {
+  justify-self: center;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.subcategory-row:hover .subcategory-delete-btn {
+  opacity: 1;
+  visibility: visible;
 }
 
 .subcategory-name {
   background: none;
   border: none;
-  font-size: 0.85rem;
+  font-size: 1rem;
   color: var(--muted-foreground);
   cursor: pointer;
   padding: 4px 8px;
@@ -17911,13 +17947,30 @@ html {
   border: 1px solid rgba(255, 255, 255, 0.15);
   border-radius: 4px;
   padding: 4px 8px;
-  font-size: 0.85rem;
+  font-size: 1rem;
   color: var(--foreground);
   outline: none;
   width: 120px;
 }
 
 .subcategory-name-input:focus {
+  border-color: rgba(255, 255, 255, 0.3);
+}
+
+/* ─── Section Title Input ─────────────────────────────────────────────── */
+.section-title-input {
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 4px;
+  padding: 4px 8px;
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--foreground);
+  outline: none;
+  min-width: 120px;
+}
+
+.section-title-input:focus {
   border-color: rgba(255, 255, 255, 0.3);
 }
 
@@ -17931,42 +17984,51 @@ html {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 24px;
-  height: 24px;
-  background: none;
-  border: none;
-  color: var(--muted-foreground);
+  width: 32px;
+  height: 32px;
+  background: rgba(239, 68, 68, 0.1);
+  border: 1px solid rgba(239, 68, 68, 0.2);
+  color: #ef4444;
   cursor: pointer;
-  border-radius: 4px;
-  opacity: 0.5;
+  border-radius: 6px;
+  opacity: 0;
+  visibility: hidden;
   transition: all 0.15s ease;
+  position: absolute;
+  right: 0;
+  top: 50%;
+  transform: translateY(-50%);
 }
 
 .subcategory-delete-btn:hover {
-  background: rgba(239, 68, 68, 0.1);
-  color: #ef4444;
-  opacity: 1;
+  background: rgba(239, 68, 68, 0.2);
+  border-color: rgba(239, 68, 68, 0.4);
+  color: #dc2626;
+  transform: translateY(-50%) scale(1.05);
 }
 
 /* ─── Add Subcategory Button ──────────────────────────────────────────── */
 .add-subcategory-btn {
   display: flex;
   align-items: center;
-  gap: 6px;
-  padding: 8px 12px;
-  margin-top: 8px;
-  background: none;
-  border: 1px dashed rgba(255, 255, 255, 0.15);
-  border-radius: 8px;
-  font-size: 0.8rem;
+  justify-content: center;
+  gap: 8px;
+  padding: 14px 8px;
+  margin: 12px auto 0;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px dashed rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  font-size: 0.9rem;
+  font-weight: 500;
   color: var(--muted-foreground);
   cursor: pointer;
   transition: all 0.15s ease;
+  width: fit-content;
 }
 
 .add-subcategory-btn:hover {
-  background: rgba(255, 255, 255, 0.03);
-  border-color: rgba(255, 255, 255, 0.25);
+  background: rgba(255, 255, 255, 0.06);
+  border-color: rgba(255, 255, 255, 0.2);
   color: var(--foreground);
 }
 
@@ -18014,7 +18076,7 @@ html {
   border: 1px solid rgba(255, 255, 255, 0.12);
   border-radius: 10px;
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
-  z-index: 200;
+  z-index: 10000;
   min-width: 160px;
   animation: popIn 0.15s ease;
 }

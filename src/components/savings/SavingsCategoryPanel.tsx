@@ -10,7 +10,7 @@
  * - Custom sections can be deleted with confirmation
  */
 
-import { ChevronDown, ChevronUp, Home, Car, Tv, Baby, TrendingUp, Plus, Trash2, FolderOpen } from 'lucide-react';
+import { Home, Car, Tv, Baby, TrendingUp, Plus, Trash2, FolderOpen } from 'lucide-react';
 import { useState } from 'react';
 import { ExpenseSection, Subcategory } from '../../utils/savingsCalculations';
 import { Currency, CURRENCY_SYMBOLS } from '../../utils/investmentSimulation';
@@ -41,6 +41,8 @@ interface SavingsCategoryPanelProps {
   onRemoveSubcategory?: (subcategoryId: string) => void;
   /** Custom section deletion */
   onDeleteSection?: () => void;
+  /** Custom section title update */
+  onUpdateSectionTitle?: (title: string) => void;
   /** Whether this section can be deleted */
   canDelete?: boolean;
 }
@@ -56,6 +58,7 @@ export function SavingsCategoryPanel({
   onUpdateSubcategory,
   onRemoveSubcategory,
   onDeleteSection,
+  onUpdateSectionTitle,
   canDelete = false,
 }: SavingsCategoryPanelProps) {
   const sectionTotal = calculateSectionTotal(section);
@@ -65,6 +68,8 @@ export function SavingsCategoryPanel({
   
   // State for inline subcategory name editing
   const [editingSubId, setEditingSubId] = useState<string | null>(null);
+  // State for inline section title editing
+  const [editingTitle, setEditingTitle] = useState(false);
 
   return (
     <div className={`savings-category-panel ${isExpanded ? 'expanded' : ''}`}>
@@ -80,19 +85,35 @@ export function SavingsCategoryPanel({
             <span className="section-icon">
               {SECTION_ICONS[section.icon] || <Home size={18} />}
             </span>
-            <span className="section-title">{section.title}</span>
+            {editingTitle && canDelete && onUpdateSectionTitle ? (
+              <input
+                type="text"
+                className="section-title-input"
+                value={section.title}
+                onChange={(e) => onUpdateSectionTitle(e.target.value)}
+                onBlur={() => setEditingTitle(false)}
+                onKeyDown={(e) => e.key === 'Enter' && setEditingTitle(false)}
+                autoFocus
+              />
+            ) : (
+              <button
+                type="button"
+                className="section-title"
+                onClick={() => canDelete && setEditingTitle(true)}
+                title={canDelete ? "Click to edit name" : undefined}
+              >
+                {section.title}
+              </button>
+            )}
           </div>
           
           <div className="header-right">
             {/* Show total when collapsed */}
             {!isExpanded && sectionTotal > 0 && (
               <span className="section-total">
-                {symbol}{sectionTotal.toLocaleString('en-US', { maximumFractionDigits: 0 })}/mo
+                £{sectionTotal.toLocaleString('en-GB', { maximumFractionDigits: 0 })} per month
               </span>
             )}
-            <span className="expand-icon">
-              {isExpanded ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
-            </span>
           </div>
         </button>
         
@@ -107,7 +128,7 @@ export function SavingsCategoryPanel({
                 className="delete-section-btn"
                 title="Delete section"
               >
-                <Trash2 size={14} />
+                <Trash2 size={18} />
               </button>
             }
           />
@@ -115,7 +136,11 @@ export function SavingsCategoryPanel({
       </div>
       
       {/* Content (animated) */}
-      <div className="category-panel-content">
+      <div 
+        className="category-panel-content"
+        onClick={isExpanded ? onToggle : undefined}
+        style={{ cursor: isExpanded ? 'pointer' : 'default' }}
+      >
         <div className="category-list">
           {/* Fixed categories */}
           {section.categories.map((category) => (
@@ -201,16 +226,6 @@ export function SavingsCategoryPanel({
             </button>
           )}
         </div>
-        
-        {/* Section subtotal */}
-        {sectionTotal > 0 && (
-          <div className="section-subtotal">
-            <span className="subtotal-label">Section Total</span>
-            <span className="subtotal-value">
-              {symbol}{sectionTotal.toLocaleString('en-US', { maximumFractionDigits: 0 })}/mo
-            </span>
-          </div>
-        )}
       </div>
     </div>
   );

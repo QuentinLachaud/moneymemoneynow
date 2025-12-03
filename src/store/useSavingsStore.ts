@@ -203,44 +203,97 @@ export const useSavingsStore = create<SavingsStore>()(
           name,
           amount: 0,
         };
-        set((state) => ({
-          expenseSections: state.expenseSections.map((section) => {
-            if (section.id !== sectionId) return section;
-            return {
-              ...section,
-              subcategories: [...(section.subcategories || []), newSubcategory],
+        set((state) => {
+          // Check if it's a regular section
+          const expenseSectionIndex = state.expenseSections.findIndex(s => s.id === sectionId);
+          if (expenseSectionIndex !== -1) {
+            const updatedSections = [...state.expenseSections];
+            updatedSections[expenseSectionIndex] = {
+              ...updatedSections[expenseSectionIndex],
+              subcategories: [...(updatedSections[expenseSectionIndex].subcategories || []), newSubcategory],
             };
-          }),
-        }));
+            return { expenseSections: updatedSections };
+          }
+          
+          // Check if it's a custom section
+          const customSectionIndex = state.customSections.findIndex(s => s.id === sectionId);
+          if (customSectionIndex !== -1) {
+            const updatedSections = [...state.customSections];
+            updatedSections[customSectionIndex] = {
+              ...updatedSections[customSectionIndex],
+              subcategories: [...(updatedSections[customSectionIndex].subcategories || []), newSubcategory],
+            };
+            return { customSections: updatedSections };
+          }
+          
+          return state;
+        });
       },
 
       updateSubcategory: (sectionId: string, subcategoryId: string, updates: Partial<Subcategory>) => {
-        set((state) => ({
-          expenseSections: state.expenseSections.map((section) => {
-            if (section.id !== sectionId) return section;
-            return {
-              ...section,
-              subcategories: (section.subcategories || []).map((sub) => {
+        set((state) => {
+          // Check if it's a regular section
+          const expenseSectionIndex = state.expenseSections.findIndex(s => s.id === sectionId);
+          if (expenseSectionIndex !== -1) {
+            const updatedSections = [...state.expenseSections];
+            updatedSections[expenseSectionIndex] = {
+              ...updatedSections[expenseSectionIndex],
+              subcategories: (updatedSections[expenseSectionIndex].subcategories || []).map((sub) => {
                 if (sub.id !== subcategoryId) return sub;
                 return { ...sub, ...updates };
               }),
             };
-          }),
-        }));
+            return { expenseSections: updatedSections };
+          }
+          
+          // Check if it's a custom section
+          const customSectionIndex = state.customSections.findIndex(s => s.id === sectionId);
+          if (customSectionIndex !== -1) {
+            const updatedSections = [...state.customSections];
+            updatedSections[customSectionIndex] = {
+              ...updatedSections[customSectionIndex],
+              subcategories: (updatedSections[customSectionIndex].subcategories || []).map((sub) => {
+                if (sub.id !== subcategoryId) return sub;
+                return { ...sub, ...updates };
+              }),
+            };
+            return { customSections: updatedSections };
+          }
+          
+          return state;
+        });
       },
 
       removeSubcategory: (sectionId, subcategoryId) => {
-        set((state) => ({
-          expenseSections: state.expenseSections.map((section) => {
-            if (section.id !== sectionId) return section;
-            return {
-              ...section,
-              subcategories: (section.subcategories || []).filter(
+        set((state) => {
+          // Check if it's a regular section
+          const expenseSectionIndex = state.expenseSections.findIndex(s => s.id === sectionId);
+          if (expenseSectionIndex !== -1) {
+            const updatedSections = [...state.expenseSections];
+            updatedSections[expenseSectionIndex] = {
+              ...updatedSections[expenseSectionIndex],
+              subcategories: (updatedSections[expenseSectionIndex].subcategories || []).filter(
                 (sub) => sub.id !== subcategoryId
               ),
             };
-          }),
-        }));
+            return { expenseSections: updatedSections };
+          }
+          
+          // Check if it's a custom section
+          const customSectionIndex = state.customSections.findIndex(s => s.id === sectionId);
+          if (customSectionIndex !== -1) {
+            const updatedSections = [...state.customSections];
+            updatedSections[customSectionIndex] = {
+              ...updatedSections[customSectionIndex],
+              subcategories: (updatedSections[customSectionIndex].subcategories || []).filter(
+                (sub) => sub.id !== subcategoryId
+              ),
+            };
+            return { customSections: updatedSections };
+          }
+          
+          return state;
+        });
       },
 
       // ─── Custom Sections ─────────────────────────────────────────

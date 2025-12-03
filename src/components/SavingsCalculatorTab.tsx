@@ -4,7 +4,7 @@
  * Layout:
  * - Top ribbon: Currency selector, Net Income input with tooltip, Add Bonus button
  * - Left panel: Total Monthly Income display + Collapsible expenditure sections
- * - Right panel: Summary, Pie chart, Savings rate, Waterfall chart
+ * - Right panel: Summary, Savings rate, Waterfall chart
  *
  * Uses Zustand store for state persistence.
  */
@@ -24,7 +24,6 @@ import { useSavingsStore } from '../store/useSavingsStore';
 import { useAppStore } from '../store/useAppStore';
 import { SavingsCategoryPanel } from './savings/SavingsCategoryPanel';
 import { BonusModal } from './savings/BonusModal';
-import { PieChartOutflows } from './savings/PieChartOutflows';
 import { WaterfallChart } from './savings/WaterfallChart';
 import { Tooltip, TooltipContent, TooltipTrigger } from './ui/tooltip';
 
@@ -54,6 +53,7 @@ export function SavingsCalculatorTab() {
   
   // Custom section actions
   const addCustomSection = useSavingsStore((s) => s.addCustomSection);
+  const updateCustomSectionTitle = useSavingsStore((s) => s.updateCustomSectionTitle);
   const removeCustomSection = useSavingsStore((s) => s.removeCustomSection);
   
   // Navigation to Investment Outcomes
@@ -261,6 +261,7 @@ export function SavingsCalculatorTab() {
                   updateSubcategory(section.id, subId, updates)
                 }
                 onRemoveSubcategory={(subId) => removeSubcategory(section.id, subId)}
+                onUpdateSectionTitle={(title) => updateCustomSectionTitle(section.id, title)}
                 onDeleteSection={() => removeCustomSection(section.id)}
                 canDelete
               />
@@ -282,7 +283,6 @@ export function SavingsCalculatorTab() {
         <div className="savings-right-panel">
           {/* 1. Income vs Outgoings Summary */}
           <div className="analysis-card summary-card">
-            <h4 className="card-title">Monthly Summary</h4>
             <div className="summary-rows">
               <div className="summary-row">
                 <span className="summary-label">Total Income</span>
@@ -325,15 +325,9 @@ export function SavingsCalculatorTab() {
             )}
           </div>
 
-          {/* 2. Outflow Pie Chart */}
-          <div className="analysis-card">
-            <h4 className="card-title">Outflow Breakdown</h4>
-            <PieChartOutflows sections={allSections} currency={currency} />
-          </div>
-
-          {/* 3. Savings Rate Display */}
+          {/* 2. Savings Rate Display */}
           <div className="analysis-card savings-rate-card">
-            <h4 className="card-title">Savings Rate</h4>
+            <h4 className="card-title inline">Savings Rate</h4>
             <div className="savings-rate-display">
               <span
                 className="savings-rate-value"
@@ -359,7 +353,7 @@ export function SavingsCalculatorTab() {
             </p>
           </div>
 
-          {/* 4. Waterfall Chart */}
+          {/* 3. Waterfall Chart */}
           <div className="analysis-card">
             <h4 className="card-title">Income Flow</h4>
             <WaterfallChart

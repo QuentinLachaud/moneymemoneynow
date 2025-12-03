@@ -7,8 +7,7 @@
  * - Currency symbol prefix
  */
 
-import { ChevronDown } from 'lucide-react';
-import { useState, useRef, useEffect } from 'react';
+import { useRef } from 'react';
 import { Currency, CURRENCY_SYMBOLS } from '../../utils/investmentSimulation';
 
 interface CategoryInputRowProps {
@@ -34,19 +33,7 @@ export function CategoryInputRow({
   onAmountChange,
   onFrequencyChange,
 }: CategoryInputRowProps) {
-  const [showFrequencyDropdown, setShowFrequencyDropdown] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
-
-  // Close dropdown when clicking outside
-  useEffect(() => {
-    function handleClickOutside(event: MouseEvent) {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
-        setShowFrequencyDropdown(false);
-      }
-    }
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
 
   const symbol = CURRENCY_SYMBOLS[currency];
 
@@ -70,42 +57,27 @@ export function CategoryInputRow({
         </div>
         
         {showFrequency && onFrequencyChange && (
-          <div className="frequency-selector" ref={dropdownRef}>
+          <div className="frequency-toggle-slider">
             <button
               type="button"
-              className="frequency-toggle"
-              onClick={() => setShowFrequencyDropdown(!showFrequencyDropdown)}
+              className={`frequency-option ${frequency === 'monthly' ? 'active' : ''}`}
+              onClick={(e) => {
+                e.stopPropagation();
+                onFrequencyChange('monthly');
+              }}
             >
-              <span className="frequency-label">
-                {frequency === 'annual' ? '/yr' : '/mo'}
-              </span>
-              <ChevronDown size={12} />
+              Monthly
             </button>
-            
-            {showFrequencyDropdown && (
-              <div className="frequency-dropdown">
-                <button
-                  type="button"
-                  className={`frequency-option ${frequency === 'monthly' ? 'active' : ''}`}
-                  onClick={() => {
-                    onFrequencyChange('monthly');
-                    setShowFrequencyDropdown(false);
-                  }}
-                >
-                  Monthly
-                </button>
-                <button
-                  type="button"
-                  className={`frequency-option ${frequency === 'annual' ? 'active' : ''}`}
-                  onClick={() => {
-                    onFrequencyChange('annual');
-                    setShowFrequencyDropdown(false);
-                  }}
-                >
-                  Annual
-                </button>
-              </div>
-            )}
+            <button
+              type="button"
+              className={`frequency-option ${frequency === 'annual' ? 'active' : ''}`}
+              onClick={(e) => {
+                e.stopPropagation();
+                onFrequencyChange('annual');
+              }}
+            >
+              Annual
+            </button>
           </div>
         )}
       </div>
