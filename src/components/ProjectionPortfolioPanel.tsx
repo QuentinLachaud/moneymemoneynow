@@ -28,7 +28,8 @@ import {
   Download,
   Info,
   Zap,
-  Activity
+  Activity,
+  ChevronDown
 } from 'lucide-react';
 
 interface ProjectionPortfolioPanelProps {
@@ -40,7 +41,6 @@ interface AssetOverride {
   globalVolatilityOverride: number | null;
 }
 
-const SIMULATION_COUNTS = [10, 100, 1000] as const;
 const DEFAULT_INFLATION_RATE = 2.5;
 
 export function ProjectionPortfolioPanel({ accounts }: ProjectionPortfolioPanelProps) {
@@ -73,10 +73,6 @@ export function ProjectionPortfolioPanel({ accounts }: ProjectionPortfolioPanelP
   const [showCashFlowTable, setShowCashFlowTable] = useState(false);
   
   // Update handlers for persisted settings
-  const setNumSimulations = useCallback((value: number) => {
-    setSimulationSettings({ numSimulations: value });
-  }, [setSimulationSettings]);
-  
   const setGlobalVolatilityOverride = useCallback((value: number) => {
     setSimulationSettings({ volatilityOverride: value });
   }, [setSimulationSettings]);
@@ -373,24 +369,6 @@ export function ProjectionPortfolioPanel({ accounts }: ProjectionPortfolioPanelP
             </button>
           </div>
 
-          {/* Simulation Count */}
-          {!isDeterministic && (
-            <div className="control-group simulations-control">
-              <label>Simulations</label>
-              <div className="btn-group-sm">
-                {SIMULATION_COUNTS.map(count => (
-                  <button
-                    key={count}
-                    className={`btn-sm ${numSimulations === count ? 'active' : ''}`}
-                    onClick={() => setNumSimulations(count)}
-                  >
-                    {count >= 1000 ? `${count / 1000}k` : count}
-                  </button>
-                ))}
-              </div>
-            </div>
-          )}
-
           {/* Stacked Volatility & Projection Sliders */}
           <div className="control-group stacked-sliders">
             {/* Volatility Control */}
@@ -590,11 +568,12 @@ export function ProjectionPortfolioPanel({ accounts }: ProjectionPortfolioPanelP
                   {showCashFlowTable ? 'Graph' : 'Data'}
                 </button>
                 <button
-                  className="download-btn"
+                  className="download-btn download-csv"
                   onClick={() => downloadCSV(cashFlowData, cashFlowColumns, 'portfolio-cash-flow')}
-                  title="Download as CSV"
+                  title="Download CSV"
                 >
-                  <Download size={14} />
+                  <ChevronDown size={14} />
+                  <span className="download-label">CSV</span>
                 </button>
               </div>
             </div>

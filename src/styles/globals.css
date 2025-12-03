@@ -3572,6 +3572,20 @@ html {
   color: #4ade80;
 }
 
+/* Expanded CSV download button variant (shows icon + CSV label) */
+.download-btn.download-csv {
+  width: auto;
+  padding: 6px 10px;
+  gap: 8px;
+}
+
+.download-btn .download-label {
+  font-size: 0.78rem;
+  color: inherit;
+  line-height: 1;
+  display: inline-block;
+}
+
 /* Data Table Container */
 .data-table-container {
   max-height: 300px;
@@ -4361,7 +4375,22 @@ html {
   display: flex;
   flex-direction: column !important;
   gap: 8px !important;
-  min-width: 200px;
+  /* Allow the stacked-sliders area to grow and shrink so sliders can align to the divider */
+  flex: 1 1 auto;
+  min-width: 0;
+
+  /* Right alignment:
+     - align-items pushes the column children to the right edge
+     - margin-left:auto moves the whole container to the right within its parent */
+  align-items: flex-end;
+  margin-left: auto;
+  width: auto;
+}
+
+/* Ensure the actual slider can still expand while staying right-aligned */
+.stacked-sliders .wide-slider {
+  width: 100%;
+  max-width: 520px; /* safeguard for very wide containers */
 }
 
 .stacked-sliders .slider-row {
@@ -4369,21 +4398,30 @@ html {
   flex-direction: row;
   align-items: center;
   gap: 12px;
+  justify-content: space-between;
 }
 
 .stacked-sliders .slider-row label {
   font-size: 0.72rem;
   color: rgba(255, 255, 255, 0.7);
   white-space: nowrap;
-  min-width: 100px;
+  min-width: 120px;
   display: flex;
   align-items: center;
   gap: 4px;
 }
 
+/* Make the actual slider expand to fill the remaining horizontal space
+   so its right edge aligns exactly with the controls divider. */
+.stacked-sliders .slider-row .wide-slider {
+  flex: 1 1 auto;
+  width: auto;
+  max-width: 520px; /* safeguard for very wide containers */
+}
+
 /* Wide Slider - 30% wider than previous sliders */
 .wide-slider {
-  width: 200px;
+  width: 180px;
   height: 6px;
   -webkit-appearance: none;
   appearance: none;

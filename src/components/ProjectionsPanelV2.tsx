@@ -30,14 +30,14 @@ import {
   Info,
   Zap,
   Activity,
-  Target
+  Target,
+  ChevronDown
 } from 'lucide-react';
 
 interface ProjectionsPanelV2Props {
   account: Account;
 }
 
-const SIMULATION_COUNTS = [10, 100, 1000] as const;
 const DEFAULT_INFLATION_RATE = 2.5;
 
 export function ProjectionsPanelV2({ account }: ProjectionsPanelV2Props) {
@@ -66,10 +66,6 @@ export function ProjectionsPanelV2({ account }: ProjectionsPanelV2Props) {
   const [startingValueOverride, setStartingValueOverride] = useState<number | null>(null);
 
   // Update handlers for persisted settings
-  const setNumSimulations = useCallback((value: number) => {
-    setSimulationSettings({ numSimulations: value });
-  }, [setSimulationSettings]);
-  
   const setVolatilityOverride = useCallback((value: number) => {
     setSimulationSettings({ volatilityOverride: value });
   }, [setSimulationSettings]);
@@ -266,29 +262,12 @@ export function ProjectionsPanelV2({ account }: ProjectionsPanelV2Props) {
             </button>
           </div>
 
-          {/* Simulation Count */}
-          {!isDeterministic && (
-            <div className="control-group simulations-control">
-              <label>Simulations</label>
-              <div className="btn-group-sm">
-                {SIMULATION_COUNTS.map(count => (
-                  <button
-                    key={count}
-                    className={`btn-sm ${numSimulations === count ? 'active' : ''}`}
-                    onClick={() => setNumSimulations(count)}
-                  >
-                    {count >= 1000 ? `${count / 1000}k` : count}
-                  </button>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* Volatility Control */}
-          {!isDeterministic && (
-            <div className="control-group volatility-control-compact">
-              <label>Volatility: {volatilityOverride}%</label>
-              <div className="slider-with-presets">
+          {/* Stacked Volatility & Projection Sliders */}
+          <div className="control-group stacked-sliders">
+            {/* Volatility Control */}
+            {!isDeterministic && (
+              <div className="slider-row">
+                <label>Volatility: {volatilityOverride}%</label>
                 <input
                   type="range"
                   min="0"
@@ -296,48 +275,35 @@ export function ProjectionsPanelV2({ account }: ProjectionsPanelV2Props) {
                   step="1"
                   value={volatilityOverride}
                   onChange={(e) => handleVolatilityChange(parseInt(e.target.value))}
-                  className="compact-slider"
+                  className="wide-slider"
                 />
-                <div className="preset-btns">
-                  {[0, 10, 20, 30].map(v => (
-                    <button
-                      key={v}
-                      className={`preset-btn-sm ${volatilityOverride === v ? 'active' : ''}`}
-                      onClick={() => handleVolatilityChange(v)}
-                    >
-                      {v}
-                    </button>
-                  ))}
-                </div>
               </div>
+            )}
+
+            {/* Projection Years */}
+            <div className="slider-row">
+              <label>
+                Projection: {effectiveProjectionYears}y
+                {projectionYearsOverride !== null && (
+                  <button 
+                    className="reset-btn-inline" 
+                    onClick={() => setProjectionYearsOverride(null)}
+                    title="Reset to account default"
+                  >
+                    ↺
+                  </button>
+                )}
+              </label>
+              <input
+                type="range"
+                min="1"
+                max="100"
+                step="1"
+                value={effectiveProjectionYears}
+                onChange={(e) => setProjectionYearsOverride(parseInt(e.target.value))}
+                className="wide-slider"
+              />
             </div>
-          )}
-
-          <div className="controls-divider" />
-
-          {/* Projection Years */}
-          <div className="control-group projection-control">
-            <label>
-              Projection: {effectiveProjectionYears}y
-              {projectionYearsOverride !== null && (
-                <button 
-                  className="reset-btn-inline" 
-                  onClick={() => setProjectionYearsOverride(null)}
-                  title="Reset to account default"
-                >
-                  ↺
-                </button>
-              )}
-            </label>
-            <input
-              type="range"
-              min="1"
-              max="100"
-              step="1"
-              value={effectiveProjectionYears}
-              onChange={(e) => setProjectionYearsOverride(parseInt(e.target.value))}
-              className="projection-slider-wide"
-            />
           </div>
 
           {/* Inflation Toggle - Slider Style */}
@@ -364,8 +330,8 @@ export function ProjectionsPanelV2({ account }: ProjectionsPanelV2Props) {
             <button 
               className="info-btn" 
               title={adjustForInflation 
-                ? `Values adjusted for ${DEFAULT_INFLATION_RATE}% annual inflation (real purchasing power)` 
-                : 'Values shown in nominal terms (not adjusted for inflation)'}
+                ? `Values adjusted for ${DEFAULT_INFLATION_RATE}% annual inflation` 
+                : 'Values shown in nominal terms'}
             >
               <Info size={12} />
             </button>
@@ -493,11 +459,12 @@ export function ProjectionsPanelV2({ account }: ProjectionsPanelV2Props) {
                   {showCashFlowTable ? 'Graph' : 'Data'}
                 </button>
                 <button
-                  className="download-btn"
+                  className="download-btn download-csv"
                   onClick={() => downloadCSV(cashFlowData, cashFlowColumns, `${account.name}-cash-flow`)}
-                  title="Download as CSV"
+                  title="Download CSV"
                 >
-                  <Download size={14} />
+                  <ChevronDown size={14} />
+                  <span className="download-label">CSV</span>
                 </button>
               </div>
             </div>

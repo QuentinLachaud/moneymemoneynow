@@ -111,7 +111,7 @@ const initialState: AppState = {
   portfolioSelectedIds: new Set(),
   tab: 'projections',
   simulationSettings: {
-    numSimulations: 100,
+    numSimulations: 1000,
     volatilityOverride: 15,
     projectionYearsOverride: null,
     adjustForInflation: false,
