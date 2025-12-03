@@ -1,7 +1,7 @@
 /**
  * InvestmentOutcomesTab — Compare investment outcomes across asset types
  * 
- * Features:
+ * V5 Redesign Features:
  * - Combined lump sum + monthly contribution with escalation
  * - Multiple asset types with Monte Carlo simulation
  * - Per-asset volatility settings (no global equity volatility)
@@ -10,10 +10,14 @@
  * - Modal-based asset editing with focus trap
  * - Contribution bar overlay on chart
  * - Results table with comma-separated formatting
+ * - Inflation adjustment toggle (+2.5% real-terms adjustment)
+ * - Redesigned 4-section ribbon with larger, friendlier UI
+ * - Improved asset list with hover edit and growth rate display
+ * - Glowy graph lines with better tooltips
  */
 
 import { useState, useMemo, useCallback, useEffect, useRef } from 'react';
-import { Settings, ChevronDown, ChevronUp, Plus, Minus, HelpCircle, X, Download } from 'lucide-react';
+import { Settings, ChevronDown, ChevronUp, Plus, Minus, HelpCircle, X, Download, Pencil, Info } from 'lucide-react';
 import {
   ComposedChart,
   Line,
@@ -139,6 +143,10 @@ export function InvestmentOutcomesTab() {
   const [currency, setCurrency] = useState<Currency>('GBP');
   const [showMoreCurrencies, setShowMoreCurrencies] = useState(false);
   
+  // ─── INFLATION ADJUSTMENT ─────────────────────────────────────────
+  const [inflationAdjustEnabled, setInflationAdjustEnabled] = useState(false);
+  const INFLATION_ADJUSTMENT_RATE = 0.025; // 2.5% real-terms adjustment
+  
   // ─── INVESTMENT MODE & VIEW MODE ──────────────────────────────────
   const [investmentMode, setInvestmentMode] = useState<InvestmentMode>('both');
   const [viewMode, setViewMode] = useState<ViewMode>('graph');
@@ -234,6 +242,9 @@ export function InvestmentOutcomesTab() {
   // Graph display toggles (independent)
   const [showContributions, setShowContributions] = useState(false);  // Show contribution bars
   const [showRunningBalance, setShowRunningBalance] = useState(true); // Show asset lines (default ON)
+  
+  // Track which asset row is being hovered (for edit icon)
+  const [hoveredAsset, setHoveredAsset] = useState<AssetTypeId | null>(null);
   
   // Handler to toggle contributions (prevent both being OFF)
   const toggleContributions = useCallback(() => {
@@ -383,6 +394,11 @@ export function InvestmentOutcomesTab() {
         config.expectedReturn = savingsRate;
       }
       
+      // Apply inflation adjustment if enabled (+2.5% real-terms)
+      if (inflationAdjustEnabled && assetId !== 'cash') {
+        config.expectedReturn = config.expectedReturn + INFLATION_ADJUSTMENT_RATE;
+      }
+      
       const result = simulateAsset(
         config,
         'lump-sum', // Always use lump-sum mode but with both amounts
@@ -404,6 +420,7 @@ export function InvestmentOutcomesTab() {
     activeAssets, assetConfigs, effectiveLumpSum, effectiveMonthly,
     horizonYears, cashApplyInflation, cashInflationRate,
     pensionNetSacrifice, pensionTaxRate, savingsRate, contributionEscalation, investmentMode,
+    inflationAdjustEnabled, INFLATION_ADJUSTMENT_RATE,
   ]);
   
   // ─── CHART DATA ───────────────────────────────────────────────────
@@ -590,32 +607,43 @@ export function InvestmentOutcomesTab() {
     }
   }, [horizonYears]);
   
+  // Get growth rate for an asset (except cash)
+  const getGrowthRate = useCallback((assetId: AssetTypeId): number => {
+    const config = assetConfigs[assetId];
+    let rate = config.expectedReturn;
+    if (assetId === 'savings') rate = savingsRate;
+    if (inflationAdjustEnabled && assetId !== 'cash') {
+      rate += INFLATION_ADJUSTMENT_RATE;
+    }
+    return rate;
+  }, [assetConfigs, savingsRate, inflationAdjustEnabled, INFLATION_ADJUSTMENT_RATE]);
+  
   return (
-    <div className="investment-outcomes-tab v4">
-      {/* ─── PREMIUM RIBBON (3-section layout) ─────────────────────────── */}
-      <div className="outcomes-ribbon-v4">
-        {/* GROUP A: Currency Selector (left) */}
-        <div className="ribbon-group ribbon-group-left">
-          <div className="currency-selector-large">
+    <div className="investment-outcomes-tab v5">
+      {/* ─── PREMIUM RIBBON V5 (4-section layout) ─────────────────────────── */}
+      <div className="outcomes-ribbon-v5">
+        {/* SECTION 1: Currency + Inflation Adjuster */}
+        <div className="ribbon-section ribbon-section-1">
+          <div className="currency-selector-v5">
             {PRIMARY_CURRENCIES.map(c => (
               <button
                 key={c}
-                className={`currency-btn-lg ${currency === c ? 'active' : ''}`}
+                className={`currency-btn-v5 ${currency === c ? 'active' : ''}`}
                 onClick={() => setCurrency(c)}
               >
                 <span className="currency-symbol">{CURRENCY_SYMBOLS[c]}</span>
                 <span className="currency-code">{c}</span>
               </button>
             ))}
-            <div className="currency-more-lg">
+            <div className="currency-more-v5">
               <button
-                className="currency-btn-lg more"
+                className="currency-btn-v5 more"
                 onClick={() => setShowMoreCurrencies(!showMoreCurrencies)}
               >
-                <ChevronDown size={14} />
+                <ChevronDown size={16} />
               </button>
               {showMoreCurrencies && (
-                <div className="currency-dropdown-lg">
+                <div className="currency-dropdown-v5">
                   {SECONDARY_CURRENCIES.map(c => (
                     <button
                       key={c}
@@ -629,38 +657,61 @@ export function InvestmentOutcomesTab() {
               )}
             </div>
           </div>
-        </div>
-
-        {/* GROUP B: Mode + Amounts (center) */}
-        <div className="ribbon-group ribbon-group-center">
-          {/* Mode Toggle */}
-          <div className="mode-toggle-v4">
+          
+          {/* Inflation Toggle */}
+          <div className="inflation-toggle-v5">
             <button
-              className={`mode-btn-v4 ${investmentMode === 'lump-sum' ? 'active' : ''}`}
+              className={`inflation-btn ${inflationAdjustEnabled ? 'active' : ''}`}
+              onClick={() => setInflationAdjustEnabled(!inflationAdjustEnabled)}
+            >
+              <span className="toggle-track">
+                <span className="toggle-thumb" />
+              </span>
+              <span className="toggle-label">Inflation Adjust</span>
+            </button>
+            <button className="info-btn" title="When enabled, adds +2.5% real-terms adjustment to all asset projections (except cash) to account for inflation.">
+              <Info size={14} />
+            </button>
+          </div>
+        </div>
+        
+        <div className="ribbon-divider" />
+        
+        {/* SECTION 2: Contribution Mode Toggle */}
+        <div className="ribbon-section ribbon-section-2">
+          <span className="section-label">Contribution Mode</span>
+          <div className="mode-slider-v5">
+            <button
+              className={`mode-option ${investmentMode === 'lump-sum' ? 'active' : ''}`}
               onClick={() => setInvestmentMode('lump-sum')}
             >
               Lump Sum
             </button>
             <button
-              className={`mode-btn-v4 ${investmentMode === 'monthly' ? 'active' : ''}`}
+              className={`mode-option ${investmentMode === 'monthly' ? 'active' : ''}`}
               onClick={() => setInvestmentMode('monthly')}
             >
               Monthly
             </button>
             <button
-              className={`mode-btn-v4 ${investmentMode === 'both' ? 'active' : ''}`}
+              className={`mode-option ${investmentMode === 'both' ? 'active' : ''}`}
               onClick={() => setInvestmentMode('both')}
             >
               Both
             </button>
           </div>
-          
-          {/* Amounts Inline */}
-          <div className="amounts-row-v4">
+        </div>
+        
+        <div className="ribbon-divider" />
+        
+        {/* SECTION 3: Contribution Inputs */}
+        <div className="ribbon-section ribbon-section-3">
+          <span className="section-label">Contribution Amounts</span>
+          <div className="contribution-inputs-v5">
             {(investmentMode === 'lump-sum' || investmentMode === 'both') && (
-              <div className="amount-input-v4">
-                <span className="input-label">Initial</span>
-                <div className="input-wrapper">
+              <div className="input-field-v5">
+                <span className="field-label">Initial Deposit</span>
+                <div className="input-wrapper-v5">
                   <span className="symbol">{symbol}</span>
                   <input
                     type="number"
@@ -672,9 +723,9 @@ export function InvestmentOutcomesTab() {
               </div>
             )}
             {(investmentMode === 'monthly' || investmentMode === 'both') && (
-              <div className="amount-input-v4">
-                <span className="input-label">Monthly</span>
-                <div className="input-wrapper">
+              <div className="input-field-v5">
+                <span className="field-label">Monthly Amount</span>
+                <div className="input-wrapper-v5">
                   <span className="symbol">{symbol}</span>
                   <input
                     type="number"
@@ -686,9 +737,10 @@ export function InvestmentOutcomesTab() {
               </div>
             )}
             {(investmentMode === 'monthly' || investmentMode === 'both') && (
-              <div className="amount-input-v4 escalation">
-                <span className="input-label">Escalation</span>
+              <div className="input-field-v5">
+                <span className="field-label">Escalation</span>
                 <select
+                  className="select-v5"
                   value={contributionEscalation}
                   onChange={(e) => setContributionEscalation(parseFloat(e.target.value))}
                 >
@@ -702,91 +754,103 @@ export function InvestmentOutcomesTab() {
             )}
           </div>
         </div>
-
-        {/* GROUP C: Horizon + View Toggle (right) */}
-        <div className="ribbon-group ribbon-group-right">
-          {/* Horizon Slider */}
-          <div className="horizon-control-v4">
-            <div className="horizon-header">
-              <span className="horizon-label">Horizon</span>
-              <span className="horizon-value">{horizonYears} years</span>
-            </div>
-            <div className="horizon-slider-v4">
-              <span className="slider-edge">{HORIZON_MIN}</span>
-              <input
-                type="range"
-                min={HORIZON_MIN}
-                max={horizonMax}
-                value={horizonYears}
-                onChange={(e) => handleHorizonChange(parseInt(e.target.value))}
-              />
-              <span className="slider-edge">{horizonMax}</span>
-            </div>
-          </div>
-          
-          {/* Large View Toggle */}
-          <div className="view-toggle-v4">
-            <button
-              className={`view-btn-v4 ${viewMode === 'graph' ? 'active' : ''}`}
-              onClick={() => setViewMode('graph')}
-            >
-              Graph
-            </button>
-            <button
-              className={`view-btn-v4 ${viewMode === 'table' ? 'active' : ''}`}
-              onClick={() => setViewMode('table')}
-            >
-              Table
-            </button>
+        
+        <div className="ribbon-divider" />
+        
+        {/* SECTION 4: Investment Period Slider */}
+        <div className="ribbon-section ribbon-section-4">
+          <span className="section-label">Investment Period</span>
+          <div className="period-slider-v5">
+            <span className="slider-min">{HORIZON_MIN}yr</span>
+            <input
+              type="range"
+              min={HORIZON_MIN}
+              max={horizonMax}
+              value={horizonYears}
+              onChange={(e) => handleHorizonChange(parseInt(e.target.value))}
+            />
+            <span className="slider-max">{horizonMax}yr</span>
+            <span className="slider-value">{horizonYears} years</span>
           </div>
         </div>
       </div>
 
       {/* ─── MAIN CONTENT: ASSET SIDEBAR + CENTERED GRAPH ───────────────── */}
-      <div className="outcomes-main-layout-v4">
+      <div className="outcomes-main-layout-v5">
         {/* LEFT: Asset Selector (Vertical Stack) */}
-        <div className="asset-sidebar-v4">
-          <h4 className="sidebar-title">Assets</h4>
-          <div className="asset-list-vertical">
+        <div className="asset-sidebar-v5">
+          <h4 className="sidebar-title">Asset Types</h4>
+          <p className="sidebar-hint">Select any asset to preview how it grows over time.</p>
+          <div className="asset-list-v5">
             {ASSET_ORDER.map(assetId => {
               const config = assetConfigs[assetId];
               const isActive = activeAssets.has(assetId);
               const isLastActive = isActive && activeAssets.size === 1;
+              const isHovered = hoveredAsset === assetId;
+              const growthRate = getGrowthRate(assetId);
               
               return (
                 <div
                   key={assetId}
-                  className={`asset-row ${isActive ? 'active' : ''}`}
+                  className={`asset-pill-v5 ${isActive ? 'active' : ''}`}
                   style={{ '--asset-color': config.color } as React.CSSProperties}
+                  onMouseEnter={() => setHoveredAsset(assetId)}
+                  onMouseLeave={() => setHoveredAsset(null)}
                 >
                   <button
-                    className="asset-toggle"
+                    className="asset-toggle-v5"
                     onClick={() => toggleAsset(assetId)}
                     disabled={isLastActive}
                   >
-                    <span className="asset-dot" style={{ backgroundColor: isActive ? config.color : 'transparent' }} />
+                    <span className="asset-dot" style={{ backgroundColor: isActive ? config.color : 'transparent', borderColor: config.color }} />
                     <span className="asset-name">{config.name}</span>
                   </button>
-                  <div className="asset-actions">
-                    <button className="icon-btn" onClick={() => handleEditAsset(assetId)} title="Settings">
-                      <Settings size={14} />
-                    </button>
-                    <button className="icon-btn" title={getAssetTooltip(assetId)}>
-                      <HelpCircle size={14} />
-                    </button>
-                  </div>
+                  
+                  {/* Growth rate (except cash) */}
+                  {assetId !== 'cash' && (
+                    <span className="growth-rate">
+                      {(growthRate * 100).toFixed(1)}%/yr
+                    </span>
+                  )}
+                  
+                  {/* Edit button on hover */}
+                  <button
+                    className={`edit-btn-v5 ${isHovered ? 'visible' : ''}`}
+                    onClick={() => handleEditAsset(assetId)}
+                    title="Edit settings"
+                  >
+                    <Pencil size={14} />
+                  </button>
                 </div>
               );
             })}
           </div>
         </div>
 
-        {/* CENTER: Graph or Table (1/3 width, centered) */}
-        <div className={`outcomes-content-v4 assets-${activeList.length}`}>
+        {/* CENTER: Graph or Table */}
+        <div className={`outcomes-content-v5 assets-${activeList.length}`}>
+          {/* Graph/Table Toggle - now at top right of content */}
+          <div className="content-header-v5">
+            <div className="view-toggle-v5">
+              <button
+                className={`view-btn-v5 ${viewMode === 'graph' ? 'active' : ''}`}
+                onClick={() => setViewMode('graph')}
+              >
+                Graph
+              </button>
+              <button
+                className={`view-btn-v5 ${viewMode === 'table' ? 'active' : ''}`}
+                onClick={() => setViewMode('table')}
+              >
+                Table
+              </button>
+            </div>
+          </div>
+          
           {viewMode === 'graph' && (
-            <div className="graph-container-v4" ref={chartRef}>
+            <div className="graph-container-v5" ref={chartRef}>
               {/* Legend Card (top-left, not overlapping y-axis) */}
-              <div className="legend-card-v4">
+              <div className="legend-card-v5">
                 <div className="legend-title">Final Values</div>
                 {activeList.map(assetId => {
                   const config = assetConfigs[assetId];
@@ -808,57 +872,62 @@ export function InvestmentOutcomesTab() {
               </div>
 
               {/* Top controls row */}
-              <div className="graph-controls-v4">
-                <div className="graph-toggles-v4">
+              <div className="graph-controls-v5">
+                <div className="graph-toggles-v5">
                   <button
-                    className={`toggle-btn-v4 ${showContributions ? 'active' : ''}`}
+                    className={`toggle-btn-v5 ${showContributions ? 'active' : ''}`}
                     onClick={toggleContributions}
                   >
                     Contributions
                   </button>
                   <button
-                    className={`toggle-btn-v4 ${showRunningBalance ? 'active' : ''}`}
+                    className={`toggle-btn-v5 ${showRunningBalance ? 'active' : ''}`}
                     onClick={toggleRunningBalance}
                   >
                     Running Balance
                   </button>
                 </div>
-                <button className="export-btn-v4" onClick={handleDownloadPNG} title="Download PNG">
-                  <Download size={14} />
+                <button className="export-btn-v5" onClick={handleDownloadPNG} title="Download PNG">
+                  <Download size={16} />
                   PNG
                 </button>
               </div>
 
               {/* Chart */}
-              <div className="chart-wrapper-v4">
-                <ResponsiveContainer width="100%" height={510}>
-                  <ComposedChart data={chartData} margin={{ top: 10, right: 20, bottom: 25, left: 10 }}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
+              <div className="chart-wrapper-v5">
+                <ResponsiveContainer width="100%" height={540}>
+                  <ComposedChart data={chartData} margin={{ top: 15, right: 25, bottom: 30, left: 15 }}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.06)" />
                     <XAxis
                       dataKey="year"
-                      stroke="rgba(255,255,255,0.4)"
+                      stroke="rgba(255,255,255,0.5)"
                       tickFormatter={(v) => `${v}`}
                       ticks={xAxisTicks}
-                      tick={{ fontSize: 10 }}
-                      axisLine={{ stroke: 'rgba(255,255,255,0.15)' }}
+                      tick={{ fontSize: 13, fontFamily: "'Inter', -apple-system, sans-serif" }}
+                      axisLine={{ stroke: 'rgba(255,255,255,0.2)', strokeWidth: 2 }}
+                      tickLine={{ stroke: 'rgba(255,255,255,0.2)' }}
                       type="number"
                       domain={[-0.5, horizonYears + 0.5]}
                       allowDecimals={false}
                       interval={0}
                     />
                     <YAxis
-                      stroke="rgba(255,255,255,0.4)"
+                      stroke="rgba(255,255,255,0.5)"
                       tickFormatter={(v) => formatCompactCurrency(v, currency)}
-                      tick={{ fontSize: 10 }}
-                      axisLine={{ stroke: 'rgba(255,255,255,0.15)' }}
-                      width={60}
+                      tick={{ fontSize: 13, fontFamily: "'Inter', -apple-system, sans-serif" }}
+                      axisLine={{ stroke: 'rgba(255,255,255,0.2)', strokeWidth: 2 }}
+                      tickLine={{ stroke: 'rgba(255,255,255,0.2)' }}
+                      width={70}
                     />
                     <Tooltip
                       contentStyle={{
-                        background: 'rgba(15, 19, 28, 0.95)',
-                        border: '1px solid rgba(255,255,255,0.1)',
-                        borderRadius: '6px',
-                        fontSize: '12px',
+                        background: 'rgba(20, 24, 36, 0.98)',
+                        border: '1px solid rgba(255,255,255,0.15)',
+                        borderRadius: '10px',
+                        fontSize: '14px',
+                        fontFamily: "'Inter', -apple-system, sans-serif",
+                        padding: '12px 16px',
+                        boxShadow: '0 8px 32px rgba(0, 0, 0, 0.4)',
                       }}
                       formatter={(value: number, name: string) => {
                         if (name === 'contributionBase') {
@@ -916,8 +985,9 @@ export function InvestmentOutcomesTab() {
                           dataKey={`${assetId}_median`}
                           name={`${assetId}_median`}
                           stroke={config.color}
-                          strokeWidth={isSingleAsset ? 3 : 2}
+                          strokeWidth={isSingleAsset ? 4 : 3}
                           dot={false}
+                          style={{ filter: 'drop-shadow(0 0 6px ' + config.color + '40)' }}
                         />
                       );
                     })}
@@ -928,16 +998,16 @@ export function InvestmentOutcomesTab() {
           )}
 
           {viewMode === 'table' && (
-            <div className="table-container-v4">
-              <div className="table-header-v4">
+            <div className="table-container-v5">
+              <div className="table-header-v5">
                 <h4>Projected Values by Year</h4>
-                <button className="export-btn-v4" onClick={handleDownloadCSV} title="Download CSV">
-                  <Download size={14} />
+                <button className="export-btn-v5" onClick={handleDownloadCSV} title="Download CSV">
+                  <Download size={16} />
                   CSV
                 </button>
               </div>
-              <div className={`table-scroll-v4 ${tableExpanded ? 'expanded' : ''}`}>
-                <table className="outcomes-table-v4">
+              <div className={`table-scroll-v5 ${tableExpanded ? 'expanded' : ''}`}>
+                <table className="outcomes-table-v5">
                   <thead>
                     <tr>
                       <th className="year-col">Year</th>
@@ -965,9 +1035,9 @@ export function InvestmentOutcomesTab() {
                 </table>
               </div>
               {tableData.length > 8 && (
-                <button className="expand-table-btn-v4" onClick={() => setTableExpanded(!tableExpanded)}>
+                <button className="expand-table-btn-v5" onClick={() => setTableExpanded(!tableExpanded)}>
                   {tableExpanded ? 'Show Less' : `Show All ${tableData.length} Years`}
-                  {tableExpanded ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
+                  {tableExpanded ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
                 </button>
               )}
             </div>
@@ -975,25 +1045,25 @@ export function InvestmentOutcomesTab() {
         </div>
       </div>
 
-      {/* ─── ASSET EDITING MODAL (Focus Trap) ─────────────────────────── */}
+      {/* ─── ASSET EDITING MODAL V5 (Focus Trap) ─────────────────────────── */}
       {editingAsset && (
-        <div className="modal-overlay editing-modal" onClick={closeEditModal}>
+        <div className="modal-overlay-v5 editing-modal" onClick={closeEditModal}>
           <div 
-            className="modal-content asset-edit-modal" 
+            className="modal-content-v5 asset-edit-modal" 
             onClick={(e) => e.stopPropagation()}
             ref={modalRef}
             role="dialog"
             aria-modal="true"
             aria-labelledby="edit-modal-title"
           >
-            <div className="modal-header">
+            <div className="modal-header-v5">
               <h3 id="edit-modal-title">Configure {assetConfigs[editingAsset].name}</h3>
               <button className="modal-close" onClick={closeEditModal}>
-                <X size={20} />
+                <X size={22} />
               </button>
             </div>
             
-            <div className="modal-body">
+            <div className="modal-body-v5">
               {/* Cash config */}
               {editingAsset === 'cash' && (
                 <>
@@ -1163,8 +1233,8 @@ export function InvestmentOutcomesTab() {
               )}
             </div>
             
-            <div className="modal-footer">
-              <button className="modal-btn save" onClick={closeEditModal}>
+            <div className="modal-footer-v5">
+              <button className="modal-btn-v5 save" onClick={closeEditModal}>
                 Done
               </button>
             </div>
@@ -1174,8 +1244,8 @@ export function InvestmentOutcomesTab() {
       
       {/* ─── OVERRIDE CONFIRMATION MODAL ─────────────────────────────── */}
       {showOverrideModal && (
-        <div className="modal-overlay" onClick={() => setShowOverrideModal(false)}>
-          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+        <div className="modal-overlay-v5" onClick={() => setShowOverrideModal(false)}>
+          <div className="modal-content-v5" onClick={(e) => e.stopPropagation()}>
             <h3>Override Historical Defaults?</h3>
             <p>
               These values are based on long-term historical data. 
