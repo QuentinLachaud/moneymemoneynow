@@ -145,7 +145,8 @@ export function InvestmentOutcomesTab() {
   
   // ─── INFLATION ADJUSTMENT ─────────────────────────────────────────
   const [inflationAdjustEnabled, setInflationAdjustEnabled] = useState(false);
-  const INFLATION_ADJUSTMENT_RATE = 0.025; // 2.5% real-terms adjustment
+  // When enabled, apply a negative adjustment to returns to reflect inflation (−2.5% annually)
+  const INFLATION_ADJUSTMENT_RATE = -0.025;
   
   // ─── INVESTMENT MODE & VIEW MODE ──────────────────────────────────
   const [investmentMode, setInvestmentMode] = useState<InvestmentMode>('both');
@@ -213,7 +214,7 @@ export function InvestmentOutcomesTab() {
   const [cashInflationRate, setCashInflationRate] = useState(0.03);
   
   // ─── PENSION-SPECIFIC STATE ───────────────────────────────────────
-  const [pensionNetSacrifice, setPensionNetSacrifice] = useState(100);
+  // Pension net-sacrifice removed: pension now uses global contribution inputs
   const [pensionTaxRate, setPensionTaxRate] = useState(0.40);
   const [pensionEquityMix, setPensionEquityMix] = useState(0.8);
   const [pensionTaxRegion, setPensionTaxRegion] = useState<TaxRegion>('england');
@@ -394,8 +395,8 @@ export function InvestmentOutcomesTab() {
         config.expectedReturn = savingsRate;
       }
       
-      // Apply inflation adjustment if enabled (+2.5% real-terms)
-      if (inflationAdjustEnabled && assetId !== 'cash') {
+      // Apply inflation adjustment when enabled (negative adjustment reduces returns)
+      if (inflationAdjustEnabled) {
         config.expectedReturn = config.expectedReturn + INFLATION_ADJUSTMENT_RATE;
       }
       
@@ -406,9 +407,9 @@ export function InvestmentOutcomesTab() {
         effectiveMonthly,
         horizonYears,
         numPaths,
-        undefined, // No global volatility override - each asset uses its own
-        assetId === 'cash' ? { applyInflation: cashApplyInflation, inflationRate: cashInflationRate } : undefined,
-        assetId === 'pension' ? { netSacrifice: pensionNetSacrifice, marginalTaxRate: pensionTaxRate } : undefined,
+        0, // Force global volatility = 0 for InvestmentOutcomesTab (deterministic results)
+        assetId === 'cash' ? { applyInflation: inflationAdjustEnabled, inflationRate: Math.abs(INFLATION_ADJUSTMENT_RATE) } : undefined,
+        assetId === 'pension' ? { marginalTaxRate: pensionTaxRate } : undefined,
         (investmentMode === 'monthly' || investmentMode === 'both') ? contributionEscalation : 0, // Escalation applies when monthly is involved
       );
       
@@ -419,7 +420,7 @@ export function InvestmentOutcomesTab() {
   }, [
     activeAssets, assetConfigs, effectiveLumpSum, effectiveMonthly,
     horizonYears, cashApplyInflation, cashInflationRate,
-    pensionNetSacrifice, pensionTaxRate, savingsRate, contributionEscalation, investmentMode,
+    pensionTaxRate, savingsRate, contributionEscalation, investmentMode,
     inflationAdjustEnabled, INFLATION_ADJUSTMENT_RATE,
   ]);
   
@@ -658,7 +659,7 @@ export function InvestmentOutcomesTab() {
             </div>
           </div>
           
-          {/* Inflation Toggle */}
+          {/* Inflation Toggle (applies −2.5% annually to all assets when enabled) */}
           <div className="inflation-toggle-v5">
             <button
               className={`inflation-btn ${inflationAdjustEnabled ? 'active' : ''}`}
@@ -669,7 +670,7 @@ export function InvestmentOutcomesTab() {
               </span>
               <span className="toggle-label">Inflation Adjust</span>
             </button>
-            <button className="info-btn" title="When enabled, adds +2.5% real-terms adjustment to all asset projections (except cash) to account for inflation.">
+            <button className="info-btn" title="When enabled, applies −2.5% annual inflation adjustment to all assets (including cash).">
               <Info size={14} />
             </button>
           </div>
@@ -776,7 +777,7 @@ export function InvestmentOutcomesTab() {
       </div>
 
       {/* ─── MAIN CONTENT: ASSET SIDEBAR + CENTERED GRAPH ───────────────── */}
-      <div className="outcomes-main-layout-v5">
+      <div className="outcomes-below-ribbon">
         {/* LEFT: Asset Selector (Vertical Stack) */}
         <div className="asset-sidebar-v5">
           <h4 className="sidebar-title">Asset Types</h4>
@@ -792,35 +793,41 @@ export function InvestmentOutcomesTab() {
               return (
                 <div
                   key={assetId}
-                  className={`asset-pill-v5 ${isActive ? 'active' : ''}`}
-                  style={{ '--asset-color': config.color } as React.CSSProperties}
+                  className="asset-row-v5"
                   onMouseEnter={() => setHoveredAsset(assetId)}
                   onMouseLeave={() => setHoveredAsset(null)}
                 >
-                  <button
-                    className="asset-toggle-v5"
-                    onClick={() => toggleAsset(assetId)}
-                    disabled={isLastActive}
+                  <div
+                    className={`asset-pill-v5 ${isActive ? 'active' : ''}`}
+                    style={{ '--asset-color': config.color } as React.CSSProperties}
                   >
-                    <span className="asset-dot" style={{ backgroundColor: isActive ? config.color : 'transparent', borderColor: config.color }} />
-                    <span className="asset-name">{config.name}</span>
-                  </button>
-                  
-                  {/* Growth rate (except cash) */}
+                    <button
+                      className="asset-toggle-v5"
+                      onClick={() => toggleAsset(assetId)}
+                      disabled={isLastActive}
+                    >
+                      <span className="asset-dot" style={{ backgroundColor: isActive ? config.color : 'transparent', borderColor: config.color }} />
+                      <span className="asset-name">{config.name}</span>
+                    </button>
+
+                    {/* Growth rate (except cash) */}
+                    {assetId !== 'cash' && (
+                      <span className="growth-rate">
+                        {(growthRate * 100).toFixed(1)}%/yr
+                      </span>
+                    )}
+                  </div>
+
+                  {/* Edit button placed outside the pill, hidden for cash */}
                   {assetId !== 'cash' && (
-                    <span className="growth-rate">
-                      {(growthRate * 100).toFixed(1)}%/yr
-                    </span>
+                    <button
+                      className={`edit-btn-v5 ${isHovered ? 'visible' : ''}`}
+                      onClick={() => handleEditAsset(assetId)}
+                      title="Edit settings"
+                    >
+                      <Pencil size={18} />
+                    </button>
                   )}
-                  
-                  {/* Edit button on hover */}
-                  <button
-                    className={`edit-btn-v5 ${isHovered ? 'visible' : ''}`}
-                    onClick={() => handleEditAsset(assetId)}
-                    title="Edit settings"
-                  >
-                    <Pencil size={14} />
-                  </button>
                 </div>
               );
             })}
@@ -849,27 +856,7 @@ export function InvestmentOutcomesTab() {
           
           {viewMode === 'graph' && (
             <div className="graph-container-v5" ref={chartRef}>
-              {/* Legend Card (top-left, not overlapping y-axis) */}
-              <div className="legend-card-v5">
-                <div className="legend-title">Final Values</div>
-                {activeList.map(assetId => {
-                  const config = assetConfigs[assetId];
-                  const result = simulations.get(assetId);
-                  if (!result) return null;
-                  
-                  const isGain = result.finalValue >= result.totalContributed;
-                  
-                  return (
-                    <div key={assetId} className="legend-row">
-                      <span className="legend-dot" style={{ backgroundColor: config.color }} />
-                      <span className="legend-name">{config.name}</span>
-                      <span className={`legend-value ${isGain ? 'gain' : 'loss'}`}>
-                        {formatFullNumber(result.finalValue, currency)}
-                      </span>
-                    </div>
-                  );
-                })}
-              </div>
+              {/* Final-values overlay removed by request */}
 
               {/* Top controls row */}
               <div className="graph-controls-v5">
@@ -1134,18 +1121,6 @@ export function InvestmentOutcomesTab() {
               {editingAsset === 'pension' && (
                 <>
                   <div className="config-field">
-                    <label>Net Monthly Sacrifice</label>
-                    <div className="input-with-symbol modal-input">
-                      <span className="symbol">{symbol}</span>
-                      <input
-                        type="number"
-                        value={pensionNetSacrifice}
-                        onChange={(e) => setPensionNetSacrifice(parseFloat(e.target.value) || 0)}
-                        min={0}
-                      />
-                    </div>
-                  </div>
-                  <div className="config-field">
                     <label>Marginal Tax Rate</label>
                     <select
                       value={pensionTaxRate}
@@ -1173,8 +1148,7 @@ export function InvestmentOutcomesTab() {
                     </p>
                   </div>
                   <div className="pension-summary">
-                    {symbol}{pensionNetSacrifice} net → {symbol}
-                    {calculateGrossPension(pensionNetSacrifice, pensionTaxRate).toFixed(2)} gross (with tax relief)
+                    Pension uses the global contribution inputs; tax relief is applied annually at your selected marginal rate.
                   </div>
                 </>
               )}

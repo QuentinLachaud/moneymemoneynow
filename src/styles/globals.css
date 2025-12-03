@@ -14739,53 +14739,73 @@ html {
 }
 
 /* ─── MAIN LAYOUT V5 ─────────────────────────────────────────────────── */
-.outcomes-main-layout-v5 {
+/* LEFT column: Asset Types list | RIGHT column: Graph/Table content */
+.outcomes-below-ribbon {
   display: flex;
   flex: 1;
   overflow: hidden;
-  padding: 24px 32px;
-  gap: 28px;
+  padding: 28px 40px;
+  gap: 40px; /* Clear visual separation between columns */
+  max-width: 2400px;
+  margin: 0 auto;
+  justify-content: flex-start;
+  align-items: flex-start;
 }
 
 /* Asset Sidebar V5 */
 .asset-sidebar-v5 {
-  width: 220px;
-  flex-shrink: 0;
+  /* Increase width by ~30% (312 * 1.3 ≈ 406px) to accommodate larger pills */
+  width: 406px;
+  flex: 0 0 406px;
   display: flex;
   flex-direction: column;
+  align-items: stretch;
 }
 
 .asset-sidebar-v5 .sidebar-title {
-  font-size: 1rem;
+  font-size: 1.1rem;
   font-weight: 800;
   text-transform: uppercase;
   letter-spacing: 0.6px;
   color: rgba(255, 255, 255, 0.95);
-  margin: 0 0 12px 0;
+  margin: 0 0 14px 0;
 }
 
 .asset-sidebar-v5 .sidebar-hint {
-  font-size: 0.85rem;
+  font-size: 0.9rem;
   color: rgba(255, 255, 255, 0.55);
-  margin: 0 0 20px 0;
+  margin: 0 0 24px 0;
   line-height: 1.5;
 }
 
 .asset-list-v5 {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 18px; /* increased gap between pills */
+}
+
+/* Row that contains the asset pill and the edit button positioned to the right */
+.asset-row-v5 {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  position: relative; /* allow inline positioning of edit button */
+  width: 100%;
 }
 
 .asset-pill-v5 {
   display: flex;
   align-items: center;
-  padding: 16px 18px;
-  background: rgba(0, 0, 0, 0.2);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 14px;
+  /* Increase padding by ~30%: 16px -> 21px vertical, 18px -> 24px horizontal */
+  padding: 21px 24px;
+  background: rgba(0, 0, 0, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 16px;
   transition: all 0.15s ease;
   position: relative;
+  flex: 1 1 auto;
+  cursor: pointer; /* clickable across entire pill */
+  padding-right: 72px; /* reserve space for edit icon positioned inside pill */
 }
 
 .asset-pill-v5:hover {
@@ -14801,7 +14821,7 @@ html {
 .asset-toggle-v5 {
   display: flex;
   align-items: center;
-  gap: 14px;
+  gap: 18px; /* increased gap */
   background: none;
   border: none;
   cursor: pointer;
@@ -14816,61 +14836,55 @@ html {
 }
 
 .asset-toggle-v5 .asset-dot {
-  width: 14px;
-  height: 14px;
+  width: 18px; /* increased from 14px */
+  height: 18px;
   border-radius: 50%;
-  border: 2px solid;
+  border: 2.5px solid;
   flex-shrink: 0;
   transition: all 0.15s ease;
 }
 
 .asset-toggle-v5 .asset-name {
-  font-size: 1rem;
+  font-size: 1.15rem; /* increased from 1rem */
   font-weight: 700;
   color: rgba(255, 255, 255, 0.9);
   white-space: nowrap;
 }
 
 .asset-pill-v5 .growth-rate {
-  font-size: 0.8rem;
+  font-size: 0.95rem; /* increased from 0.8rem */
   font-weight: 700;
   color: rgba(255, 255, 255, 0.55);
   margin-left: auto;
-  padding-right: 8px;
+  padding-right: 10px;
 }
 
-.edit-btn-v5 {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 32px;
-  height: 32px;
-  background: rgba(255, 255, 255, 0.08);
-  border: none;
-  border-radius: 8px;
-  color: rgba(255, 255, 255, 0.5);
-  cursor: pointer;
-  opacity: 0;
-  transition: all 0.15s ease;
+/* Place the edit button visually inside the asset pill on the right-hand side */
+.asset-row-v5 .edit-btn-v5,
+.asset-row-v5 .icon-btn {
   position: absolute;
-  right: 14px;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 3;
+  background: rgba(255,255,255,0.03);
+  border-radius: 8px;
+  padding: 6px;
 }
 
-.edit-btn-v5.visible {
-  opacity: 1;
-}
+/* Slight hover affordance so user knows the whole pill toggles */
+.asset-row-v5:hover .asset-pill-v5 { box-shadow: 0 2px 12px rgba(0,0,0,0.35); }
 
-.edit-btn-v5:hover {
-  background: rgba(255, 255, 255, 0.15);
-  color: rgba(255, 255, 255, 0.9);
-}
+/* Ensure the toggle area stretches across the pill so clicking anywhere toggles */
+.asset-toggle-v5 { width: 100%; display: flex; align-items: center; }
 
-/* ─── OUTCOMES CONTENT V5 ───────────────────────────────────────────── */
+/* RIGHT COLUMN: Graph/Table content container - separate from Asset Types column */
 .outcomes-content-v5 {
-  flex: 1;
   display: flex;
   flex-direction: column;
-  overflow: auto;
+  flex: 1 1 0%;
+  min-width: 0;
+  align-self: stretch;
 }
 
 .content-header-v5 {
@@ -14909,9 +14923,9 @@ html {
   box-shadow: 0 2px 10px rgba(99, 102, 241, 0.3);
 }
 
-/* Graph Container V5 */
 .graph-container-v5 {
-  flex: 1;
+  /* Make graph area wider (flex:3) to be roughly 2x previous size relative to sidebar */
+  flex: 3 1 0%;
   display: flex;
   flex-direction: column;
   position: relative;
@@ -14919,21 +14933,21 @@ html {
   background: rgba(0, 0, 0, 0.15);
   border: 1px solid rgba(255, 255, 255, 0.06);
   border-radius: 16px;
+  min-width: 700px;
+  /* Reserve space for new wider sidebar (406px) + gap (28px) + padding */
+  max-width: calc(100% - 460px);
+  width: 100%;
+  box-sizing: border-box;
+  margin: 0;
+  overflow: hidden;
+  align-self: flex-start; /* buttress to the left/top of its column */
 }
+
+.chart-wrapper-v5 { width: 100%; }
 
 /* Legend Card V5 */
 .legend-card-v5 {
-  position: absolute;
-  top: 50px;
-  left: 100px;
-  background: rgba(20, 24, 36, 0.96);
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  border-radius: 14px;
-  padding: 16px 20px;
-  z-index: 10;
-  min-width: 180px;
-  backdrop-filter: blur(8px);
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+  display: none; /* Final values overlay removed per design */
 }
 
 .legend-card-v5 .legend-title {
@@ -15041,7 +15055,8 @@ html {
 /* Chart Wrapper V5 */
 .chart-wrapper-v5 {
   flex: 1;
-  min-height: 480px;
+  min-height: 520px;
+  width: 100%;
 }
 
 /* ─── TABLE V5 ────────────────────────────────────────────────────────── */
@@ -15203,35 +15218,28 @@ html {
   color: #fff;
 }
 
-.modal-body-v5 {
-  padding: 32px;
-  display: flex;
-  flex-direction: column;
-  gap: 24px;
-}
-
-.modal-body-v5 .config-field {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-
-.modal-body-v5 .config-field label {
-  font-size: 0.95rem;
-  font-weight: 700;
-  color: rgba(255, 255, 255, 0.8);
-}
-
-.modal-body-v5 .config-field input,
-.modal-body-v5 .config-field select {
-  padding: 16px 20px;
-  font-size: 1rem;
-  font-weight: 700;
-  background: rgba(0, 0, 0, 0.35);
-  border: 1px solid rgba(255, 255, 255, 0.12);
+.edit-btn-v5 {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.06);
   border-radius: 10px;
-  color: #fff;
+  color: rgba(255, 255, 255, 0.75);
+  cursor: pointer;
+  opacity: 1;
+  transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
+  position: relative;
 }
+.edit-btn-v5:hover {
+  background: rgba(255, 255, 255, 0.12);
+  color: rgba(255, 255, 255, 0.95);
+  border-color: rgba(255, 255, 255, 0.15);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
+}
+
 
 .modal-body-v5 .config-field input:focus,
 .modal-body-v5 .config-field select:focus {
@@ -15300,23 +15308,38 @@ html {
   }
 }
 
-@media (max-width: 1024px) {
-  .outcomes-main-layout-v5 {
+@media (max-width: 1200px) {
+  .outcomes-below-ribbon {
     flex-direction: column;
-    padding: 16px;
+    padding: 20px;
+    gap: 24px;
   }
   
   .asset-sidebar-v5 {
     width: 100%;
+    flex: 0 0 auto;
   }
   
   .asset-list-v5 {
     flex-direction: row;
     flex-wrap: wrap;
+    gap: 12px;
   }
   
   .asset-pill-v5 {
-    flex: 0 0 auto;
+    flex: 0 1 auto;
+    padding: 16px 20px;
+    padding-right: 60px;
+  }
+  
+  .asset-toggle-v5 .asset-name {
+    font-size: 1rem;
+  }
+  
+  .graph-container-v5 {
+    max-width: 100%;
+    min-width: auto;
+    width: 100%;
   }
 }
 

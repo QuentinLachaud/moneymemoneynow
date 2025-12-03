@@ -56,7 +56,6 @@ export interface CashConfig extends AssetConfig {
 
 /** Pension-specific configuration */
 export interface PensionConfig extends AssetConfig {
-  netSacrifice: number;        // Monthly net pay sacrifice
   marginalTaxRate: number;     // As decimal (0.45 = 45%)
 }
 
@@ -82,7 +81,9 @@ export interface SimulationResult {
   p10Path: number[];           // 10th percentile
   p90Path: number[];           // 90th percentile
   finalValue: number;          // Median final value
-  totalContributed: number;    // Total amount invested
+  totalContributed: number;    // Total amount invested (gross, includes tax relief for pensions)
+  netContributed: number;      // Net amount paid by the user (excludes tax relief)
+  totalTaxRelief: number;      // Tax relief amount included in totalContributed (if any)
 }
 
 /** Default asset configurations */
@@ -368,6 +369,63 @@ function simulateCashPathWithEscalation(
 }
 
 /**
+ * Simulate a pension path where monthly contributions are specified as net (user-paid)
+ * and the pension receives tax relief immediately. Each month we add the gross amount
+ * (net + relief) after applying growth for the month. Escalation applies to the net amount
+ * and the relief scales proportionally.
+ */
+function simulatePensionPathWithEscalation(
+  initialNetValue: number,
+  monthlyNetContribution: number,
+  marginalTaxRate: number,
+  annualReturn: number,
+  annualVolatility: number,
+  annualFee: number,
+  totalMonths: number,
+  escalationRate: number = 0,
+): number[] {
+  // Start by grossing up the initial net (if any)
+  const grossInitial = initialNetValue && initialNetValue > 0 ? initialNetValue / (1 - marginalTaxRate) : 0;
+  const values: number[] = [grossInitial];
+  const dt = 1 / 12;
+
+  // Use annual parameters when converting to monthly GBM steps.
+  // Drift should be (annualReturn - annualFee - 0.5 * vol^2), then multiplied by dt.
+  const vol = annualVolatility;
+  const drift = annualReturn - annualFee - 0.5 * vol * vol;
+
+  let currentValue = grossInitial;
+  let yearNetAccumulator = 0; // accumulate net contributions within the year
+
+  for (let m = 1; m <= totalMonths; m++) {
+    const randomShock = randomNormal();
+    const growthFactor = Math.exp(drift * dt + vol * Math.sqrt(dt) * randomShock);
+
+    // Apply growth to existing value
+    currentValue = currentValue * growthFactor;
+
+    // Calculate escalated net contribution for this month
+    const yearOfMonth = Math.floor((m - 1) / 12);
+    const escalatedNet = monthlyNetContribution * Math.pow(1 + escalationRate, yearOfMonth);
+
+    // Add the net portion now
+    currentValue += escalatedNet;
+    yearNetAccumulator += escalatedNet;
+
+    // At the end of each year, apply the tax relief lump-sum for the year's contributions
+    if (m % 12 === 0 && yearNetAccumulator > 0) {
+      const relief = yearNetAccumulator * (marginalTaxRate / (1 - marginalTaxRate));
+      currentValue += relief;
+      yearNetAccumulator = 0;
+    }
+
+    values.push(Math.max(0, currentValue));
+  }
+
+  return values;
+}
+
+/**
  * Compute percentile from array of values
  */
 function percentile(values: number[], p: number): number {
@@ -430,7 +488,7 @@ export function simulateAsset(
   numPaths: number = 500,
   globalVolatility?: number,
   cashConfig?: { applyInflation: boolean; inflationRate: number },
-  pensionConfig?: { netSacrifice: number; marginalTaxRate: number },
+  pensionConfig?: { marginalTaxRate: number },
   escalationRate: number = 0, // Annual % increase in monthly contributions
 ): SimulationResult {
   const timePoints = generateTimePoints(horizonYears);
@@ -441,20 +499,7 @@ export function simulateAsset(
   let effectiveInitial = initialAmount;
   let effectiveMonthly = monthlyAmount;
   
-  // Special handling for pension: gross up the monthly contribution
-  if (config.id === 'pension' && pensionConfig) {
-    const grossMonthly = pensionConfig.netSacrifice / (1 - pensionConfig.marginalTaxRate);
-    effectiveMonthly = grossMonthly;
-    // If a lump-sum initialAmount is provided for pension, gross it up too
-    // so the pension starts at the grossed value (net + tax relief).
-    if (initialAmount && initialAmount > 0) {
-      const grossInitial = initialAmount / (1 - pensionConfig.marginalTaxRate);
-      effectiveInitial = grossInitial;
-    } else {
-      // default: no initial lump-sum for pension
-      effectiveInitial = 0;
-    }
-  }
+  // For pension we'll handle grossing and per-period additions explicitly below
   
   // Calculate total contributed with escalation
   let totalContributed = effectiveInitial;
@@ -463,9 +508,13 @@ export function simulateAsset(
     const escalatedMonthly = effectiveMonthly * Math.pow(1 + escalationRate, yearOfMonth);
     totalContributed += escalatedMonthly;
   }
+
+  // Compute netContributed and tax relief breakdown (defaults)
+  let netContributed = totalContributed;
+  let totalTaxRelief = 0;
   
-  // Each asset uses its own volatility (no global override needed anymore)
-  const effectiveVolatility = config.volatility;
+  // Each asset uses its own volatility unless a global override is provided (used by InvestmentOutcomesTab to disable volatility)
+  const effectiveVolatility = (globalVolatility !== undefined) ? globalVolatility : config.volatility;
   
   let paths: number[][];
   
@@ -480,6 +529,58 @@ export function simulateAsset(
       escalationRate,
     );
     paths = [path];
+  }
+  // Pension: simulate taking net monthly sacrifice and applying immediate tax relief
+  else if (config.id === 'pension' && pensionConfig) {
+    // Compute gross initial (if any) from net initial
+    const netInitial = initialAmount && initialAmount > 0 ? initialAmount : 0;
+    const grossInitial = netInitial > 0 ? netInitial / (1 - pensionConfig.marginalTaxRate) : 0;
+
+    // Recalculate totalContributed/netContributed/totalTaxRelief precisely from escalation and the global monthly amount
+    let recomputedTotalContributed = grossInitial;
+    let recomputedNetContributed = netInitial;
+    for (let m = 1; m <= totalMonths; m++) {
+      const yearOfMonth = Math.floor((m - 1) / 12);
+      const escalatedNetMonthly = effectiveMonthly * Math.pow(1 + escalationRate, yearOfMonth);
+      const escalatedGrossMonthly = escalatedNetMonthly / (1 - pensionConfig.marginalTaxRate);
+      recomputedNetContributed += escalatedNetMonthly;
+      recomputedTotalContributed += escalatedGrossMonthly;
+    }
+
+    totalContributed = recomputedTotalContributed;
+    netContributed = recomputedNetContributed;
+    totalTaxRelief = totalContributed - netContributed;
+
+    const effectiveVol = effectiveVolatility;
+
+    if (effectiveVol === 0 || numPaths === 1) {
+      const path = simulatePensionPathWithEscalation(
+        netInitial,
+        effectiveMonthly,
+        pensionConfig.marginalTaxRate,
+        config.expectedReturn,
+        effectiveVol,
+        config.fee,
+        totalMonths,
+        escalationRate,
+      );
+      paths = [path];
+    } else {
+      paths = [];
+      for (let i = 0; i < numPaths; i++) {
+        const path = simulatePensionPathWithEscalation(
+          netInitial,
+          effectiveMonthly,
+          pensionConfig.marginalTaxRate,
+          config.expectedReturn,
+          effectiveVol,
+          config.fee,
+          totalMonths,
+          escalationRate,
+        );
+        paths.push(path);
+      }
+    }
   }
   // Deterministic path for zero-volatility assets
   else if (effectiveVolatility === 0 || numPaths === 1) {
@@ -523,6 +624,8 @@ export function simulateAsset(
     p90Path,
     finalValue: medianPath[medianPath.length - 1],
     totalContributed,
+    netContributed,
+    totalTaxRelief,
   };
 }
 
