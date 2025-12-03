@@ -35,6 +35,7 @@ import {
   simulateAsset,
   calculateGrossPension,
 } from '../utils/investmentSimulation';
+import { useAppStore } from '../store/useAppStore';
 
 /** Investment mode type */
 type InvestmentMode = 'lump-sum' | 'monthly' | 'both';
@@ -131,6 +132,9 @@ function formatCompactCurrency(value: number, currency: Currency): string {
 }
 
 export function InvestmentOutcomesTab() {
+  // ─── PREFILL FROM SAVINGS CALCULATOR ──────────────────────────────
+  const consumeInvestmentOutcomesPrefill = useAppStore((s) => s.consumeInvestmentOutcomesPrefill);
+  
   // ─── TOP CONTROLS STATE ───────────────────────────────────────────
   const [currency, setCurrency] = useState<Currency>('GBP');
   const [showMoreCurrencies, setShowMoreCurrencies] = useState(false);
@@ -148,6 +152,24 @@ export function InvestmentOutcomesTab() {
   const [horizonYears, setHorizonYears] = useState(20);
   const [horizonMax, setHorizonMax] = useState(30);
   const HORIZON_MIN = 5; // Minimum 5 years
+  
+  // Consume prefill from Savings Calculator (one-time on mount)
+  useEffect(() => {
+    const prefill = consumeInvestmentOutcomesPrefill();
+    if (prefill) {
+      if (prefill.monthlyAmount !== undefined) {
+        setMonthlyAmount(prefill.monthlyAmount);
+        // Switch to monthly mode if only monthly is provided
+        if (prefill.lumpSumAmount === 0 || prefill.lumpSumAmount === undefined) {
+          setInvestmentMode('monthly');
+          setLumpSumAmount(0);
+        }
+      }
+      if (prefill.lumpSumAmount !== undefined) {
+        setLumpSumAmount(prefill.lumpSumAmount);
+      }
+    }
+  }, [consumeInvestmentOutcomesPrefill]);
   
   // Handle dynamic horizon extension: when user reaches 30, extend to 60
   const handleHorizonChange = useCallback((value: number) => {

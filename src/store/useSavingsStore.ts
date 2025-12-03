@@ -5,6 +5,8 @@
  * - Currency selection
  * - Net income and bonus
  * - Expenditure sections with category amounts
+ * - Subcategories (user-added items)
+ * - Custom sections
  * - Expanded/collapsed section state
  *
  * All values persist to localStorage for user convenience.
@@ -15,6 +17,7 @@ import { persist, createJSONStorage } from 'zustand/middleware';
 import { Currency } from '../utils/investmentSimulation';
 import {
   ExpenseSection,
+  Subcategory,
   DEFAULT_EXPENSE_SECTIONS,
   calculateTotalOutgoings,
   calculateMonthlySavings,
@@ -34,6 +37,9 @@ interface SavingsState {
   
   // Expenditure sections (with amounts)
   expenseSections: ExpenseSection[];
+  
+  // Custom sections (user-created)
+  customSections: ExpenseSection[];
   
   // UI state: which sections are expanded
   expandedSections: Set<string>;
@@ -61,6 +67,16 @@ interface SavingsActions {
     categoryId: string,
     frequency: 'annual' | 'monthly'
   ) => void;
+  
+  // Subcategories
+  addSubcategory: (sectionId: string, name: string) => void;
+  updateSubcategory: (sectionId: string, subcategoryId: string, updates: Partial<Subcategory>) => void;
+  removeSubcategory: (sectionId: string, subcategoryId: string) => void;
+  
+  // Custom sections
+  addCustomSection: (title?: string) => void;
+  updateCustomSectionTitle: (sectionId: string, title: string) => void;
+  removeCustomSection: (sectionId: string) => void;
   
   // UI
   toggleSection: (sectionId: string) => void;
@@ -93,7 +109,8 @@ const initialState: SavingsState = {
   netIncome: 0,
   netBonus: 0,
   expenseSections: DEFAULT_EXPENSE_SECTIONS,
-  expandedSections: new Set(['household']), // First section expanded by default
+  customSections: [],
+  expandedSections: new Set(['household']),
 };
 
 /**
@@ -179,6 +196,85 @@ export const useSavingsStore = create<SavingsStore>()(
         });
       },
 
+      // ─── Subcategories ───────────────────────────────────────────
+      addSubcategory: (sectionId, name) => {
+        const newSubcategory: Subcategory = {
+          id: `sub-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+          name,
+          amount: 0,
+        };
+        set((state) => ({
+          expenseSections: state.expenseSections.map((section) => {
+            if (section.id !== sectionId) return section;
+            return {
+              ...section,
+              subcategories: [...(section.subcategories || []), newSubcategory],
+            };
+          }),
+        }));
+      },
+
+      updateSubcategory: (sectionId: string, subcategoryId: string, updates: Partial<Subcategory>) => {
+        set((state) => ({
+          expenseSections: state.expenseSections.map((section) => {
+            if (section.id !== sectionId) return section;
+            return {
+              ...section,
+              subcategories: (section.subcategories || []).map((sub) => {
+                if (sub.id !== subcategoryId) return sub;
+                return { ...sub, ...updates };
+              }),
+            };
+          }),
+        }));
+      },
+
+      removeSubcategory: (sectionId, subcategoryId) => {
+        set((state) => ({
+          expenseSections: state.expenseSections.map((section) => {
+            if (section.id !== sectionId) return section;
+            return {
+              ...section,
+              subcategories: (section.subcategories || []).filter(
+                (sub) => sub.id !== subcategoryId
+              ),
+            };
+          }),
+        }));
+      },
+
+      // ─── Custom Sections ─────────────────────────────────────────
+      addCustomSection: (title?: string) => {
+        const sectionTitle = title || 'Custom Section';
+        const newSection: ExpenseSection = {
+          id: `custom-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+          title: sectionTitle,
+          icon: '📁',
+          categories: [],
+          subcategories: [],
+          isCustom: true,
+        };
+        set((state) => ({
+          customSections: [...state.customSections, newSection],
+          expandedSections: new Set([...state.expandedSections, newSection.id]),
+        }));
+      },
+
+      updateCustomSectionTitle: (sectionId, title) => {
+        set((state) => ({
+          customSections: state.customSections.map((section) => {
+            if (section.id !== sectionId) return section;
+            return { ...section, title };
+          }),
+        }));
+      },
+
+      removeCustomSection: (sectionId) => {
+        set((state) => ({
+          customSections: state.customSections.filter((s) => s.id !== sectionId),
+        }));
+      },
+
       // ─── Reset ───────────────────────────────────────────────────
       resetStore: () => set(initialState),
 
@@ -214,6 +310,7 @@ export const useSavingsStore = create<SavingsStore>()(
         netIncome: state.netIncome,
         netBonus: state.netBonus,
         expenseSections: state.expenseSections,
+        customSections: state.customSections,
         expandedSections: state.expandedSections,
       }),
     }

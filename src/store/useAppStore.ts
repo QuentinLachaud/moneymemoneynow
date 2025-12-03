@@ -48,6 +48,14 @@ export interface SimulationSettings {
 }
 
 /**
+ * Prefill values for Investment Outcomes tab (one-time use)
+ */
+export interface InvestmentOutcomesPrefill {
+  monthlyAmount?: number;
+  lumpSumAmount?: number;
+}
+
+/**
  * Store state interface — all persisted state
  */
 interface AppState {
@@ -64,6 +72,9 @@ interface AppState {
   
   // Simulation settings (persisted)
   simulationSettings: SimulationSettings;
+  
+  // One-time prefill for Investment Outcomes tab
+  investmentOutcomesPrefill: InvestmentOutcomesPrefill | null;
 }
 
 /**
@@ -92,6 +103,10 @@ interface AppActions {
   // Tab navigation
   setTab: (tab: TabType) => void;
   
+  // Navigate to Investment Outcomes with prefilled values
+  navigateToInvestmentOutcomes: (prefill: InvestmentOutcomesPrefill) => void;
+  consumeInvestmentOutcomesPrefill: () => InvestmentOutcomesPrefill | null;
+  
   // Simulation settings
   setSimulationSettings: (settings: Partial<SimulationSettings>) => void;
   
@@ -117,6 +132,7 @@ const initialState: AppState = {
     adjustForInflation: false,
     useLogScale: false,
   },
+  investmentOutcomesPrefill: null,
 };
 
 /**
@@ -255,6 +271,21 @@ export const useAppStore = create<AppStore>()(
       // ─── Tab Navigation ──────────────────────────────────────────
       setTab: (tab) => {
         set({ tab });
+      },
+
+      navigateToInvestmentOutcomes: (prefill) => {
+        set({ 
+          tab: 'investment-outcomes',
+          investmentOutcomesPrefill: prefill,
+        });
+      },
+
+      consumeInvestmentOutcomesPrefill: () => {
+        const prefill = get().investmentOutcomesPrefill;
+        if (prefill) {
+          set({ investmentOutcomesPrefill: null });
+        }
+        return prefill;
       },
 
       // ─── Simulation Settings ─────────────────────────────────────

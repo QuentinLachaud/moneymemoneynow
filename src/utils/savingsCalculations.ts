@@ -4,11 +4,20 @@
  * Handles:
  * - Monthly value normalization (annual → monthly)
  * - Category aggregation
+ * - Subcategory support
+ * - Custom section support
  * - Savings rate computation
  * - Waterfall chart data generation
  */
 
 import { Currency, CURRENCY_SYMBOLS } from './investmentSimulation';
+
+/** Subcategory structure (user-added items within a section) */
+export interface Subcategory {
+  id: string;
+  name: string;
+  amount: number;
+}
 
 /** Expenditure category structure */
 export interface ExpenseCategory {
@@ -25,6 +34,10 @@ export interface ExpenseSection {
   title: string;
   icon: string;
   categories: ExpenseCategory[];
+  /** User-added subcategories */
+  subcategories?: Subcategory[];
+  /** Whether this is a custom (user-created) section */
+  isCustom?: boolean;
 }
 
 /** Default expenditure sections configuration */
@@ -104,10 +117,20 @@ export function getMonthlyValue(category: ExpenseCategory): number {
 }
 
 /**
- * Calculate total for a section (all categories summed as monthly)
+ * Calculate subcategories total for a section
+ */
+export function calculateSubcategoriesTotal(subcategories?: Subcategory[]): number {
+  if (!subcategories || subcategories.length === 0) return 0;
+  return subcategories.reduce((sum, sub) => sum + sub.amount, 0);
+}
+
+/**
+ * Calculate total for a section (all categories + subcategories summed as monthly)
  */
 export function calculateSectionTotal(section: ExpenseSection): number {
-  return section.categories.reduce((sum, cat) => sum + getMonthlyValue(cat), 0);
+  const categoriesTotal = section.categories.reduce((sum, cat) => sum + getMonthlyValue(cat), 0);
+  const subcategoriesTotal = calculateSubcategoriesTotal(section.subcategories);
+  return categoriesTotal + subcategoriesTotal;
 }
 
 /**
@@ -180,19 +203,42 @@ export const SECTION_COLORS: Record<string, string> = {
   investments: '#22c55e',  // Green
 };
 
+/** Color palette for custom sections */
+const CUSTOM_SECTION_COLORS = [
+  '#8b5cf6', // Violet
+  '#06b6d4', // Cyan
+  '#f43f5e', // Rose
+  '#84cc16', // Lime
+  '#a855f7', // Purple
+];
+
+/**
+ * Get color for a section (handles custom sections)
+ */
+export function getSectionColor(sectionId: string, customIndex = 0): string {
+  if (SECTION_COLORS[sectionId]) {
+    return SECTION_COLORS[sectionId];
+  }
+  return CUSTOM_SECTION_COLORS[customIndex % CUSTOM_SECTION_COLORS.length];
+}
+
 /**
  * Generate pie chart data for outflows
  */
 export function generatePieChartData(sections: ExpenseSection[]): PieChartDataPoint[] {
   const totalOutgoings = calculateTotalOutgoings(sections);
+  let customIndex = 0;
   
   return sections
     .map(section => {
       const value = calculateSectionTotal(section);
+      const color = section.isCustom 
+        ? getSectionColor(section.id, customIndex++)
+        : getSectionColor(section.id);
       return {
         name: section.title,
         value,
-        color: SECTION_COLORS[section.id] || '#94a3b8',
+        color,
         percentage: totalOutgoings > 0 ? (value / totalOutgoings) * 100 : 0,
       };
     })
@@ -224,6 +270,7 @@ export function generateWaterfallData(
 ): WaterfallDataPoint[] {
   const data: WaterfallDataPoint[] = [];
   let runningTotal = totalIncome;
+  let customIndex = 0;
   
   // First bar: Total Income (starts at 0, ends at income)
   data.push({
@@ -241,10 +288,13 @@ export function generateWaterfallData(
     const sectionTotal = calculateSectionTotal(section);
     if (sectionTotal > 0) {
       const newRunningTotal = runningTotal - sectionTotal;
+      const color = section.isCustom 
+        ? getSectionColor(section.id, customIndex++)
+        : getSectionColor(section.id);
       data.push({
         name: section.title,
         value: sectionTotal,
-        fill: SECTION_COLORS[section.id] || '#94a3b8',
+        fill: color,
         start: newRunningTotal,
         end: runningTotal,
         displayValue: sectionTotal,

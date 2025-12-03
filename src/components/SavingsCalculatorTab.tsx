@@ -10,7 +10,7 @@
  */
 
 import { useState, useMemo } from 'react';
-import { ChevronDown, Plus, HelpCircle } from 'lucide-react';
+import { ChevronDown, Plus, HelpCircle, ArrowRight, FolderPlus } from 'lucide-react';
 import { Currency, CURRENCY_SYMBOLS } from '../utils/investmentSimulation';
 import {
   calculateTotalOutgoings,
@@ -21,6 +21,7 @@ import {
   getSavingsRateLabel,
 } from '../utils/savingsCalculations';
 import { useSavingsStore } from '../store/useSavingsStore';
+import { useAppStore } from '../store/useAppStore';
 import { SavingsCategoryPanel } from './savings/SavingsCategoryPanel';
 import { BonusModal } from './savings/BonusModal';
 import { PieChartOutflows } from './savings/PieChartOutflows';
@@ -40,10 +41,23 @@ export function SavingsCalculatorTab() {
   const netBonus = useSavingsStore((s) => s.netBonus);
   const setNetBonus = useSavingsStore((s) => s.setNetBonus);
   const expenseSections = useSavingsStore((s) => s.expenseSections);
+  const customSections = useSavingsStore((s) => s.customSections);
   const expandedSections = useSavingsStore((s) => s.expandedSections);
   const toggleSection = useSavingsStore((s) => s.toggleSection);
   const updateCategoryAmount = useSavingsStore((s) => s.updateCategoryAmount);
   const updateCategoryFrequency = useSavingsStore((s) => s.updateCategoryFrequency);
+  
+  // Subcategory actions
+  const addSubcategory = useSavingsStore((s) => s.addSubcategory);
+  const updateSubcategory = useSavingsStore((s) => s.updateSubcategory);
+  const removeSubcategory = useSavingsStore((s) => s.removeSubcategory);
+  
+  // Custom section actions
+  const addCustomSection = useSavingsStore((s) => s.addCustomSection);
+  const removeCustomSection = useSavingsStore((s) => s.removeCustomSection);
+  
+  // Navigation to Investment Outcomes
+  const navigateToInvestmentOutcomes = useAppStore((s) => s.navigateToInvestmentOutcomes);
 
   // ─── LOCAL UI STATE ───────────────────────────────────────────────
   const [showMoreCurrencies, setShowMoreCurrencies] = useState(false);
@@ -51,14 +65,19 @@ export function SavingsCalculatorTab() {
 
   // ─── DERIVED CALCULATIONS ─────────────────────────────────────────
   const symbol = CURRENCY_SYMBOLS[currency];
+  
+  // Combine default and custom sections for calculations
+  const allSections = useMemo(() => {
+    return [...expenseSections, ...customSections];
+  }, [expenseSections, customSections]);
 
   const totalMonthlyIncome = useMemo(() => {
     return netIncome + netBonus / 12;
   }, [netIncome, netBonus]);
 
   const totalOutgoings = useMemo(() => {
-    return calculateTotalOutgoings(expenseSections);
-  }, [expenseSections]);
+    return calculateTotalOutgoings(allSections);
+  }, [allSections]);
 
   const monthlySavings = useMemo(() => {
     return calculateMonthlySavings(totalMonthlyIncome, totalOutgoings);
@@ -70,6 +89,14 @@ export function SavingsCalculatorTab() {
 
   const savingsRateColor = getSavingsRateColor(savingsRate);
   const savingsRateLabel = getSavingsRateLabel(savingsRate);
+  
+  // Handler for CTA button
+  const handleInvestSavings = () => {
+    navigateToInvestmentOutcomes({
+      monthlyAmount: Math.max(0, monthlySavings),
+      lumpSumAmount: 0,
+    });
+  };
 
   return (
     <div className="savings-calculator-tab">
@@ -210,8 +237,44 @@ export function SavingsCalculatorTab() {
                 onFrequencyChange={(categoryId, freq) =>
                   updateCategoryFrequency(section.id, categoryId, freq)
                 }
+                onAddSubcategory={() => addSubcategory(section.id, 'New item')}
+                onUpdateSubcategory={(subId, updates) =>
+                  updateSubcategory(section.id, subId, updates)
+                }
+                onRemoveSubcategory={(subId) => removeSubcategory(section.id, subId)}
               />
             ))}
+            
+            {/* Custom Sections */}
+            {customSections.map((section) => (
+              <SavingsCategoryPanel
+                key={section.id}
+                section={section}
+                currency={currency}
+                isExpanded={expandedSections.has(section.id)}
+                onToggle={() => toggleSection(section.id)}
+                onAmountChange={(categoryId, amount) =>
+                  updateCategoryAmount(section.id, categoryId, amount)
+                }
+                onAddSubcategory={() => addSubcategory(section.id, 'New item')}
+                onUpdateSubcategory={(subId, updates) =>
+                  updateSubcategory(section.id, subId, updates)
+                }
+                onRemoveSubcategory={(subId) => removeSubcategory(section.id, subId)}
+                onDeleteSection={() => removeCustomSection(section.id)}
+                canDelete
+              />
+            ))}
+            
+            {/* Add Custom Section Button */}
+            <button
+              type="button"
+              className="add-custom-section-btn"
+              onClick={() => addCustomSection('Custom Category')}
+            >
+              <FolderPlus size={16} />
+              <span>Add Custom Section</span>
+            </button>
           </div>
         </div>
 
@@ -248,12 +311,24 @@ export function SavingsCalculatorTab() {
                 </span>
               </div>
             </div>
+            
+            {/* CTA Button: Invest Your Savings */}
+            {monthlySavings > 0 && (
+              <button
+                type="button"
+                className="invest-savings-cta"
+                onClick={handleInvestSavings}
+              >
+                <span className="cta-text">See how your savings could grow</span>
+                <ArrowRight size={16} className="cta-arrow" />
+              </button>
+            )}
           </div>
 
           {/* 2. Outflow Pie Chart */}
           <div className="analysis-card">
             <h4 className="card-title">Outflow Breakdown</h4>
-            <PieChartOutflows sections={expenseSections} currency={currency} />
+            <PieChartOutflows sections={allSections} currency={currency} />
           </div>
 
           {/* 3. Savings Rate Display */}
@@ -289,7 +364,7 @@ export function SavingsCalculatorTab() {
             <h4 className="card-title">Income Flow</h4>
             <WaterfallChart
               totalIncome={totalMonthlyIncome}
-              sections={expenseSections}
+              sections={allSections}
               currency={currency}
             />
           </div>

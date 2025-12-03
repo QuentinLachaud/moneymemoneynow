@@ -7,3 +7,4 @@ export { CategoryInputRow } from './CategoryInputRow';
 export { BonusModal } from './BonusModal';
 export { PieChartOutflows } from './PieChartOutflows';
 export { WaterfallChart } from './WaterfallChart';
+export { DeleteConfirmPopover } from './DeleteConfirmPopover';
