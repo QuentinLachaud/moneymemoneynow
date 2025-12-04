@@ -192,7 +192,10 @@ export function AccountsStrip({
                   crash={crash}
                   isActive={activeCrashId === crash.id}
                   onToggle={() => toggleCrash(crash.id)}
-                  onClick={() => setActiveCrash(activeCrashId === crash.id ? null : crash.id)}
+                  onClick={() => {
+                    toggleCrash(crash.id);
+                    setActiveCrash(activeCrashId === crash.id ? null : crash.id);
+                  }}
                   onEdit={() => {
                     setEditingCrash(crash);
                     setShowCrashModal(true);

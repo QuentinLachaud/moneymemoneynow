@@ -242,19 +242,9 @@ export function applyCrashesToValue(
     if (yearsSinceCrash === 0) {
       // Crash year - apply immediate drop
       adjustedValue *= (1 - crash.severity);
-    } else if (yearsSinceCrash > 0 && yearsSinceCrash <= crash.recoveryYears) {
-      // Recovery period - gradually restore value
-      const recoveryProgress = yearsSinceCrash / crash.recoveryYears;
-      
-      if (crash.recoveryShape === 'linear') {
-        // Linear recovery: value gradually returns
-        const recoveredFraction = crash.severity * recoveryProgress;
-        adjustedValue *= (1 - crash.severity + recoveredFraction);
-      } else {
-        // Exponential recovery: faster initial recovery
-        const recoveredFraction = crash.severity * (1 - Math.exp(-3 * recoveryProgress));
-        adjustedValue *= (1 - crash.severity + recoveredFraction);
-      }
+    } else if (yearsSinceCrash > 0) {
+      // After crash - maintain the reduced level, let simulation randomness drive recovery
+      adjustedValue *= (1 - crash.severity);
     }
     // After recovery period - fully recovered, no adjustment needed
   });
