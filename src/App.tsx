@@ -355,6 +355,7 @@ export default function App() {
                 frequency: editingAccount.frequency,
                 transactionType: editingAccount.transactionType,
                 transactionAmount: editingAccount.transactionAmount,
+                annualIncreaseRate: editingAccount.annualIncreaseRate,
               } : undefined}
               defaultTransactionType={defaultTransactionType}
               submitLabel={editingAccountId ? 'Save Changes' : `Add ${defaultTransactionType === 'deposit' ? 'Deposit' : 'Drawdown'}`}

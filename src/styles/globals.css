@@ -18505,6 +18505,7 @@ html {
   display: grid;
   grid-template-rows: 0fr;
   transition: grid-template-rows 0.25s ease;
+  z-index: 2;
 }
 
 .savings-category-panel.expanded .category-panel-content {

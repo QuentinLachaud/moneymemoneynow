@@ -186,13 +186,15 @@ export const useSavingsStore = create<SavingsStore>()(
       // ─── UI ──────────────────────────────────────────────────────
       toggleSection: (sectionId) => {
         set((state) => {
-          const next = new Set(state.expandedSections);
-          if (next.has(sectionId)) {
+          if (state.expandedSections.has(sectionId)) {
+            // If it's expanded, collapse it
+            const next = new Set(state.expandedSections);
             next.delete(sectionId);
+            return { expandedSections: next };
           } else {
-            next.add(sectionId);
+            // If not expanded, expand it and collapse others
+            return { expandedSections: new Set([sectionId]) };
           }
-          return { expandedSections: next };
         });
       },
 

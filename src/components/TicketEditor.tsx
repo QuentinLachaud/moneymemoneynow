@@ -36,6 +36,7 @@ export default function TicketEditor({ account, onSave, onCancel }: Props) {
     frequency: account.frequency || 'annual',
     transactionType: account.transactionType || 'deposit',
     transactionAmount: account.transactionAmount || 0,
+    annualIncreaseRate: account.annualIncreaseRate || 0,
   });
 
   /** Update a single form field */
@@ -60,6 +61,7 @@ export default function TicketEditor({ account, onSave, onCancel }: Props) {
       <div style={{ display: 'flex', gap: 8 }}>
         <input type="number" value={form.timeHorizon} onChange={e => update('timeHorizon', Number(e.target.value))} placeholder="Years" />
         <input type="number" value={form.expectedReturn} onChange={e => update('expectedReturn', Number(e.target.value))} step="0.01" placeholder="Return" />
+        <input type="number" value={form.annualIncreaseRate} onChange={e => update('annualIncreaseRate', Number(e.target.value))} step="0.01" placeholder="Annual Increase %" />
       </div>
       <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end' }}>
         <button onClick={onCancel} className="btn">Cancel</button>
