@@ -616,7 +616,7 @@ input:focus, textarea:focus, select:focus {
   position: absolute;
   top: 4px;
   left: 4px;
-  width: calc(50% - 4px);
+  width: 0px; /* Will be set dynamically */
   height: calc(100% - 8px);
   background: linear-gradient(135deg, rgba(99, 102, 241, 0.25), rgba(139, 92, 246, 0.2));
   border: 1px solid rgba(99, 102, 241, 0.3);
@@ -626,16 +626,6 @@ input:focus, textarea:focus, select:focus {
     inset 0 1px 0 rgba(255, 255, 255, 0.1);
   transition: transform 350ms cubic-bezier(0.4, 0, 0.2, 1);
   pointer-events: none;
-}
-
-/* Three-tab variant - fix slider width calculation */
-.tab-toggle.three-tabs .tab-slider {
-  width: calc(33.333% - 2.67px);
-}
-
-/* Four-tab variant */
-.tab-toggle.four-tabs .tab-slider {
-  width: calc(25% - 2px);
 }
 
 /* Tab Button — Individual tab */
@@ -18418,13 +18408,13 @@ html {
 .savings-category-panel {
   background: rgba(0, 0, 0, 0.25);
   border: 1px solid rgba(255, 255, 255, 0.06);
-  border-radius: 12px;
+  border-radius: 16px;
   overflow: hidden;
   transition: border-color 0.15s ease;
 }
 
 .savings-category-panel.expanded {
-  border-color: rgba(255, 255, 255, 0.1);
+  border-color: var(--section-color, rgba(255, 255, 255, 0.1));
 }
 
 .category-panel-header {
@@ -18433,20 +18423,38 @@ html {
   justify-content: space-between;
   width: 100%;
   padding: 14px 18px;
-  background: none;
-  border: none;
+  background: rgba(0, 0, 0, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.06);
   cursor: pointer;
-  transition: background 0.15s ease;
+  transition: all 0.15s ease;
+  border-radius: 16px 16px 0 0;
 }
 
 .category-panel-header:hover {
-  background: rgba(255, 255, 255, 0.03);
+  background: rgba(0, 0, 0, 0.12);
+}
+
+.savings-category-panel.collapsed .category-panel-header {
+  border-radius: 16px;
+}
+
+.savings-category-panel.expanded .category-panel-header {
+  border-color: rgba(255, 255, 255, 0.06);
 }
 
 .header-left {
   display: flex;
   align-items: center;
   gap: 12px;
+}
+
+.section-dot {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  border: 2.5px solid;
+  flex-shrink: 0;
+  transition: all 0.15s ease;
 }
 
 .section-icon {
@@ -18457,13 +18465,13 @@ html {
   height: 32px;
   background: rgba(255, 255, 255, 0.06);
   border-radius: 8px;
-  color: var(--foreground);
+  color: white;
 }
 
 .section-title {
   font-size: 1.1rem;
   font-weight: 600;
-  color: var(--foreground);
+  color: var(--section-text, var(--foreground));
 }
 
 .header-right {
@@ -18475,8 +18483,8 @@ html {
 .section-total {
   font-size: 1.25rem;
   font-weight: 700;
-  color: #10b981;
-  text-shadow: 0 0 12px rgba(16, 185, 129, 0.6), 0 0 24px rgba(16, 185, 129, 0.3), 0 0 36px rgba(16, 185, 129, 0.1);
+  color: var(--section-accent, #10b981);
+  text-shadow: 0 0 8px rgba(16, 185, 129, 0.4), 0 0 16px rgba(16, 185, 129, 0.2), 0 0 24px rgba(16, 185, 129, 0.1);
   background: linear-gradient(135deg, rgba(16, 185, 129, 0.1), rgba(5, 150, 105, 0.05));
   padding: 4px 8px;
   border-radius: 6px;
@@ -19102,7 +19110,7 @@ html {
 
 .subcategory-name {
   justify-self: start;
-  font-size: 1.1rem;
+  font-size: 1.2rem;
   color: var(--foreground);
   cursor: pointer;
   padding: 4px 8px;
@@ -19129,8 +19137,8 @@ html {
 .subcategory-name {
   background: none;
   border: none;
-  font-size: 1rem;
-  color: var(--muted-foreground);
+  font-size: 1.2rem;
+  color: var(--foreground);
   cursor: pointer;
   padding: 4px 8px;
   border-radius: 4px;
@@ -19187,8 +19195,8 @@ html {
   justify-content: center;
   width: 32px;
   height: 32px;
-  background: rgba(239, 68, 68, 0.1);
-  border: 1px solid rgba(239, 68, 68, 0.2);
+  background: transparent;
+  border: none;
   color: #ef4444;
   cursor: pointer;
   border-radius: 6px;
@@ -19196,16 +19204,14 @@ html {
   visibility: hidden;
   transition: all 0.15s ease;
   position: absolute;
-  right: 0;
+  right: -50px;
   top: 50%;
   transform: translateY(-50%);
 }
 
 .subcategory-delete-btn:hover {
-  background: rgba(239, 68, 68, 0.2);
-  border-color: rgba(239, 68, 68, 0.4);
   color: #dc2626;
-  transform: translateY(-50%) scale(1.05);
+  transform: translateY(-50%) scale(1.1);
 }
 
 /* ─── Add Subcategory Button ──────────────────────────────────────────── */

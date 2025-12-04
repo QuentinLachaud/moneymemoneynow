@@ -24,7 +24,7 @@
  * - To change spacing: update --page-gap in globals.css
  */
 
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { ChevronDown, ChevronUp } from 'lucide-react';
 import { AccountForm } from './components/AccountForm';
 import { ProjectionsPanelV2 } from './components/ProjectionsPanelV2';
@@ -65,6 +65,12 @@ export default function App() {
   
   /** Ref to left panel for scroll-into-view */
   const leftTrayRef = useRef<HTMLDivElement | null>(null);
+  
+  /** Refs for tab buttons to calculate slider position */
+  const tabRefs = useRef<(HTMLButtonElement | null)[]>([]);
+  
+  /** Slider style state for dynamic positioning */
+  const [sliderStyle, setSliderStyle] = useState({ width: 0, transform: 'translateX(0px)' });
 
   /** Modal open state for adding/editing account from strip */
   const [showAccountModal, setShowAccountModal] = useState(false);
@@ -83,6 +89,30 @@ export default function App() {
 
   /** Left panel collapsed on mobile */
   const [leftPanelCollapsed, setLeftPanelCollapsed] = useState(true);
+
+  /* ─── EFFECTS ───────────────────────────────────────────────────── */
+  
+  /** Calculate slider position when tab changes */
+  useEffect(() => {
+    const tabIndex = ['savings-calculator', 'investment-outcomes', 'tax-calculator', 'net-worth', 'projections', 'projection-portfolio'].indexOf(tab);
+    const tabElement = tabRefs.current[tabIndex];
+    
+    if (tabElement) {
+      const rect = tabElement.getBoundingClientRect();
+      const containerRect = tabElement.parentElement?.getBoundingClientRect();
+      
+      if (containerRect) {
+        // Center the slider around the text content
+        const width = rect.width - 12; // Reduce width slightly to frame text better
+        const left = rect.left - containerRect.left + 6; // Center position
+        
+        setSliderStyle({
+          width,
+          transform: `translateX(${left}px)`
+        });
+      }
+    }
+  }, [tab]);
 
   /* ─── LOCAL UI HANDLERS ─────────────────────────────────────────── */
 
@@ -150,52 +180,45 @@ export default function App() {
           <div className="tab-toggle six-tabs">
             <div 
               className="tab-slider" 
-              style={{ 
-                width: 'calc(100% / 6)',
-                transform: tab === 'savings-calculator'
-                  ? 'translateX(0)'
-                  : tab === 'investment-outcomes' 
-                    ? 'translateX(100%)' 
-                    : tab === 'tax-calculator'
-                      ? 'translateX(200%)'
-                      : tab === 'net-worth'
-                        ? 'translateX(300%)'
-                        : tab === 'projections'
-                          ? 'translateX(400%)'
-                          : 'translateX(500%)'
-              }} 
+              style={sliderStyle}
             />
             <button
+              ref={(el) => (tabRefs.current[0] = el)}
               onClick={() => setTab('savings-calculator')}
               className={`tab-button ${tab === 'savings-calculator' ? 'active' : ''}`}
             >
               Savings Calculator
             </button>
             <button
+              ref={(el) => (tabRefs.current[1] = el)}
               onClick={() => setTab('investment-outcomes')}
               className={`tab-button ${tab === 'investment-outcomes' ? 'active' : ''}`}
             >
               Investment Outcomes
             </button>
             <button
+              ref={(el) => (tabRefs.current[2] = el)}
               onClick={() => setTab('tax-calculator')}
               className={`tab-button ${tab === 'tax-calculator' ? 'active' : ''}`}
             >
               Tax Calculator
             </button>
             <button
+              ref={(el) => (tabRefs.current[3] = el)}
               onClick={() => setTab('net-worth')}
               className={`tab-button ${tab === 'net-worth' ? 'active' : ''}`}
             >
               Net Worth
             </button>
             <button
+              ref={(el) => (tabRefs.current[4] = el)}
               onClick={() => setTab('projections')}
               className={`tab-button ${tab === 'projections' ? 'active' : ''}`}
             >
               Projections
             </button>
             <button
+              ref={(el) => (tabRefs.current[5] = el)}
               onClick={() => setTab('projection-portfolio')}
               className={`tab-button ${tab === 'projection-portfolio' ? 'active' : ''}`}
             >

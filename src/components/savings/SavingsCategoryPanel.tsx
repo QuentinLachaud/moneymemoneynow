@@ -28,6 +28,17 @@ const SECTION_ICONS: Record<string, React.ReactNode> = {
   '📁': <FolderOpen size={18} />,
 };
 
+/** Color mapping for sections */
+const SECTION_COLORS: Record<string, { bg: string; text: string; accent: string }> = {
+  household: { bg: 'rgba(99, 102, 241, 0.15)', text: '#6366f1', accent: '#4f46e5' },
+  vehicle: { bg: 'rgba(245, 158, 11, 0.15)', text: '#f59e0b', accent: '#d97706' },
+  subscriptions: { bg: 'rgba(236, 72, 153, 0.15)', text: '#ec4899', accent: '#db2777' },
+  childcare: { bg: 'rgba(20, 184, 166, 0.15)', text: '#14b8a6', accent: '#0f766e' },
+  investments: { bg: 'rgba(34, 197, 94, 0.15)', text: '#22c55e', accent: '#16a34a' },
+  // Default for custom sections
+  default: { bg: 'rgba(107, 114, 128, 0.15)', text: '#6b7280', accent: '#4b5563' },
+};
+
 interface SavingsCategoryPanelProps {
   section: ExpenseSection;
   currency: Currency;
@@ -66,13 +77,16 @@ export function SavingsCategoryPanel({
   const isVehicleSection = section.id === 'vehicle';
   const subcategories = section.subcategories || [];
   
+  // Get section colors
+  const sectionColors = SECTION_COLORS[section.id] || SECTION_COLORS.default;
+  
   // State for inline subcategory name editing
   const [editingSubId, setEditingSubId] = useState<string | null>(null);
   // State for inline section title editing
   const [editingTitle, setEditingTitle] = useState(false);
 
   return (
-    <div className={`savings-category-panel ${isExpanded ? 'expanded' : ''}`}>
+    <div className={`savings-category-panel ${isExpanded ? 'expanded' : 'collapsed'}`}>
       {/* Header (clickable) */}
       <div className="category-panel-header-wrapper">
         <button
@@ -80,8 +94,16 @@ export function SavingsCategoryPanel({
           className="category-panel-header"
           onClick={onToggle}
           aria-expanded={isExpanded}
+          style={{
+            '--section-color': sectionColors.text,
+            '--section-accent': sectionColors.accent,
+          } as React.CSSProperties}
         >
           <div className="header-left">
+            <span className="section-dot" style={{ 
+              backgroundColor: isExpanded ? sectionColors.text : 'transparent', 
+              borderColor: sectionColors.text 
+            }} />
             <span className="section-icon">
               {SECTION_ICONS[section.icon] || <Home size={18} />}
             </span>
@@ -136,11 +158,7 @@ export function SavingsCategoryPanel({
       </div>
       
       {/* Content (animated) */}
-      <div 
-        className="category-panel-content"
-        onClick={isExpanded ? onToggle : undefined}
-        style={{ cursor: isExpanded ? 'pointer' : 'default' }}
-      >
+      <div className="category-panel-content">
         <div className="category-list">
           {/* Fixed categories */}
           {section.categories.map((category) => (
@@ -206,7 +224,7 @@ export function SavingsCategoryPanel({
                       className="subcategory-delete-btn"
                       title="Remove item"
                     >
-                      <Trash2 size={12} />
+                      <Trash2 size={24} />
                     </button>
                   }
                 />
