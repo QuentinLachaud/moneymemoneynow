@@ -18625,24 +18625,28 @@ html {
 
 /* Frequency toggle slider (for vehicle items) */
 .frequency-toggle-slider {
-  display: flex;
-  background: rgba(255, 255, 255, 0.06);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 6px;
-  overflow: hidden;
-  height: 100%; /* Match the height of the input field */
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 999px;
+  padding: 4px;
+  height: 36px; /* pill height */
 }
 
 .frequency-toggle-slider .frequency-option {
-  padding: 4px 8px;
-  background: none;
+  padding: 6px 12px;
+  background: transparent;
   border: none;
   color: var(--muted-foreground);
-  font-size: 0.75rem;
-  font-weight: 500;
+  font-size: 0.85rem;
+  font-weight: 700;
   cursor: pointer;
   transition: all 0.15s ease;
-  border-right: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 999px;
+  min-width: 64px;
+  text-align: center;
 }
 
 .frequency-toggle-slider .frequency-option:last-child {
@@ -18650,16 +18654,18 @@ html {
 }
 
 .frequency-toggle-slider .frequency-option.active {
-  background: rgba(16, 185, 129, 0.2);
-  color: #10b981;
+  /* Use the section color when available for a themed active state */
+  background: rgba(var(--section-color-rgb, 99, 102, 241), 0.14);
+  color: var(--section-color, #6366f1);
+  box-shadow: 0 6px 18px rgba(var(--section-color-rgb, 99, 102, 241), 0.06);
 }
 
 .frequency-toggle-slider .frequency-option:hover {
-  background: rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.06);
 }
 
 .frequency-toggle-slider .frequency-option.active:hover {
-  background: rgba(16, 185, 129, 0.3);
+  background: rgba(var(--section-color-rgb, 99, 102, 241), 0.18);
 }
 
 /* ─── Savings Right Panel (Analysis) ──────────────────────────────────── */
@@ -19202,25 +19208,33 @@ html {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 32px;
-  height: 32px;
-  background: transparent;
-  border: none;
+  width: 44px;
+  height: 44px;
+  background: rgba(239, 68, 68, 0.06);
+  border: 1px solid rgba(239, 68, 68, 0.12);
+  border-radius: 10px;
+  padding: 6px;
   color: #ef4444;
   cursor: pointer;
-  border-radius: 6px;
   opacity: 0;
   visibility: hidden;
-  transition: all 0.15s ease;
+  transform: translateY(-50%) scale(0.9);
+  transition: all 0.18s cubic-bezier(.2,.9,.2,1);
   position: absolute;
-  right: -50px;
+  right: 12px;
   top: 50%;
-  transform: translateY(-50%);
 }
 
 .subcategory-delete-btn:hover {
   color: #dc2626;
-  transform: translateY(-50%) scale(1.1);
+  transform: translateY(-50%) scale(1.05);
+  background: rgba(239, 68, 68, 0.09);
+}
+
+/* Reveal a larger delete button when the whole row is hovered */
+.subcategory-row:hover .subcategory-delete-btn {
+  opacity: 1;
+  visibility: visible;
 }
 
 /* ─── Add Subcategory Button ──────────────────────────────────────────── */
