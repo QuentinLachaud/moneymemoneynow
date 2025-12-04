@@ -18410,11 +18410,20 @@ html {
   border: 1px solid rgba(255, 255, 255, 0.06);
   border-radius: 16px;
   overflow: hidden;
-  transition: border-color 0.15s ease;
+  transition: border-color 0.15s ease, background-color 0.15s ease, box-shadow 0.15s ease;
 }
 
+/* When expanded: make the panel border and outer outline the section color.
+   Use the RGB var so we can control opacity for the background and a stronger
+   solid color for the outline. This creates a continuous colored outline
+   around the whole expanded panel (no white gap). */
 .savings-category-panel.expanded {
-  border-color: var(--section-color, rgba(255, 255, 255, 0.1));
+  background: rgba(var(--section-color-rgb, 0, 0, 0), 0.06);
+  /* Use the hex/text color for a true match with section highlight (e.g. purple).
+     Keep a strong solid border using the provided `--section-color`. */
+  border: 1px solid var(--section-color);
+  /* Keep subtle outer ring using the RGB var for translucency */
+  box-shadow: 0 0 0 3px rgba(var(--section-color-rgb, 0, 0, 0), 0.12);
 }
 
 .category-panel-header {
@@ -18424,22 +18433,22 @@ html {
   width: 100%;
   padding: 14px 18px;
   background: rgba(0, 0, 0, 0.12);
-  border: 1px solid rgba(255, 255, 255, 0.06);
+  /* remove inner border so the panel border becomes a continuous outline
+     when the parent `.savings-category-panel` is highlighted */
+  border: none;
   cursor: pointer;
   transition: all 0.15s ease;
   border-radius: 16px 16px 0 0;
 }
 
-.category-panel-header:hover {
-  background: rgba(0, 0, 0, 0.12);
-}
+
 
 .savings-category-panel.collapsed .category-panel-header {
   border-radius: 16px;
 }
 
 .savings-category-panel.expanded .category-panel-header {
-  border-color: rgba(255, 255, 255, 0.06);
+  border-color: orange
 }
 
 .header-left {

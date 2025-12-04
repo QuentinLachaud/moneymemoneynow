@@ -29,14 +29,14 @@ const SECTION_ICONS: Record<string, React.ReactNode> = {
 };
 
 /** Color mapping for sections */
-const SECTION_COLORS: Record<string, { bg: string; text: string; accent: string }> = {
-  household: { bg: 'rgba(99, 102, 241, 0.15)', text: '#6366f1', accent: '#4f46e5' },
-  vehicle: { bg: 'rgba(245, 158, 11, 0.15)', text: '#f59e0b', accent: '#d97706' },
-  subscriptions: { bg: 'rgba(236, 72, 153, 0.15)', text: '#ec4899', accent: '#db2777' },
-  childcare: { bg: 'rgba(20, 184, 166, 0.15)', text: '#14b8a6', accent: '#0f766e' },
-  investments: { bg: 'rgba(34, 197, 94, 0.15)', text: '#22c55e', accent: '#16a34a' },
+const SECTION_COLORS: Record<string, { bg: string; text: string; accent: string; rgb: string }> = {
+  household: { bg: 'rgba(99, 102, 241, 0.15)', text: '#6366f1', accent: '#4f46e5', rgb: '99, 102, 241' },
+  vehicle: { bg: 'rgba(245, 158, 11, 0.15)', text: '#f59e0b', accent: '#d97706', rgb: '245, 158, 11' },
+  subscriptions: { bg: 'rgba(236, 72, 153, 0.15)', text: '#ec4899', accent: '#db2777', rgb: '236, 72, 153' },
+  childcare: { bg: 'rgba(20, 184, 166, 0.15)', text: '#14b8a6', accent: '#0f766e', rgb: '20, 184, 166' },
+  investments: { bg: 'rgba(34, 197, 94, 0.15)', text: '#22c55e', accent: '#16a34a', rgb: '34, 197, 94' },
   // Default for custom sections
-  default: { bg: 'rgba(107, 114, 128, 0.15)', text: '#6b7280', accent: '#4b5563' },
+  default: { bg: 'rgba(107, 114, 128, 0.15)', text: '#6b7280', accent: '#4b5563', rgb: '107, 114, 128' },
 };
 
 interface SavingsCategoryPanelProps {
@@ -86,7 +86,14 @@ export function SavingsCategoryPanel({
   const [editingTitle, setEditingTitle] = useState(false);
 
   return (
-    <div className={`savings-category-panel ${isExpanded ? 'expanded' : 'collapsed'}`}>
+    <div
+      className={`savings-category-panel ${isExpanded ? 'expanded' : 'collapsed'}`}
+      style={{
+        '--section-color': sectionColors.text,
+        '--section-accent': sectionColors.accent,
+        '--section-color-rgb': sectionColors.rgb,
+      } as React.CSSProperties}
+    >
       {/* Header (clickable) */}
       <div className="category-panel-header-wrapper">
         <button
@@ -94,10 +101,6 @@ export function SavingsCategoryPanel({
           className="category-panel-header"
           onClick={onToggle}
           aria-expanded={isExpanded}
-          style={{
-            '--section-color': sectionColors.text,
-            '--section-accent': sectionColors.accent,
-          } as React.CSSProperties}
         >
           <div className="header-left">
             <span className="section-dot" style={{ 
