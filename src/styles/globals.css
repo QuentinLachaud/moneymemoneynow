@@ -3298,6 +3298,7 @@ html {
 
 .starting-value-slider.wide .slider-track-container {
   gap: 6px;
+  justify-content: center;
 }
 
 .starting-value-slider.wide .slider-track {

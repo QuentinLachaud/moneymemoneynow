@@ -69,6 +69,7 @@ interface AppState {
   
   // UI state (persisted for convenience)
   tab: TabType;
+  pensionTaxRegion: 'england' | 'scotland';
   
   // Simulation settings (persisted)
   simulationSettings: SimulationSettings;
@@ -102,6 +103,7 @@ interface AppActions {
   
   // Tab navigation
   setTab: (tab: TabType) => void;
+  setPensionTaxRegion: (region: 'england' | 'scotland') => void;
   
   // Navigate to Investment Outcomes with prefilled values
   navigateToInvestmentOutcomes: (prefill: InvestmentOutcomesPrefill) => void;
@@ -125,6 +127,7 @@ const initialState: AppState = {
   projectionAccountId: null,
   portfolioSelectedIds: new Set(),
   tab: 'savings-calculator',
+  pensionTaxRegion: 'england',
   simulationSettings: {
     numSimulations: 1000,
     volatilityOverride: 15,
@@ -271,6 +274,10 @@ export const useAppStore = create<AppStore>()(
       // ─── Tab Navigation ──────────────────────────────────────────
       setTab: (tab) => {
         set({ tab });
+      },
+
+      setPensionTaxRegion: (region) => {
+        set({ pensionTaxRegion: region });
       },
 
       navigateToInvestmentOutcomes: (prefill) => {

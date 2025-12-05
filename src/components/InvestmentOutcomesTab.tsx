@@ -223,7 +223,8 @@ export function InvestmentOutcomesTab() {
   // Pension net-sacrifice removed: pension now uses global contribution inputs
   const [pensionTaxRate, setPensionTaxRate] = useState(0.40);
   const [pensionEquityMix, setPensionEquityMix] = useState(0.8);
-  const [pensionTaxRegion, setPensionTaxRegion] = useState<TaxRegion>('england');
+  const pensionTaxRegion = useAppStore((state) => state.pensionTaxRegion);
+  const setPensionTaxRegion = useAppStore((state) => state.setPensionTaxRegion);
   const [showPensionTaxModal, setShowPensionTaxModal] = useState(false);
   const [pendingPensionTaxRate, setPendingPensionTaxRate] = useState(0.40);
   const [pendingPensionTaxRegion, setPendingPensionTaxRegion] = useState<TaxRegion>('england');
