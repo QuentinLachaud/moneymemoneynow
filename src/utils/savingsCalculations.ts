@@ -48,6 +48,9 @@ export const DEFAULT_EXPENSE_SECTIONS: ExpenseSection[] = [
     icon: 'Home',
     categories: [
       { id: 'mortgage', label: 'Mortgage', amount: 0 },
+      { id: 'rent', label: 'Rent', amount: 0 },
+      { id: 'utilities', label: 'Utilities', amount: 0 },
+      { id: 'energy', label: 'Energy', amount: 0 },
       { id: 'council-tax', label: 'Council Tax', amount: 0 },
       { id: 'home-insurance', label: 'Home Insurance', amount: 0 },
       { id: 'groceries', label: 'Groceries', amount: 0 },
