@@ -103,8 +103,8 @@ export default function App() {
       
       if (containerRect) {
         // Center the slider around the text content
-        const width = rect.width - 12; // Reduce width slightly to frame text better
-        const left = rect.left - containerRect.left + 6; // Center position
+        const width = rect.width - 2; // Reduce width slightly to frame text better
+        const left = rect.left - containerRect.left - 5; // Center position
         
         setSliderStyle({
           width,
