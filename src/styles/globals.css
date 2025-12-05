@@ -14771,7 +14771,7 @@ html {
   max-width: 2400px;
   margin: 0 auto;
   justify-content: flex-start;
-  align-items: flex-start;
+  align-items: stretch;
 }
 
 /* Asset Sidebar V5 */
@@ -14965,7 +14965,7 @@ html {
   align-self: flex-start; /* buttress to the left/top of its column */
 }
 
-.chart-wrapper-v5 { width: 100%; }
+.chart-wrapper-v5 { width: 100%; flex: 1; }
 
 /* Legend Card V5 */
 .legend-card-v5 {

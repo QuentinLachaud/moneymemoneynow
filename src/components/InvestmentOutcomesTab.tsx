@@ -813,15 +813,14 @@ export function InvestmentOutcomesTab() {
                   <div
                     className={`asset-pill-v5 ${isActive ? 'active' : ''}`}
                     style={{ '--asset-color': config.color } as React.CSSProperties}
+                    onClick={() => !isLastActive && toggleAsset(assetId)}
                   >
-                    <button
+                    <div
                       className="asset-toggle-v5"
-                      onClick={() => toggleAsset(assetId)}
-                      disabled={isLastActive}
                     >
                       <span className="asset-dot" style={{ backgroundColor: isActive ? config.color : 'transparent', borderColor: config.color }} />
                       <span className="asset-name">{config.name}</span>
-                    </button>
+                    </div>
 
                     {/* Growth rate (except cash) */}
                     {assetId !== 'cash' && (
@@ -895,7 +894,7 @@ export function InvestmentOutcomesTab() {
 
               {/* Chart */}
               <div className="chart-wrapper-v5">
-                <ResponsiveContainer width="100%" height={540}>
+                <ResponsiveContainer width="100%" height="80%">
                   <ComposedChart data={chartData} margin={{ top: 15, right: 25, bottom: 30, left: 15 }}>
                     <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.06)" />
                     <XAxis
