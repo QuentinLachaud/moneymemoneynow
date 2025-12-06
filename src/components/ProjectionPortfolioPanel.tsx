@@ -10,7 +10,7 @@
  * using the unified AccountsStrip component
  */
 
-import { useState, useMemo, useCallback } from 'react';
+import { useState, useMemo, useCallback, useEffect } from 'react';
 import { Account, useAppStore } from '../store/useAppStore';
 import { useMarketCrashStore, getCrashFactor } from '../store/useMarketCrashStore';
 import { runPortfolioMonteCarloSimulation, PortfolioSimulationResult } from '../utils/portfolioMonteCarlo';
@@ -20,7 +20,6 @@ import { CashFlowChart, getCashFlowData, getCashFlowColumns } from './CashFlowCh
 // PortfolioSummary replaced with inline summary-widget for unified ribbon design
 import { CrashYearSlider } from './CrashYearSlider';
 import { 
-  BarChart3, 
   Table, 
   TrendingUp, 
   Shield, 
@@ -29,7 +28,8 @@ import {
   Info,
   Zap,
   Activity,
-  ChevronDown
+  ChevronDown,
+  ChevronUp
 } from 'lucide-react';
 
 interface ProjectionPortfolioPanelProps {
@@ -68,9 +68,9 @@ export function ProjectionPortfolioPanel({ accounts }: ProjectionPortfolioPanelP
   
   // Local-only state (not persisted)
   const [histogramBins, setHistogramBins] = useState(20);
-  const [showHistogram, setShowHistogram] = useState(true);
-  const [showDataTable, setShowDataTable] = useState(false);
+  const [activeView, setActiveView] = useState<'projection' | 'distribution' | 'table'>('projection');
   const [showCashFlowTable, setShowCashFlowTable] = useState(false);
+  const [isCashFlowCollapsed, setIsCashFlowCollapsed] = useState(false);
   
   // Update handlers for persisted settings
   const setGlobalVolatilityOverride = useCallback((value: number) => {
@@ -91,6 +91,13 @@ export function ProjectionPortfolioPanel({ accounts }: ProjectionPortfolioPanelP
   
   // Per-asset overrides
   const [assetOverrides, setAssetOverrides] = useState<Map<string, AssetOverride>>(new Map());
+
+  // Ensure deterministic mode never shows the distribution view
+  useEffect(() => {
+    if (isDeterministic && activeView === 'distribution') {
+      setActiveView('projection');
+    }
+  }, [isDeterministic, activeView]);
 
   // Filter accounts based on selection
   const activeAccounts = useMemo(() => {
@@ -523,41 +530,127 @@ export function ProjectionPortfolioPanel({ accounts }: ProjectionPortfolioPanelP
         </div>
       </div>
 
-      {/* Main Content */}
-      <div className="portfolio-content no-slider">
-        <div className="portfolio-charts">
-          {/* Monte Carlo Chart */}
-          <div className="chart-section card">
-            <div className="section-header">
+      <div className="portfolio-stack">
+        <div className="triple-panel card">
+          <div className="section-header triple-header">
+            <div className="header-left">
               <h3>
                 <TrendingUp size={18} className="header-icon" />
-                {isDeterministic ? 'Portfolio Projection' : 'Monte Carlo Projection'}
+                Portfolio Outcomes
                 {enabledCrashes.length > 0 && (
                   <span className="crash-indicator">
                     · {enabledCrashes.length} crash{enabledCrashes.length > 1 ? 'es' : ''}
                   </span>
                 )}
               </h3>
-              <div className="section-meta">
-                {!isDeterministic && `${numSimulations.toLocaleString()} sims · ${globalVolatilityOverride}% vol · `}
-                {timeHorizon}y horizon
-                {useLogScale && ' · Log'}
-                {adjustForInflation && ' · Real'}
+              <div className="view-toggle">
+                <button
+                  className={activeView === 'projection' ? 'active' : ''}
+                  onClick={() => setActiveView('projection')}
+                >
+                  Monte Carlo
+                </button>
+                {!isDeterministic && (
+                  <button
+                    className={activeView === 'distribution' ? 'active' : ''}
+                    onClick={() => setActiveView('distribution')}
+                  >
+                    Final Value
+                  </button>
+                )}
+                <button
+                  className={activeView === 'table' ? 'active' : ''}
+                  onClick={() => setActiveView('table')}
+                >
+                  Data Table
+                </button>
+                <div className="view-indicator" data-view={activeView} />
               </div>
             </div>
-            <div className="chart-container large">
-              <MonteCarloChart simulation={adjustedSimulation} useLogScale={useLogScale} />
+            <div className="section-meta">
+              {!isDeterministic && `${numSimulations.toLocaleString()} sims · ${globalVolatilityOverride}% vol · `}
+              {timeHorizon}y horizon
+              {useLogScale && ' · Log'}
+              {adjustForInflation && ' · Real'}
             </div>
-            
-            {/* Crash Year Slider - only visible when a crash is selected */}
-            {hasActiveCrash && (
-              <CrashYearSlider startYear={startYear} endYear={endYear} />
-            )}
           </div>
 
-          {/* Cash Flow Chart */}
-          <div className="chart-section card">
-            <div className="section-header">
+          <div className="triple-body">
+            {activeView === 'projection' && (
+              <>
+                <div className="chart-container triple">
+                  <MonteCarloChart simulation={adjustedSimulation} useLogScale={useLogScale} />
+                </div>
+                {hasActiveCrash && (
+                  <CrashYearSlider startYear={startYear} endYear={endYear} />
+                )}
+              </>
+            )}
+
+            {activeView === 'distribution' && !isDeterministic && finalValues.length > 0 && (
+              <div className="chart-container triple">
+                <div className="bin-control">
+                  <label>Bins: {histogramBins}</label>
+                  <input
+                    type="range"
+                    min="5"
+                    max="100"
+                    step="5"
+                    value={histogramBins}
+                    onChange={(e) => setHistogramBins(parseInt(e.target.value))}
+                  />
+                </div>
+                <HistogramChart
+                  finalValues={finalValues}
+                  stats={adjustedSimulation.stats}
+                  numBins={histogramBins}
+                  useLogScale={useLogScale}
+                />
+              </div>
+            )}
+
+            {activeView === 'table' && (
+              <div className="data-table-section card minimal">
+                <div className="percentile-table-container">
+                  <table className="percentile-table colorized">
+                    <thead>
+                      <tr>
+                        <th>Year</th>
+                        {!isDeterministic && <th style={{ color: '#ef4444' }}>1st</th>}
+                        {!isDeterministic && <th style={{ color: '#f97316' }}>10th</th>}
+                        <th style={{ color: '#22c55e' }}>25th</th>
+                        <th style={{ color: '#eab308' }}>50th</th>
+                        <th style={{ color: '#38bdf8' }}>75th</th>
+                        {!isDeterministic && <th style={{ color: '#a855f7' }}>90th</th>}
+                        {!isDeterministic && <th style={{ color: '#8b5cf6' }}>99th</th>}
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {adjustedSimulation.years.map((year, idx) => (
+                        <tr key={year}>
+                          <td>{year}</td>
+                          {!isDeterministic && <td style={{ color: '#ef4444' }}>{formatValue(adjustedSimulation.percentiles[1][idx])}</td>}
+                          {!isDeterministic && <td style={{ color: '#f97316' }}>{formatValue(adjustedSimulation.percentiles[10][idx])}</td>}
+                          <td style={{ color: '#22c55e' }}>{formatValue(adjustedSimulation.percentiles[25][idx])}</td>
+                          <td style={{ color: '#eab308' }}>{formatValue(adjustedSimulation.percentiles[50][idx])}</td>
+                          <td style={{ color: '#38bdf8' }}>{formatValue(adjustedSimulation.percentiles[75][idx])}</td>
+                          {!isDeterministic && <td style={{ color: '#a855f7' }}>{formatValue(adjustedSimulation.percentiles[90][idx])}</td>}
+                          {!isDeterministic && <td style={{ color: '#8b5cf6' }}>{formatValue(adjustedSimulation.percentiles[99][idx])}</td>}
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* ───── Section: Cash Flow Panel (collapsible, default collapsed) ───── */}
+        <div className={`chart-section card ${isCashFlowCollapsed ? 'collapsed' : ''}`}>
+          <div className="section-header">
+            {/* ───── Left: Title + Action Buttons ───── */}
+            <div className="header-left">
               <h3>Portfolio Cash Flow</h3>
               <div className="header-actions">
                 <button
@@ -565,7 +658,7 @@ export function ProjectionPortfolioPanel({ accounts }: ProjectionPortfolioPanelP
                   onClick={() => setShowCashFlowTable(!showCashFlowTable)}
                 >
                   {showCashFlowTable ? <LineChart size={14} /> : <Table size={14} />}
-                  {showCashFlowTable ? 'Graph' : 'Data'}
+                  <span className="action-label">{showCashFlowTable ? 'Graph' : 'Data'}</span>
                 </button>
                 <button
                   className="download-btn download-csv"
@@ -577,6 +670,19 @@ export function ProjectionPortfolioPanel({ accounts }: ProjectionPortfolioPanelP
                 </button>
               </div>
             </div>
+            {/* ───── Right: Collapse Toggle ───── */}
+            <div className="section-right">
+              <button
+                className="collapse-btn"
+                onClick={() => setIsCashFlowCollapsed(!isCashFlowCollapsed)}
+                aria-label={isCashFlowCollapsed ? 'Expand cash flow chart' : 'Collapse cash flow chart'}
+              >
+                {isCashFlowCollapsed ? <ChevronDown size={14} /> : <ChevronUp size={14} />}
+              </button>
+            </div>
+          </div>
+          {/* ───── Chart Container (hidden when collapsed) ───── */}
+          {!isCashFlowCollapsed && (
             <div className="chart-container cashflow-tall">
               {showCashFlowTable ? (
                 <div className="data-table-container">
@@ -606,94 +712,6 @@ export function ProjectionPortfolioPanel({ accounts }: ProjectionPortfolioPanelP
               ) : (
                 <CashFlowChart accounts={activeAccounts} />
               )}
-            </div>
-          </div>
-        </div>
-
-        {/* Side Panel */}
-        <div className="portfolio-side-panel">
-          <div className="side-panel-toggles">
-            {!isDeterministic && (
-              <button
-                className={`toggle-btn ${showHistogram ? 'active' : ''}`}
-                onClick={() => setShowHistogram(!showHistogram)}
-              >
-                <BarChart3 size={16} />
-                Distribution
-              </button>
-            )}
-            <button
-              className={`toggle-btn ${showDataTable ? 'active' : ''}`}
-              onClick={() => setShowDataTable(!showDataTable)}
-            >
-              <Table size={16} />
-              Data
-            </button>
-          </div>
-
-          {/* Histogram */}
-          {!isDeterministic && showHistogram && finalValues.length > 0 && (
-            <div className="histogram-section card">
-              <div className="section-header">
-                <h4>Final Value Distribution</h4>
-                <div className="bin-control">
-                  <label>Bins: {histogramBins}</label>
-                  <input
-                    type="range"
-                    min="5"
-                    max="100"
-                    step="5"
-                    value={histogramBins}
-                    onChange={(e) => setHistogramBins(parseInt(e.target.value))}
-                  />
-                </div>
-              </div>
-              <div className="histogram-container">
-                <HistogramChart
-                  finalValues={finalValues}
-                  stats={adjustedSimulation.stats}
-                  numBins={histogramBins}
-                />
-              </div>
-            </div>
-          )}
-
-          {/* Data Table */}
-          {showDataTable && (
-            <div className="data-table-section card">
-              <div className="section-header">
-                <h4>Percentile Data</h4>
-              </div>
-              <div className="percentile-table-container">
-                <table className="percentile-table">
-                  <thead>
-                    <tr>
-                      <th>Year</th>
-                      {!isDeterministic && <th>1st</th>}
-                      {!isDeterministic && <th>10th</th>}
-                      <th>25th</th>
-                      <th>50th</th>
-                      <th>75th</th>
-                      {!isDeterministic && <th>90th</th>}
-                      {!isDeterministic && <th>99th</th>}
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {adjustedSimulation.years.map((year, idx) => (
-                      <tr key={year}>
-                        <td>{year}</td>
-                        {!isDeterministic && <td>{formatValue(adjustedSimulation.percentiles[1][idx])}</td>}
-                        {!isDeterministic && <td>{formatValue(adjustedSimulation.percentiles[10][idx])}</td>}
-                        <td>{formatValue(adjustedSimulation.percentiles[25][idx])}</td>
-                        <td className="highlight">{formatValue(adjustedSimulation.percentiles[50][idx])}</td>
-                        <td>{formatValue(adjustedSimulation.percentiles[75][idx])}</td>
-                        {!isDeterministic && <td>{formatValue(adjustedSimulation.percentiles[90][idx])}</td>}
-                        {!isDeterministic && <td>{formatValue(adjustedSimulation.percentiles[99][idx])}</td>}
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
             </div>
           )}
         </div>

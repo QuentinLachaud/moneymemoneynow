@@ -611,6 +611,7 @@ export function PortfolioPanel({ accounts, selectedAccountIds }: PortfolioPanelP
                   finalValues={finalValues}
                   stats={adjustedSimulation.stats}
                   numBins={histogramBins}
+                  useLogScale={useLogScale}
                 />
               </div>
             </div>

@@ -24,9 +24,11 @@ interface HistogramChartProps {
   finalValues: number[];
   stats: SimulationStats;
   numBins: number;
+  /** Use logarithmic scale for X-axis */
+  useLogScale?: boolean;
 }
 
-export function HistogramChart({ finalValues, stats, numBins }: HistogramChartProps) {
+export function HistogramChart({ finalValues, stats, numBins, useLogScale = false }: HistogramChartProps) {
   const bins = useMemo(() => {
     return generateHistogramBins(finalValues, numBins);
   }, [finalValues, numBins]);
@@ -55,6 +57,8 @@ export function HistogramChart({ finalValues, stats, numBins }: HistogramChartPr
           
           <XAxis
             dataKey="binMid"
+            scale={useLogScale ? "log" : "linear"}
+            domain={useLogScale ? ['dataMin', 'dataMax'] : undefined}
             tickFormatter={(value) => formatCurrency(value)}
             tick={{ fontSize: 10, fill: 'rgba(255,255,255,0.6)' }}
             tickLine={false}

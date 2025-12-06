@@ -191,6 +191,7 @@ export function ProjectionsPanel({ account }: ProjectionsPanelProps) {
                   finalValues={finalValues}
                   stats={simulation.stats}
                   numBins={histogramBins}
+                  useLogScale={false}
                 />
               </div>
             </div>

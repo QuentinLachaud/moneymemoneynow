@@ -25,7 +25,6 @@
  */
 
 import { useState, useRef, useEffect } from 'react';
-import { ChevronDown, ChevronUp } from 'lucide-react';
 import { AccountForm } from './components/AccountForm';
 import { ProjectionsPanelV2 } from './components/ProjectionsPanelV2';
 import { ProjectionPortfolioPanel } from './components/ProjectionPortfolioPanel';
@@ -63,9 +62,6 @@ export default function App() {
   
   /* ─── LOCAL UI STATE (not persisted) ────────────────────────────── */
   
-  /** Ref to left panel for scroll-into-view */
-  const leftTrayRef = useRef<HTMLDivElement | null>(null);
-  
   /** Refs for tab buttons to calculate slider position */
   const tabRefs = useRef<(HTMLButtonElement | null)[]>([]);
   
@@ -83,12 +79,6 @@ export default function App() {
 
   /** Get the account being edited in modal */
   const editingAccount = editingAccountId ? accounts.find(a => a.id === editingAccountId) : null;
-
-  /** ID of account being edited in left tray (null = adding new) */
-  const [editingId, setEditingId] = useState<string | null>(null);
-
-  /** Left panel collapsed on mobile */
-  const [leftPanelCollapsed, setLeftPanelCollapsed] = useState(true);
 
   /* ─── EFFECTS ───────────────────────────────────────────────────── */
   
@@ -142,15 +132,6 @@ export default function App() {
     setEditingAccountId(null);
   };
 
-  /** Start editing an account in the left tray form */
-  const startEdit = (id: string) => {
-    setEditingId(id);
-    leftTrayRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
-  };
-
-  /** Cancel left tray editing */
-  const cancelEdit = () => setEditingId(null);
-
   /* ─── ACCOUNT CRUD WRAPPERS ─────────────────────────────────────── */
   
   /** Add a new account (wrapper for store action) */
@@ -168,7 +149,6 @@ export default function App() {
     deleteAccountFromStore(id);
   };
 
-  /* ─── RENDER ────────────────────────────────────────────────────── */
   return (
     <div className="app-container">
       {/* ─── HEADER + TABS: Combined row for efficiency ─────────────── */}
@@ -228,48 +208,9 @@ export default function App() {
         </div>
       </header>
 
-      {/* ─── MAIN LAYOUT: Left panel + Content area ─────────────────── */}
-      <div className={`main-grid ${(tab === 'savings-calculator' || tab === 'tax-calculator' || tab === 'investment-outcomes' || tab === 'net-worth') ? 'full-width' : ''}`}>
-        {/* Left Panel: Add Account Form (collapsible on mobile) - Hidden on full-width tabs */}
-        {tab !== 'savings-calculator' && tab !== 'tax-calculator' && tab !== 'investment-outcomes' && tab !== 'net-worth' && (
-          <aside 
-            className={`left-panel card ${leftPanelCollapsed ? 'collapsed' : ''}`}
-            ref={(el) => { leftTrayRef.current = el as HTMLDivElement | null; }}
-          >
-            {/* Mobile toggle header */}
-            <button 
-              className="panel-toggle-header"
-              onClick={() => setLeftPanelCollapsed(!leftPanelCollapsed)}
-            >
-              <h2 className="panel-title">{editingId ? 'Edit Cash Flow' : 'Add Cash Flow'}</h2>
-              {leftPanelCollapsed ? <ChevronDown size={20} /> : <ChevronUp size={20} />}
-            </button>
-            
-            <div className="panel-content">
-              <AccountForm
-                onSubmit={(data) => {
-                  if (editingId) {
-                    updateAccount(editingId, data);
-                    cancelEdit();
-                  } else {
-                    addAccount(data);
-                  }
-                  setLeftPanelCollapsed(true); // Collapse after submit on mobile
-                }}
-                initialData={editingId ? accounts.find((a) => a.id === editingId) : undefined}
-                submitLabel={editingId ? 'Update Cash Flow' : 'Add Cash Flow'}
-                existingAccounts={accounts}
-              />
-              {editingId && (
-                <button onClick={cancelEdit} className="btn cancel-btn">
-                  Cancel Edit
-                </button>
-              )}
-            </div>
-          </aside>
-        )}
-
-        {/* Right Content: Tab-specific content */}
+      {/* ─── MAIN LAYOUT: Content area ──────────────────────────────── */}
+      <div className="main-grid full-width">
+        {/* Content area */}
         <div className="content-area">
           {tab === 'savings-calculator' ? (
             /* Savings Calculator Tab: Monthly budgeting and savings analysis */

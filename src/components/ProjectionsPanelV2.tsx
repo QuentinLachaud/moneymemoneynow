@@ -13,7 +13,7 @@
  * - Distribution chart with Data toggle
  */
 
-import { useState, useMemo, useCallback } from 'react';
+import { useState, useMemo, useCallback, useEffect } from 'react';
 import { Account, useAppStore } from '../store/useAppStore';
 import { runMonteCarloSimulation, SimulationResult } from '../utils/monteCarlo';
 import { MonteCarloChart } from './MonteCarloChart';
@@ -31,7 +31,8 @@ import {
   Zap,
   Activity,
   Target,
-  ChevronDown
+  ChevronDown,
+  ChevronUp
 } from 'lucide-react';
 
 interface ProjectionsPanelV2Props {
@@ -61,6 +62,22 @@ export function ProjectionsPanelV2({ account }: ProjectionsPanelV2Props) {
   const [showSurvivalScatter, setShowSurvivalScatter] = useState(false);
   const [showDataTable, setShowDataTable] = useState(false);
   const [showCashFlowTable, setShowCashFlowTable] = useState(false);
+  
+  // ─────────────────────────────────────────────────────────────
+  // State: Cash Flow Panel Collapse
+  // Purpose: Controls whether the cash flow chart is visible or minimized
+  // Effect: Toggles body.cashflow-collapsed class for global layout adjustments
+  // ─────────────────────────────────────────────────────────────
+  const [isCashFlowCollapsed, setIsCashFlowCollapsed] = useState(true);
+
+  useEffect(() => {
+    if (isCashFlowCollapsed) {
+      document.body.classList.add('cashflow-collapsed');
+    } else {
+      document.body.classList.remove('cashflow-collapsed');
+    }
+    return () => document.body.classList.remove('cashflow-collapsed');
+  }, [isCashFlowCollapsed]);
   
   // Starting value override
   const [startingValueOverride, setStartingValueOverride] = useState<number | null>(null);
@@ -446,58 +463,74 @@ export function ProjectionsPanelV2({ account }: ProjectionsPanelV2Props) {
             </div>
           </div>
 
-          {/* Cash Flow Chart */}
-          <div className="chart-section card">
+          {/* ───── Section: Cash Flow Panel (collapsible, default collapsed) ───── */}
+          <div className={`chart-section card ${isCashFlowCollapsed ? 'collapsed' : ''}`}>
             <div className="section-header">
-              <h3>Cash Flow: {account.name}</h3>
-              <div className="header-actions">
+              {/* ───── Left: Title + Action Buttons ───── */}
+              <div className="header-left">
+                <h3>Cash Flow: {account.name}</h3>
+                <div className="header-actions">
+                  <button
+                    className={`data-toggle-btn ${showCashFlowTable ? 'active' : ''}`}
+                    onClick={() => setShowCashFlowTable(!showCashFlowTable)}
+                  >
+                    {showCashFlowTable ? <LineChart size={14} /> : <Table size={14} />}
+                    <span className="action-label">{showCashFlowTable ? 'Graph' : 'Data'}</span>
+                  </button>
+                  <button
+                    className="download-btn download-csv"
+                    onClick={() => downloadCSV(cashFlowData, cashFlowColumns, `${account.name}-cash-flow`)}
+                    title="Download CSV"
+                  >
+                    <ChevronDown size={14} />
+                    <span className="download-label">CSV</span>
+                  </button>
+                </div>
+              </div>
+              {/* ───── Right: Collapse Toggle ───── */}
+              <div className="section-right">
                 <button
-                  className={`data-toggle-btn ${showCashFlowTable ? 'active' : ''}`}
-                  onClick={() => setShowCashFlowTable(!showCashFlowTable)}
+                  className="collapse-btn"
+                  onClick={() => setIsCashFlowCollapsed(!isCashFlowCollapsed)}
+                  aria-label={isCashFlowCollapsed ? 'Expand cash flow chart' : 'Collapse cash flow chart'}
                 >
-                  {showCashFlowTable ? <LineChart size={14} /> : <Table size={14} />}
-                  {showCashFlowTable ? 'Graph' : 'Data'}
-                </button>
-                <button
-                  className="download-btn download-csv"
-                  onClick={() => downloadCSV(cashFlowData, cashFlowColumns, `${account.name}-cash-flow`)}
-                  title="Download CSV"
-                >
-                  <ChevronDown size={14} />
-                  <span className="download-label">CSV</span>
+                  {isCashFlowCollapsed ? <ChevronDown size={14} /> : <ChevronUp size={14} />}
                 </button>
               </div>
             </div>
-            <div className="chart-container cashflow-tall">
-              {showCashFlowTable ? (
-                <div className="data-table-container">
-                  <table className="data-table">
-                    <thead>
-                      <tr>
-                        {cashFlowColumns.map(col => (
-                          <th key={col.key}>{col.label}</th>
-                        ))}
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {cashFlowData.map((row, idx) => (
-                        <tr key={idx}>
+            {/* ───── Chart Container (hidden when collapsed) ───── */}
+            {!isCashFlowCollapsed && (
+              <div className="chart-container cashflow-tall">
+                {showCashFlowTable ? (
+                  <div className="data-table-container">
+                    <table className="data-table">
+                      <thead>
+                        <tr>
                           {cashFlowColumns.map(col => (
-                            <td key={col.key}>
-                              {col.format 
-                                ? col.format(row[col.key] as number) 
-                                : row[col.key]}
-                            </td>
+                            <th key={col.key}>{col.label}</th>
                           ))}
                         </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              ) : (
-                <CashFlowChart accounts={[modifiedAccount]} />
-              )}
-            </div>
+                      </thead>
+                      <tbody>
+                        {cashFlowData.map((row, idx) => (
+                          <tr key={idx}>
+                            {cashFlowColumns.map(col => (
+                              <td key={col.key}>
+                                {col.format 
+                                  ? col.format(row[col.key] as number) 
+                                  : row[col.key]}
+                              </td>
+                            ))}
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                ) : (
+                  <CashFlowChart accounts={[modifiedAccount]} />
+                )}
+              </div>
+            )}
           </div>
         </div>
 
@@ -554,6 +587,7 @@ export function ProjectionsPanelV2({ account }: ProjectionsPanelV2Props) {
                   finalValues={finalValues}
                   stats={adjustedSimulation.stats}
                   numBins={histogramBins}
+                  useLogScale={useLogScale}
                 />
               </div>
             </div>

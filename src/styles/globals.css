@@ -9,6 +9,15 @@
  * 5. Layout System (left tray, bottom strip, columns)
  * 6. Tailwind Theme Extensions
  * 7. Typography
+ * 8. TAB-SPECIFIC STYLES (see comments below for each tab)
+ *
+ * TABS:
+ * - Savings Calculator: Lines ~18550+
+ * - Investment Outcomes: Lines ~10851+
+ * - Tax Calculator: Lines ~1925+
+ * - Net Worth: Lines ~15795+
+ * - Projections: Lines ~1915+
+ * - Projection Portfolio: Lines ~2675+
  *
  * KEY CUSTOMIZATION POINTS:
  * - Layout dimensions: --header-height, --left-tray-width, --bottom-strip-height
@@ -73,7 +82,7 @@
   --header-height: 36px;         /* Height of title - compact */
   --tab-height: 44px;            /* Height of tab toggle - compact */
   --left-panel-width: 280px;     /* Width of Add Account panel */
-  --accounts-strip-height: 170px; /* Height of bottom accounts strip - slightly taller */
+  --accounts-strip-height: 190px; /* Height of bottom accounts strip - slightly taller */
   --page-gap: 12px;              /* Spacing between all elements */
 
   /* Sidebar (unused but defined for component library) */
@@ -188,6 +197,7 @@ body::before {
   transform-origin: center center;
 }
 
+/* Card hover state - enhanced glow */
 .card:hover, .panel:hover {
   border-color: rgba(99, 102, 241, 0.15);
   box-shadow: 
@@ -196,15 +206,17 @@ body::before {
     0 1px 2px rgba(0, 0, 0, 0.2);
 }
 
-/* Accent utilities - modernized */
+/* Gold accent text color */
 .accent-gold, .text-accent-gold {
   color: #818cf8;
 }
+
+/* Gold accent focus ring */
 .ring-accent-gold {
   box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.12);
 }
 
-/* Button — Premium glass morphism */
+/* Base button styling - glass morphism */
 button, .btn {
   background: linear-gradient(180deg, rgba(255,255,255,0.04), rgba(255,255,255,0.01));
   color: var(--foreground);
@@ -215,6 +227,7 @@ button, .btn {
   transition: all 200ms cubic-bezier(0.16, 1, 0.3, 1);
 }
 
+/* Button hover - lift effect */
 button:hover, .btn:hover {
   background: linear-gradient(180deg, rgba(255,255,255,0.08), rgba(255,255,255,0.03));
   border-color: rgba(99, 102, 241, 0.25);
@@ -222,12 +235,13 @@ button:hover, .btn:hover {
   transform: translateY(-1px);
 }
 
+/* Button active state - press down */
 button:active, .btn:active {
   transform: translateY(0);
   transition-duration: 50ms;
 }
 
-/* Primary button variant */
+/* Primary CTA buttons - gradient background */
 .btn-primary, button[type="submit"] {
   background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
   border: 1px solid rgba(255, 255, 255, 0.1);
@@ -236,6 +250,7 @@ button:active, .btn:active {
   box-shadow: 0 2px 8px rgba(99, 102, 241, 0.3);
 }
 
+/* Primary button hover - brighter gradient */
 .btn-primary:hover, button[type="submit"]:hover {
   background: linear-gradient(135deg, #7c7ef5 0%, #9d6ff9 100%);
   box-shadow: 0 4px 20px rgba(99, 102, 241, 0.4);
@@ -616,7 +631,7 @@ input:focus, textarea:focus, select:focus {
   position: absolute;
   top: 4px;
   left: 4px;
-  width: 0px; /* Will be set dynamically */
+  width: 0px; /* Set dynamically by JS */
   height: calc(100% - 8px);
   background: linear-gradient(135deg, rgba(99, 102, 241, 0.25), rgba(139, 92, 246, 0.2));
   border: 1px solid rgba(99, 102, 241, 0.3);
@@ -674,7 +689,25 @@ input:focus, textarea:focus, select:focus {
   overflow: hidden;
 }
 
-/* Full width mode (for Tax Calculator tab) */
+/* Layout state variables */
+:root {
+  --left-panel-collapsed-width: 44px;
+  --left-tray-tab-visible: 44px;
+  --left-tray-tab-height: 168px;
+  --left-tray-transition: 320ms cubic-bezier(0.22, 0.61, 0.36, 1);
+}
+
+/* Collapsed left panel state */
+.main-grid.tray-collapsed {
+  grid-template-columns: var(--left-tray-tab-visible) 1fr;
+}
+
+/* Expanded left panel state */
+.main-grid.tray-expanded {
+  grid-template-columns: var(--left-panel-width) 1fr;
+}
+
+/* Full width mode for Tax Calculator tab */
 .main-grid.full-width {
   grid-template-columns: 1fr;
 }
@@ -687,6 +720,94 @@ input:focus, textarea:focus, select:focus {
   overflow-y: auto;
   height: 100%;
   background: linear-gradient(180deg, rgba(15, 19, 28, 0.95), rgba(12, 16, 22, 0.98));
+  position: relative;
+  width: var(--left-panel-width);
+  isolation: isolate;
+  border: 1px solid rgba(255, 255, 255, 0.04);
+  box-shadow: inset -1px 0 0 rgba(255, 255, 255, 0.04);
+  transition: transform var(--left-tray-transition), box-shadow var(--left-tray-transition), background 200ms ease, border-color 200ms ease;
+}
+
+.left-panel::before {
+  content: "";
+  position: absolute;
+  top: 10px;
+  bottom: 10px;
+  right: 10px;
+  width: 14px;
+  border-radius: 999px;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.07), rgba(255, 255, 255, 0.02));
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08), inset 0 -1px 0 rgba(0, 0, 0, 0.45);
+  opacity: 0.8;
+  pointer-events: none;
+}
+
+.left-panel.tray-collapsed {
+  padding: 12px 8px;
+  overflow: visible;
+  transform: translateX(calc(-100% + var(--left-tray-tab-visible)));
+  box-shadow: inset -1px 0 0 rgba(255, 255, 255, 0.05), 0 14px 30px rgba(0, 0, 0, 0.24);
+}
+
+.left-panel.tray-collapsed .panel-content,
+.left-panel.tray-collapsed .panel-title,
+.left-panel.tray-collapsed form,
+.left-panel.tray-collapsed .cancel-btn {
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 120ms ease;
+}
+
+.left-panel.tray-expanded {
+  transform: translateX(0);
+  box-shadow: 8px 0 24px rgba(0, 0, 0, 0.28);
+}
+
+.left-panel.tray-expanded .panel-content,
+.left-panel.tray-expanded .panel-title,
+.left-panel.tray-expanded form,
+.left-panel.tray-expanded .cancel-btn {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.pull-tab {
+  position: absolute;
+  top: 50%;
+  right: 6px;
+  transform: translateY(-50%);
+  height: var(--left-tray-tab-height);
+  max-height: calc(100% - 32px);
+  min-height: 120px;
+  padding: 14px 10px;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: linear-gradient(180deg, rgba(29, 38, 53, 0.9), rgba(18, 24, 35, 0.95));
+  color: rgba(255, 255, 255, 0.86);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  cursor: pointer;
+  writing-mode: vertical-rl;
+  text-orientation: mixed;
+  text-align: center;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+  box-shadow: 0 14px 32px rgba(0, 0, 0, 0.32), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(6px);
+  transition: background 200ms ease, color 200ms ease, transform var(--left-tray-transition), box-shadow var(--left-tray-transition), right var(--left-tray-transition);
+}
+
+.pull-tab:hover {
+  background: linear-gradient(180deg, rgba(42, 56, 75, 0.95), rgba(22, 30, 44, 0.98));
+  color: #fff;
+  transform: translateY(-50%) translateX(2px);
+  box-shadow: 0 16px 36px rgba(0, 0, 0, 0.38), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+}
+
+.left-panel.tray-expanded .pull-tab {
+  right: -12px;
 }
 
 /* Panel toggle header - visible only on mobile */
@@ -1269,6 +1390,20 @@ input:focus, textarea:focus, select:focus {
     width: 100%;
     max-width: 400px;
   }
+
+  .main-grid.tray-collapsed,
+  .main-grid.tray-expanded {
+    grid-template-columns: 1fr;
+  }
+
+  .left-panel.tray-collapsed,
+  .left-panel.tray-expanded {
+    width: 100%;
+  }
+
+  .pull-tab {
+    display: none;
+  }
   
   .graph-panel {
     min-height: 300px;
@@ -1790,6 +1925,7 @@ html {
  * ==========================================================================
  * SECTION 9: MONTE CARLO PROJECTIONS — Simulation charts and controls
  * ==========================================================================
+ * TAB: Projections
  */
 
 /* Projections Tab Content */
@@ -1800,6 +1936,11 @@ html {
   min-height: 0;
   overflow: hidden;
 }
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   TAX CALCULATOR TAB STYLES
+   TAB: Tax Calculator
+   ═══════════════════════════════════════════════════════════════════════════ */
 
 /* Tax Calculator Tab Content */
 .tax-calculator-tab-content {
@@ -2068,6 +2209,7 @@ html {
   font-weight: 500;
 }
 
+/* Chart container - flexible height chart wrapper */
 .chart-container {
   flex: 1;
   min-height: 0;
@@ -2075,6 +2217,7 @@ html {
   overflow: hidden;
 }
 
+/* Compact chart variant - fixed height */
 .chart-container.compact {
   flex: 0;
   height: 220px;
@@ -2093,6 +2236,80 @@ html {
 
 .cash-flow-section .section-header h3 {
   font-size: 0.8rem;
+}
+
+/* ─────────────────────────────────────────────────────────────
+   Cash Flow Panel Collapse Behavior
+   Purpose: When cash flow is collapsed, expand the accounts ribbon
+   and keep the Monte Carlo chart at a fixed height
+   ───────────────────────────────────────────────────────────── */
+
+/* Global body class toggled by React when cash flow panel is collapsed */
+body.cashflow-collapsed {
+  --accounts-strip-height: 230px;
+}
+
+/* Collapsed chart section: minimal height, just header visible */
+.chart-section.collapsed {
+  height: 48px;
+  flex: 0 0 48px;
+  overflow: hidden;
+}
+
+/* Expanded chart section: take available space */
+.chart-section:not(.collapsed) {
+  flex: 1;
+  min-height: 200px;
+}
+
+/* Header layout for left actions + right collapse chevron */
+.chart-section .section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.chart-section .section-header .header-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.chart-section .section-header .header-left .header-actions {
+  display: inline-flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.chart-section .section-header .section-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* Collapse button styling */
+.collapse-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: none;
+  color: var(--muted-text, #9aa0a6);
+  padding: 6px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background 150ms ease, color 150ms ease;
+}
+
+.collapse-btn:hover {
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--foreground, #fff);
+}
+
+/* Prevent Monte Carlo from resizing when cashflow is collapsed */
+body.cashflow-collapsed .triple-panel .chart-container.triple {
+  min-height: 360px;
 }
 
 /* Monte Carlo Chart Container */
@@ -2478,6 +2695,7 @@ html {
 
 /* ═══════════════════════════════════════════════════════════════════════════
    PORTFOLIO TAB STYLES
+   TAB: Projection Portfolio
    ═══════════════════════════════════════════════════════════════════════════ */
 
 .portfolio-tab-content,
@@ -3182,7 +3400,7 @@ html {
   flex-direction: row;
 }
 
-/* Main Content Layout - Legacy grid (kept for compatibility) */
+/* Portfolio content layout - 3-column grid with controls */
 .portfolio-content {
   display: grid;
   grid-template-columns: 50px 1fr 380px;
@@ -3194,6 +3412,123 @@ html {
 /* Portfolio content without slider (2-column) */
 .portfolio-content.no-slider {
   grid-template-columns: 1fr 320px;
+}
+
+/* Portfolio stack container */
+.portfolio-stack {
+  display: flex;
+  flex-direction: column;
+  gap: var(--page-gap);
+  min-height: 0;
+}
+
+/* Triple panel - Monte Carlo, Distribution, Data Table views */
+.triple-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 16px;
+  max-width: 100%;
+  margin: 0 auto;
+}
+
+/* Triple panel header with view toggle */
+.triple-header {
+  align-items: center;
+  gap: 12px;
+}
+
+/* Meta info in triple header */
+.triple-header .section-meta {
+  font-size: 0.8rem;
+  color: rgba(255, 255, 255, 0.55);
+}
+
+/* View toggle - Monte Carlo/Distribution/Table */
+.view-toggle {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  position: relative;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 10px;
+  overflow: hidden;
+  margin-left: 14px;
+}
+
+.view-toggle button {
+  padding: 8px 12px;
+  border: none;
+  background: transparent;
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 0.8rem;
+  cursor: pointer;
+  position: relative;
+  z-index: 1;
+  transition: color 150ms ease;
+}
+
+.view-toggle button.active {
+  color: #fff;
+}
+
+.view-indicator {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  pointer-events: none;
+}
+
+.view-indicator::after {
+  content: '';
+  background: linear-gradient(135deg, rgba(99, 102, 241, 0.28), rgba(56, 189, 248, 0.25));
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 10px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
+  transition: transform 200ms ease;
+  grid-column: 1 / span 1;
+}
+
+.view-indicator[data-view='projection']::after {
+  transform: translateX(0%);
+}
+
+.view-indicator[data-view='distribution']::after {
+  transform: translateX(100%);
+}
+
+.view-indicator[data-view='table']::after {
+  transform: translateX(200%);
+}
+
+.triple-body {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.chart-container.triple {
+  min-height: 340px;
+  max-width: 1500px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.data-table-section.card.minimal {
+  padding: 12px;
+  background: transparent;
+  border: 1px solid rgba(59, 174, 30, 0.08);
+}
+
+.percentile-table.colorized th,
+.percentile-table.colorized td {
+  font-weight: 600;
+}
+
+.percentile-table.colorized td {
+  border-color: rgba(255, 255, 255, 0.08);
 }
 
 /* New Resizable Two-Column Layout */
@@ -4722,10 +5057,12 @@ html {
 }
 
 .chart-container.cashflow-tall {
-  flex: 1 1 0;
-  min-height: 0;
-  height: auto;
-  max-height: 100%;
+  flex: 0 0 auto;
+  width: 100%;
+  height: 320px;
+  min-height: 260px;
+  max-height: 380px;
+  padding: 12px;
   overflow: hidden;
 }
 
@@ -6496,13 +6833,14 @@ html {
 /* Unified Account Card */
 .account-card-unified {
   flex-shrink: 0;
-  min-width: 140px;
-  max-width: 180px;
-  padding: 8px 10px;
+  min-width: 160px;
+  max-width: 200px;
+  min-height: 110px;
+  padding: 10px 12px;
   border-radius: 8px;
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 6px;
   cursor: pointer;
   transition: all 200ms ease;
   user-select: none;
@@ -6796,9 +7134,11 @@ html {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 36px;
-  min-height: 80px;
-  border-radius: 8px;
+  min-width: 160px;
+  width: 18vw;
+  max-width: 200px;
+  min-height: 110px;
+  border-radius: 10px;
   border: 1px dashed;
   cursor: pointer;
   transition: all 200ms ease;
@@ -10542,6 +10882,7 @@ html {
 
 /* ============================================
    INVESTMENT OUTCOMES TAB
+   TAB: Investment Outcomes
    Premium, minimal investment comparison interface
    ============================================ */
 
@@ -15481,6 +15822,7 @@ html {
 
 /* ═══════════════════════════════════════════════════════════════════════════
    NET WORTH TAB STYLES
+   TAB: Net Worth
    ═══════════════════════════════════════════════════════════════════════════ */
 
 .net-worth-tab-content {
@@ -18241,6 +18583,7 @@ html {
 
 /* ==========================================================================
  * SECTION: SAVINGS CALCULATOR TAB
+ * TAB: Savings Calculator
  * ========================================================================== */
 
 /* Main container */
