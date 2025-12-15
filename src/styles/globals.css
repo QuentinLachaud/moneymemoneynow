@@ -6426,19 +6426,135 @@ body.cashflow-collapsed {
 
 /*
  * ==========================================================================
- * UNIFIED ACCOUNTS STRIP
+ * UNIFIED ACCOUNTS STRIP — Collapsible with Hover Expansion
  * ==========================================================================
  * Bottom ribbon with deposits (green), drawdowns (red), and crashes (yellow)
+ * 
+ * States:
+ * - Collapsed: Compact strip matching center panel width with section labels
+ * - Expanded: Full-width layout with all cards visible on hover
  */
 
+/* ───── Base Container ───── */
 .accounts-strip-unified {
   display: flex;
   flex-shrink: 0;
+  background: linear-gradient(180deg, rgba(10, 13, 18, 0.85), rgba(10, 13, 18, 0.95));
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 12px 12px 0 0;
+  overflow: hidden;
+  transition: all 300ms cubic-bezier(0.4, 0, 0.2, 1);
+  margin: 0 auto;
+  box-sizing: border-box;
+}
+
+/* ───── Collapsed State ───── */
+.accounts-strip-unified.collapsed {
+  height: 44px;
+  min-height: 44px;
+  max-width: calc(100% - 32px);
+  width: fit-content;
+  align-self: center;
+  cursor: pointer;
+}
+
+.accounts-strip-unified.collapsed:hover {
+  background: linear-gradient(180deg, rgba(15, 20, 28, 0.9), rgba(12, 16, 22, 0.95));
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+/* ───── Expanded State ───── */
+.accounts-strip-unified.expanded {
   height: var(--accounts-strip-height);
   min-height: var(--accounts-strip-height);
-  background: linear-gradient(180deg, rgba(10, 13, 18, 0.6), rgba(10, 13, 18, 0.8));
-  border-top: 1px solid rgba(255, 255, 255, 0.04);
-  overflow: hidden;
+  max-width: 100%;
+  width: 100%;
+}
+
+/* ───── Collapsed View Layout ───── */
+.strip-collapsed {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0;
+  padding: 0 16px;
+  height: 100%;
+  width: 100%;
+}
+
+.collapsed-section {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.7);
+  transition: color 150ms ease;
+}
+
+.collapsed-section.deposits {
+  color: rgba(16, 185, 129, 0.85);
+}
+
+.collapsed-section.drawdowns {
+  color: rgba(239, 68, 68, 0.85);
+}
+
+.collapsed-section.crashes {
+  color: rgba(234, 179, 8, 0.85);
+}
+
+.collapsed-count {
+  font-size: 0.65rem;
+  padding: 2px 6px;
+  border-radius: 8px;
+  font-weight: 600;
+}
+
+.collapsed-section.deposits .collapsed-count {
+  background: rgba(16, 185, 129, 0.15);
+  color: rgba(16, 185, 129, 1);
+}
+
+.collapsed-section.drawdowns .collapsed-count {
+  background: rgba(239, 68, 68, 0.15);
+  color: rgba(239, 68, 68, 1);
+}
+
+.collapsed-section.crashes .collapsed-count {
+  background: rgba(234, 179, 8, 0.15);
+  color: rgba(234, 179, 8, 1);
+}
+
+.collapsed-count.muted {
+  opacity: 0.5;
+}
+
+.collapsed-divider {
+  width: 1px;
+  height: 20px;
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.collapsed-expand-hint {
+  display: flex;
+  align-items: center;
+  margin-left: 12px;
+  color: rgba(255, 255, 255, 0.3);
+  animation: hint-bounce 2s ease-in-out infinite;
+}
+
+@keyframes hint-bounce {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-2px); }
+}
+
+/* ───── Expanded View Layout ───── */
+.strip-expanded {
+  display: flex;
+  width: 100%;
+  height: 100%;
 }
 
 .strip-section {
@@ -6449,17 +6565,17 @@ body.cashflow-collapsed {
   flex: 1;
 }
 
-.strip-section.deposits {
+.strip-section.deposits-section {
   background: linear-gradient(180deg, rgba(16, 185, 129, 0.03), rgba(16, 185, 129, 0.01));
   border-right: 1px solid rgba(255, 255, 255, 0.04);
 }
 
-.strip-section.drawdowns {
+.strip-section.drawdowns-section {
   background: linear-gradient(180deg, rgba(239, 68, 68, 0.03), rgba(239, 68, 68, 0.01));
   border-right: 1px solid rgba(255, 255, 255, 0.04);
 }
 
-.strip-section.crashes {
+.strip-section.crashes-section {
   background: linear-gradient(180deg, rgba(234, 179, 8, 0.03), rgba(234, 179, 8, 0.01));
   flex: 0 0 auto;
   min-width: 180px;

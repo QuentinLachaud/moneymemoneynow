@@ -1,18 +1,17 @@
 /**
  * MarketCrashModal — Modal for creating/editing market crash events
  * 
- * Fields:
+ * Simplified crash model:
  * - Crash label/name
  * - Crash date (year)
- * - Years before recovery (1-15, default 6)
- * - Crash severity (10-50% in 5% increments)
- * - Recovery shape (linear/exponential)
- * - Scope (all assets / selected)
+ * - Crash severity (10-70% - the percentage drop applied to all assets)
+ * 
+ * No recovery settings - natural market returns in the simulation handle recovery.
  */
 
 import { useState } from 'react';
 import { X, AlertTriangle, Trash2 } from 'lucide-react';
-import { MarketCrash, RecoveryShape, CrashScope } from '../store/useMarketCrashStore';
+import { MarketCrash } from '../store/useMarketCrashStore';
 
 interface MarketCrashModalProps {
   onClose: () => void;
@@ -21,10 +20,8 @@ interface MarketCrashModalProps {
   initialData?: MarketCrash;
 }
 
-const SEVERITY_OPTIONS = [10, 15, 20, 25, 30, 35, 40, 45, 50];
-const DEFAULT_RECOVERY_YEARS = 6;
-const MIN_RECOVERY_YEARS = 1;
-const MAX_RECOVERY_YEARS = 15;
+// Extended severity range from 10% to 70%
+const SEVERITY_OPTIONS = [10, 20, 30, 40, 50, 60, 70];
 
 export function MarketCrashModal({
   onClose,
@@ -36,10 +33,7 @@ export function MarketCrashModal({
   
   const [name, setName] = useState(initialData?.name || '');
   const [crashYear, setCrashYear] = useState(initialData?.crashYear || currentYear + 5);
-  const [recoveryYears, setRecoveryYears] = useState(initialData?.recoveryYears || DEFAULT_RECOVERY_YEARS);
   const [severity, setSeverity] = useState((initialData?.severity || 0.30) * 100);
-  const [recoveryShape, setRecoveryShape] = useState<RecoveryShape>(initialData?.recoveryShape || 'linear');
-  const [scope, setScope] = useState<CrashScope>(initialData?.scope || 'all');
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -51,10 +45,7 @@ export function MarketCrashModal({
     onSubmit({
       name: name.trim(),
       crashYear,
-      recoveryYears,
       severity: severity / 100,
-      recoveryShape,
-      scope,
       isEnabled: initialData?.isEnabled ?? true,
     });
   };
@@ -99,27 +90,9 @@ export function MarketCrashModal({
               onChange={(e) => setCrashYear(parseInt(e.target.value))}
               className="form-input"
             />
-          </div>
-
-          {/* Recovery Years Slider */}
-          <div className="form-group">
-            <label>
-              Years Before Recovery: <span className="value-highlight">{recoveryYears} years</span>
-            </label>
-            <div className="slider-container">
-              <input
-                type="range"
-                min={MIN_RECOVERY_YEARS}
-                max={MAX_RECOVERY_YEARS}
-                value={recoveryYears}
-                onChange={(e) => setRecoveryYears(parseInt(e.target.value))}
-                className="form-slider"
-              />
-              <div className="slider-labels">
-                <span>{MIN_RECOVERY_YEARS}y</span>
-                <span>{MAX_RECOVERY_YEARS}y</span>
-              </div>
-            </div>
+            <p className="form-hint">
+              The year when the crash occurs, affecting all assets immediately.
+            </p>
           </div>
 
           {/* Severity Selector */}
@@ -137,55 +110,10 @@ export function MarketCrashModal({
                 </button>
               ))}
             </div>
-          </div>
-
-          {/* Recovery Shape */}
-          <div className="form-group">
-            <label>Recovery Shape</label>
-            <div className="toggle-group">
-              <button
-                type="button"
-                className={`toggle-btn ${recoveryShape === 'linear' ? 'active' : ''}`}
-                onClick={() => setRecoveryShape('linear')}
-              >
-                Linear
-              </button>
-              <button
-                type="button"
-                className={`toggle-btn ${recoveryShape === 'exponential' ? 'active' : ''}`}
-                onClick={() => setRecoveryShape('exponential')}
-              >
-                Exponential
-              </button>
-            </div>
             <p className="form-hint">
-              {recoveryShape === 'linear' 
-                ? 'Value recovers at a constant rate each year'
-                : 'Value recovers faster initially, then slows'}
+              Percentage drop applied to entire portfolio at crash year. 
+              Recovery occurs naturally through market returns.
             </p>
-          </div>
-
-          {/* Scope */}
-          <div className="form-group">
-            <label>Crash Scope</label>
-            <div className="toggle-group">
-              <button
-                type="button"
-                className={`toggle-btn ${scope === 'all' ? 'active' : ''}`}
-                onClick={() => setScope('all')}
-              >
-                Entire Portfolio
-              </button>
-              <button
-                type="button"
-                className={`toggle-btn ${scope === 'selected' ? 'active' : ''}`}
-                onClick={() => setScope('selected')}
-                disabled
-                title="Coming soon"
-              >
-                Selected Assets
-              </button>
-            </div>
           </div>
 
           {/* Actions */}

@@ -1,21 +1,32 @@
 /**
  * AccountsStrip — Unified bottom ribbon with deposit/drawdown/crash sections
  * 
- * This component replaces the old accounts strip and CashFlowRibbon with a unified design:
+ * ─────────────────────────────────────────────────────────────────────────────
+ * Component: AccountsStrip
+ * Purpose: Collapsible bottom ribbon that expands on hover to reveal full controls.
+ *          Shows deposits, drawdowns, and market crashes in a unified layout.
+ * Layer: Domain Component
+ * Dependencies: MarketCrashModal, useMarketCrashStore, useAppStore
+ * Consumed by: App.tsx (shown on projections/portfolio tabs)
+ * ─────────────────────────────────────────────────────────────────────────────
  * 
- * Layout:
+ * Layout (Collapsed - compact strip matching center panel width):
+ * ┌──────────────────────────────────────────────────────────┐
+ * │  ↑ Deposits (3)   │   ↓ Drawdowns (2)   │   ⚡ Crashes   │
+ * └──────────────────────────────────────────────────────────┘
+ * 
+ * Layout (Expanded - on hover, balloon out to full width):
  * ┌─────────────────────────────────────────────────────────────────────┐
  * │ DEPOSITS (green)          │ DRAWDOWNS (red)       │ CRASHES (gold) │
  * │ [+ Card] [Card] [Card]    │ [Card] [Card] [+]     │ [Card] [+]     │
  * └─────────────────────────────────────────────────────────────────────┘
  * 
  * Features:
- * - Deposit cards have green hue
- * - Drawdown cards have red hue
- * - Click anywhere on card to toggle selection (not just checkbox)
- * - Each section has its own colored add button
+ * - Collapsed by default, shows compact 3-section summary
+ * - Expands smoothly on hover to reveal full card details
+ * - Deposit cards have green hue with up arrow
+ * - Drawdown cards have red hue with down arrow
  * - Market crash section only visible on Portfolio/ProjectionPortfolio tabs
- * - Compact card design with name, year, duration, amount, edit/delete
  */
 
 import { useState } from 'react';
@@ -25,7 +36,8 @@ import {
   TrendingUp, 
   TrendingDown,
   AlertTriangle,
-  Zap
+  Zap,
+  ChevronUp
 } from 'lucide-react';
 import { Account } from '../store/useAppStore';
 import { useMarketCrashStore, MarketCrash } from '../store/useMarketCrashStore';
@@ -62,7 +74,10 @@ export function AccountsStrip({
   onEditAccount,
   onDeleteAccount,
 }: AccountsStripProps) {
-  // Market crash state (for portfolio tabs)
+  // ─────────────────────────────────────────────────────────────────────────
+  // State: Hover expansion and crash modal
+  // ─────────────────────────────────────────────────────────────────────────
+  const [isExpanded, setIsExpanded] = useState(false);
   const [showCrashModal, setShowCrashModal] = useState(false);
   const [editingCrash, setEditingCrash] = useState<MarketCrash | null>(null);
   
@@ -76,14 +91,22 @@ export function AccountsStrip({
     deleteCrash,
   } = useMarketCrashStore();
 
-  // Separate accounts by type
+  // ─────────────────────────────────────────────────────────────────────────
+  // Logic: Filter and categorize accounts
+  // ─────────────────────────────────────────────────────────────────────────
   const deposits = accounts.filter(a => a.transactionType === 'deposit');
   const drawdowns = accounts.filter(a => a.transactionType === 'withdraw');
-
-  // Show crashes section only on projection-portfolio tab
   const showCrashSection = tab === 'projection-portfolio';
 
-  // Check if an account is selected based on tab type
+  // Count selected items for collapsed view
+  const selectedDepositsCount = deposits.filter(d => 
+    tab === 'projections' ? projectionAccountId === d.id : portfolioSelectedIds.has(d.id)
+  ).length;
+  const selectedDrawdownsCount = drawdowns.filter(d => 
+    tab === 'projections' ? projectionAccountId === d.id : portfolioSelectedIds.has(d.id)
+  ).length;
+  const enabledCrashesCount = crashes.filter(c => c.isEnabled).length;
+
   const isSelected = (accountId: string): boolean => {
     if (tab === 'projections') {
       return projectionAccountId === accountId;
@@ -91,7 +114,6 @@ export function AccountsStrip({
     return portfolioSelectedIds.has(accountId);
   };
 
-  // Toggle account selection
   const handleToggle = (accountId: string) => {
     if (tab === 'projections') {
       onToggleProjection?.(accountId);
@@ -100,7 +122,6 @@ export function AccountsStrip({
     }
   };
 
-  // Handle crash add/edit
   const handleCrashSubmit = (crashData: Omit<MarketCrash, 'id' | 'createdAt'>) => {
     if (editingCrash) {
       updateCrash(editingCrash.id, crashData);
@@ -121,99 +142,155 @@ export function AccountsStrip({
 
   return (
     <>
-      <div className="accounts-strip-unified">
-        {/* Deposits Section */}
-        <div className="strip-section deposits-section">
-          <div className="section-header">
-            <TrendingUp size={14} />
-            <span>Deposits</span>
-          </div>
-          <div className="section-cards">
-            {deposits.map(account => (
-              <AccountCard
-                key={account.id}
-                account={account}
-                isSelected={isSelected(account.id)}
-                onToggle={() => handleToggle(account.id)}
-                onEdit={() => onEditAccount(account.id)}
-                onDelete={() => onDeleteAccount(account.id)}
-                formatAmount={formatAmount}
-              />
-            ))}
-            <button 
-              className="add-card-btn deposit-add"
-              onClick={onAddDeposit}
-              title="Add new deposit"
-            >
-              <Plus size={18} />
-            </button>
-          </div>
-        </div>
-
-        {/* Drawdowns Section */}
-        <div className="strip-section drawdowns-section">
-          <div className="section-header">
-            <TrendingDown size={14} />
-            <span>Drawdowns</span>
-          </div>
-          <div className="section-cards">
-            {drawdowns.map(account => (
-              <AccountCard
-                key={account.id}
-                account={account}
-                isSelected={isSelected(account.id)}
-                onToggle={() => handleToggle(account.id)}
-                onEdit={() => onEditAccount(account.id)}
-                onDelete={() => onDeleteAccount(account.id)}
-                formatAmount={formatAmount}
-              />
-            ))}
-            <button 
-              className="add-card-btn drawdown-add"
-              onClick={onAddDrawdown}
-              title="Add new drawdown"
-            >
-              <Plus size={18} />
-            </button>
-          </div>
-        </div>
-
-        {/* Market Crashes Section (Portfolio tabs only) */}
-        {showCrashSection && (
-          <div className="strip-section crashes-section">
-            <div className="section-header">
-              <AlertTriangle size={14} />
-              <span>Market Crashes</span>
+      {/* ───── Section: Main Strip Container (collapsed/expanded) ───── */}
+      <div 
+        className={`accounts-strip-unified ${isExpanded ? 'expanded' : 'collapsed'}`}
+        onMouseEnter={() => setIsExpanded(true)}
+        onMouseLeave={() => setIsExpanded(false)}
+      >
+        {/* ───── Section: Collapsed View (compact 3-section summary) ───── */}
+        {!isExpanded && (
+          <div className="strip-collapsed">
+            <div className="collapsed-section deposits">
+              <TrendingUp size={14} />
+              <span>Deposits</span>
+              {selectedDepositsCount > 0 && (
+                <span className="collapsed-count">{selectedDepositsCount}/{deposits.length}</span>
+              )}
+              {selectedDepositsCount === 0 && deposits.length > 0 && (
+                <span className="collapsed-count muted">{deposits.length}</span>
+              )}
             </div>
-            <div className="section-cards">
-              {crashes.map(crash => (
-                <CrashCard
-                  key={crash.id}
-                  crash={crash}
-                  isActive={activeCrashId === crash.id}
-                  onToggle={() => toggleCrash(crash.id)}
-                  onClick={() => {
-                    toggleCrash(crash.id);
-                    setActiveCrash(activeCrashId === crash.id ? null : crash.id);
-                  }}
-                  onEdit={() => {
-                    setEditingCrash(crash);
-                    setShowCrashModal(true);
-                  }}
-                  onDelete={() => deleteCrash(crash.id)}
-                />
-              ))}
-              <button 
-                className="add-card-btn crash-add"
-                onClick={() => {
-                  setEditingCrash(null);
-                  setShowCrashModal(true);
-                }}
-                title="Add market crash scenario"
-              >
-                <Plus size={18} />
-              </button>
+            
+            <div className="collapsed-divider" />
+            
+            <div className="collapsed-section drawdowns">
+              <TrendingDown size={14} />
+              <span>Drawdowns</span>
+              {selectedDrawdownsCount > 0 && (
+                <span className="collapsed-count">{selectedDrawdownsCount}/{drawdowns.length}</span>
+              )}
+              {selectedDrawdownsCount === 0 && drawdowns.length > 0 && (
+                <span className="collapsed-count muted">{drawdowns.length}</span>
+              )}
             </div>
+            
+            {showCrashSection && (
+              <>
+                <div className="collapsed-divider" />
+                <div className="collapsed-section crashes">
+                  <Zap size={14} />
+                  <span>Crashes</span>
+                  {enabledCrashesCount > 0 && (
+                    <span className="collapsed-count">{enabledCrashesCount}</span>
+                  )}
+                </div>
+              </>
+            )}
+            
+            <div className="collapsed-expand-hint">
+              <ChevronUp size={14} />
+            </div>
+          </div>
+        )}
+
+        {/* ───── Section: Expanded View (full cards layout) ───── */}
+        {isExpanded && (
+          <div className="strip-expanded">
+            {/* Deposits Section */}
+            <div className="strip-section deposits-section">
+              <div className="section-header">
+                <TrendingUp size={14} />
+                <span>Deposits</span>
+              </div>
+              <div className="section-cards">
+                {deposits.map(account => (
+                  <AccountCard
+                    key={account.id}
+                    account={account}
+                    isSelected={isSelected(account.id)}
+                    onToggle={() => handleToggle(account.id)}
+                    onEdit={() => onEditAccount(account.id)}
+                    onDelete={() => onDeleteAccount(account.id)}
+                    formatAmount={formatAmount}
+                  />
+                ))}
+                <button 
+                  className="add-card-btn deposit-add"
+                  onClick={onAddDeposit}
+                  title="Add new deposit"
+                >
+                  <Plus size={18} />
+                </button>
+              </div>
+            </div>
+
+            {/* Drawdowns Section */}
+            <div className="strip-section drawdowns-section">
+              <div className="section-header">
+                <TrendingDown size={14} />
+                <span>Drawdowns</span>
+              </div>
+              <div className="section-cards">
+                {drawdowns.map(account => (
+                  <AccountCard
+                    key={account.id}
+                    account={account}
+                    isSelected={isSelected(account.id)}
+                    onToggle={() => handleToggle(account.id)}
+                    onEdit={() => onEditAccount(account.id)}
+                    onDelete={() => onDeleteAccount(account.id)}
+                    formatAmount={formatAmount}
+                  />
+                ))}
+                <button 
+                  className="add-card-btn drawdown-add"
+                  onClick={onAddDrawdown}
+                  title="Add new drawdown"
+                >
+                  <Plus size={18} />
+                </button>
+              </div>
+            </div>
+
+            {/* Market Crashes Section (Portfolio tabs only) */}
+            {showCrashSection && (
+              <div className="strip-section crashes-section">
+                <div className="section-header">
+                  <AlertTriangle size={14} />
+                  <span>Market Crashes</span>
+                </div>
+                <div className="section-cards">
+                  {crashes.map(crash => (
+                    <CrashCard
+                      key={crash.id}
+                      crash={crash}
+                      isActive={activeCrashId === crash.id}
+                      onToggle={() => toggleCrash(crash.id)}
+                      onClick={() => {
+                        toggleCrash(crash.id);
+                        setActiveCrash(activeCrashId === crash.id ? null : crash.id);
+                      }}
+                      onEdit={() => {
+                        setEditingCrash(crash);
+                        setShowCrashModal(true);
+                      }}
+                      onDelete={() => deleteCrash(crash.id)}
+                    />
+                  ))}
+                  <button 
+                    className="add-card-btn crash-add"
+                    onClick={() => {
+                      setEditingCrash(null);
+                      setShowCrashModal(true);
+                    }}
+                    title="Add market crash scenario"
+                  >
+                    <Plus size={18} />
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
         )}
       </div>
@@ -357,7 +434,7 @@ function CrashCard({
         </div>
         
         <div className="card-meta">
-          {crash.crashYear} · -{(crash.severity * 100).toFixed(0)}% · {crash.recoveryYears}y recovery
+          {crash.crashYear} · -{(crash.severity * 100).toFixed(0)}% drop
         </div>
       </div>
 

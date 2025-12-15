@@ -9,17 +9,11 @@ import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 
 /**
- * Recovery shape for crash events
- */
-export type RecoveryShape = 'linear' | 'exponential';
-
-/**
- * Crash scope - which assets are affected
- */
-export type CrashScope = 'all' | 'selected';
-
-/**
  * MarketCrash — represents a market crash event
+ * 
+ * Simplified crash model: A permanent percentage drop occurs at crashYear
+ * that affects all assets. No artificial recovery - the simulation's
+ * natural market returns handle any recovery.
  */
 export interface MarketCrash {
   id: string;
@@ -27,16 +21,8 @@ export interface MarketCrash {
   name: string;
   /** Year when the crash occurs (absolute year, e.g. 2030) */
   crashYear: number;
-  /** Years before full recovery */
-  recoveryYears: number;
-  /** Crash severity as a decimal (0.10 = 10% drop, 0.50 = 50% drop) */
+  /** Crash severity as a decimal (0.10 = 10% drop, 0.70 = 70% drop) */
   severity: number;
-  /** Shape of recovery curve */
-  recoveryShape: RecoveryShape;
-  /** Scope of crash application */
-  scope: CrashScope;
-  /** If scope is 'selected', which asset IDs are affected */
-  affectedAssetIds?: string[];
   /** Whether this crash is active in simulations */
   isEnabled: boolean;
   /** Created timestamp for ordering */
@@ -217,8 +203,10 @@ export const useMarketCrashStore = create<MarketCrashStore>()(
  * Apply market crashes to a portfolio value at a given year
  * Returns the crash-adjusted value
  * 
- * Note: crashYear is the year BEFORE the crash occurs.
- * The actual crash happens at crashYear + 1.
+ * Simplified crash model:
+ * - At crashYear, the portfolio takes a permanent percentage hit
+ * - The portfolio value is reduced by severity% at crash year and remains reduced
+ * - No artificial recovery - natural market returns (from simulation) handle recovery
  */
 export function applyCrashesToValue(
   value: number,
@@ -230,23 +218,10 @@ export function applyCrashesToValue(
   crashes.forEach((crash) => {
     if (!crash.isEnabled) return;
     
-    // Actual crash occurs one year after crashYear
-    const actualCrashYear = crash.crashYear + 1;
-    const yearsSinceCrash = year - actualCrashYear;
-    
-    if (yearsSinceCrash < 0) {
-      // Before crash - no effect
-      return;
-    }
-    
-    if (yearsSinceCrash === 0) {
-      // Crash year - apply immediate drop
-      adjustedValue *= (1 - crash.severity);
-    } else if (yearsSinceCrash > 0) {
-      // After crash - maintain the reduced level, let simulation randomness drive recovery
+    // If we're at or past the crash year, apply the permanent drop
+    if (year >= crash.crashYear) {
       adjustedValue *= (1 - crash.severity);
     }
-    // After recovery period - fully recovered, no adjustment needed
   });
   
   return adjustedValue;
@@ -254,6 +229,7 @@ export function applyCrashesToValue(
 
 /**
  * Get crash factor for a specific year (multiplier to apply to portfolio value)
+ * Returns 1.0 before crash, (1 - severity) at and after crash year
  */
 export function getCrashFactor(year: number, crashes: MarketCrash[]): number {
   return applyCrashesToValue(1, year, crashes);
