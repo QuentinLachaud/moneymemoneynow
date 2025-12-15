@@ -2294,11 +2294,6 @@ body.cashflow-collapsed {
   color: var(--foreground, #fff);
 }
 
-/* Prevent Monte Carlo from resizing when cashflow is collapsed */
-body.cashflow-collapsed .triple-panel .chart-container.triple {
-  min-height: 360px;
-}
-
 /* Monte Carlo Chart Container */
 .monte-carlo-chart-container {
   display: flex;
