@@ -5,7 +5,8 @@
  * to provide consistent slider controls for simulation settings.
  */
 
-import { Info } from 'lucide-react';
+import { Slider, IconButton } from '@quentinlachaud/app-component-library';
+import { RotateCcw } from 'lucide-react';
 import { useAppStore } from '../store/useAppStore';
 
 interface SimulationSlidersProps {
@@ -45,49 +46,43 @@ export function SimulationSliders({
   return (
     <div className="simulation-sliders">
       {showVolatilitySlider && (
-        <div className="slider-control">
-          <div className="slider-label">
-            <span>Volatility</span>
-            <span className="slider-value">{volatility}%</span>
-          </div>
-          <input
-            type="range"
-            min="0"
-            max="50"
-            step="1"
-            value={volatility}
-            onChange={(e) => handleVolatilityChange(parseInt(e.target.value))}
-            className="slider-input"
-          />
-        </div>
+        <Slider
+          label="Volatility"
+          value={volatility}
+          min={0}
+          max={50}
+          step={1}
+          onChange={handleVolatilityChange}
+          formatValue={(v) => `${v}%`}
+        />
       )}
       
       {showProjectionSlider && (
-        <div className="slider-control">
-          <div className="slider-label">
-            <span>
-              Projection
-              {hasOverride && (
-                <button 
-                  className="reset-btn-inline" 
-                  onClick={resetProjectionYears}
-                  title="Reset to default"
-                >
-                  ↺
-                </button>
-              )}
-            </span>
-            <span className="slider-value">{projectionYears}y</span>
+        <div className="flex items-center gap-2">
+          <div className="flex-1">
+            <Slider
+              label={
+                hasOverride ? (
+                  <span className="flex items-center gap-1">
+                    Projection
+                    <IconButton
+                      icon={<RotateCcw size={12} />}
+                      label="Reset to default"
+                      variant="ghost"
+                      size="sm"
+                      onClick={resetProjectionYears}
+                    />
+                  </span>
+                ) : 'Projection'
+              }
+              value={projectionYears}
+              min={1}
+              max={100}
+              step={1}
+              onChange={(v) => handleProjectionYearsChange(v)}
+              formatValue={(v) => `${v}y`}
+            />
           </div>
-          <input
-            type="range"
-            min="1"
-            max="100"
-            step="1"
-            value={projectionYears}
-            onChange={(e) => handleProjectionYearsChange(parseInt(e.target.value))}
-            className="slider-input"
-          />
         </div>
       )}
     </div>

@@ -26,6 +26,7 @@ import { SavingsCategoryPanel } from './savings/SavingsCategoryPanel';
 import { BonusModal } from './savings/BonusModal';
 import { WaterfallChart } from './savings/WaterfallChart';
 import { Tooltip, TooltipContent, TooltipTrigger } from './ui/tooltip';
+import { Button, IconButton, NumberInput, SegmentedToggle } from '@quentinlachaud/app-component-library';
 
 /** Primary and secondary currency options */
 const PRIMARY_CURRENCIES: Currency[] = ['USD', 'GBP', 'EUR'];
@@ -105,16 +106,15 @@ export function SavingsCalculatorTab() {
         {/* LEFT: Currency Selector */}
         <div className="ribbon-group ribbon-group-left">
           <div className="currency-selector-large">
-            {PRIMARY_CURRENCIES.map((c) => (
-              <button
-                key={c}
-                className={`currency-btn-lg ${currency === c ? 'active' : ''}`}
-                onClick={() => setCurrency(c)}
-              >
-                <span className="currency-symbol">{CURRENCY_SYMBOLS[c]}</span>
-                <span className="currency-code">{c}</span>
-              </button>
-            ))}
+            <SegmentedToggle
+              options={PRIMARY_CURRENCIES.map((c) => ({
+                value: c,
+                label: <><span className="currency-symbol">{CURRENCY_SYMBOLS[c]}</span><span className="currency-code">{c}</span></>,
+              }))}
+              value={currency}
+              onChange={(v) => setCurrency(v as Currency)}
+              size="sm"
+            />
             <div className="currency-more-lg">
               <button
                 className="currency-btn-lg more"
@@ -150,37 +150,32 @@ export function SavingsCalculatorTab() {
               <span className="input-label">Net Income</span>
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <button type="button" className="help-icon-btn">
-                    <HelpCircle size={14} />
-                  </button>
+                  <IconButton icon={<HelpCircle size={14} />} label="Help" variant="ghost" size="sm" />
                 </TooltipTrigger>
                 <TooltipContent>
                   Net Income means the money actually entering your bank account monthly.
                 </TooltipContent>
               </Tooltip>
             </div>
-            <div className="input-wrapper income-input-wrapper">
-              <span className="symbol">{symbol}</span>
-              <input
-                type="number"
-                value={netIncome || ''}
-                onChange={(e) => setNetIncome(parseFloat(e.target.value) || 0)}
-                placeholder="0"
-                min={0}
-              />
-              <span className="suffix">/mo</span>
-            </div>
+            <NumberInput
+              value={netIncome || undefined}
+              onChange={(v) => setNetIncome(v ?? 0)}
+              label={`${symbol} /mo`}
+              placeholder="0"
+              min={0}
+              fullWidth
+            />
           </div>
 
           {/* Add Bonus Button */}
           <div className="bonus-button-group">
-            <button
-              type="button"
-              className="add-bonus-btn"
+            <Button
+              variant="secondary"
+              size="sm"
+              leftIcon={<Plus size={16} />}
               onClick={() => setShowBonusModal(true)}
             >
-              <Plus size={16} />
-              <span>Add Bonus</span>
+              Add Bonus
               <Tooltip>
                 <TooltipTrigger asChild>
                   <span className="bonus-help-icon">
@@ -191,7 +186,7 @@ export function SavingsCalculatorTab() {
                   Add your annual net bonus. It will be divided by 12 and added to monthly income.
                 </TooltipContent>
               </Tooltip>
-            </button>
+            </Button>
             {netBonus > 0 && (
               <span className="bonus-indicator">
                 +{symbol}{(netBonus / 12).toLocaleString('en-US', { maximumFractionDigits: 0 })}/mo
@@ -268,14 +263,14 @@ export function SavingsCalculatorTab() {
             ))}
             
             {/* Add Custom Section Button */}
-            <button
-              type="button"
-              className="add-custom-section-btn"
+            <Button
+              variant="secondary"
+              size="sm"
+              leftIcon={<FolderPlus size={16} />}
               onClick={() => addCustomSection('Custom Category')}
             >
-              <FolderPlus size={16} />
-              <span>Add Custom Section</span>
-            </button>
+              Add Custom Section
+            </Button>
           </div>
         </div>
 
@@ -314,14 +309,15 @@ export function SavingsCalculatorTab() {
             
             {/* CTA Button: Invest Your Savings */}
             {monthlySavings > 0 && (
-              <button
-                type="button"
-                className="invest-savings-cta"
+              <Button
+                variant="primary"
+                size="lg"
+                rightIcon={<ArrowRight size={16} />}
                 onClick={handleInvestSavings}
+                fullWidth
               >
-                <span className="cta-text">See how your savings could grow</span>
-                <ArrowRight size={16} className="cta-arrow" />
-              </button>
+                See how your savings could grow
+              </Button>
             )}
           </div>
 

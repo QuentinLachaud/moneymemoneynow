@@ -8,6 +8,7 @@
  */
 
 import { useRef } from 'react';
+import { NumberInput, SegmentedToggle } from '@quentinlachaud/app-component-library';
 import { Currency, CURRENCY_SYMBOLS } from '../../utils/investmentSimulation';
 
 interface CategoryInputRowProps {
@@ -44,41 +45,22 @@ export function CategoryInputRow({
       </label>
       
       <div className="category-input-wrapper">
-        <div className="category-input-field">
-          <span className="currency-prefix">{symbol}</span>
-          <input
-            id={categoryId}
-            type="number"
-            value={amount || ''}
-            onChange={(e) => onAmountChange(parseFloat(e.target.value) || 0)}
-            placeholder="0"
-            min={0}
-          />
-        </div>
+        <NumberInput
+          value={amount || undefined}
+          onChange={(v) => onAmountChange(v ?? 0)}
+          min={0}
+        />
         
         {showFrequency && onFrequencyChange && (
-          <div className="frequency-toggle-slider">
-            <button
-              type="button"
-              className={`frequency-option ${frequency === 'monthly' ? 'active' : ''}`}
-              onClick={(e) => {
-                e.stopPropagation();
-                onFrequencyChange('monthly');
-              }}
-            >
-              Monthly
-            </button>
-            <button
-              type="button"
-              className={`frequency-option ${frequency === 'annual' ? 'active' : ''}`}
-              onClick={(e) => {
-                e.stopPropagation();
-                onFrequencyChange('annual');
-              }}
-            >
-              Annual
-            </button>
-          </div>
+          <SegmentedToggle
+            options={[
+              { value: 'monthly', label: 'Monthly' },
+              { value: 'annual', label: 'Annual' },
+            ]}
+            value={frequency}
+            onChange={(v) => onFrequencyChange(v as 'annual' | 'monthly')}
+            size="sm"
+          />
         )}
       </div>
     </div>

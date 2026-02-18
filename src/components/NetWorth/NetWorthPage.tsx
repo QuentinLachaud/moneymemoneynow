@@ -7,6 +7,7 @@
 
 import { useState, useCallback } from 'react';
 import { Plus } from 'lucide-react';
+import { Button, IconButton } from '@quentinlachaud/app-component-library';
 import {
   useNetWorthStore,
   useNetWorth,
@@ -145,25 +146,27 @@ export function NetWorthPage() {
         <div className="nw-column">
           <div className="nw-column-header">
             <h3 className="nw-column-title asset">Assets</h3>
-            <button 
-              className="nw-add-btn asset"
+            <IconButton
+              icon={<Plus size={20} />}
+              label="Add Asset"
+              variant="ghost"
+              size="sm"
               onClick={() => openAddModal('asset')}
-              title="Add Asset"
-            >
-              <Plus size={20} />
-            </button>
+            />
           </div>
           
           <div className="nw-items-list">
             {assets.length === 0 ? (
               <div className="nw-empty-state">
                 <p>No assets added yet</p>
-                <button 
-                  className="nw-empty-add-btn asset"
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  leftIcon={<Plus size={16} />}
                   onClick={() => openAddModal('asset')}
                 >
-                  <Plus size={16} /> Add your first asset
-                </button>
+                  Add your first asset
+                </Button>
               </div>
             ) : (
               assets.map(asset => (
@@ -193,25 +196,27 @@ export function NetWorthPage() {
         <div className="nw-column">
           <div className="nw-column-header">
             <h3 className="nw-column-title liability">Liabilities</h3>
-            <button 
-              className="nw-add-btn liability"
+            <IconButton
+              icon={<Plus size={20} />}
+              label="Add Liability"
+              variant="ghost"
+              size="sm"
               onClick={() => openAddModal('liability')}
-              title="Add Liability"
-            >
-              <Plus size={20} />
-            </button>
+            />
           </div>
           
           <div className="nw-items-list">
             {liabilities.length === 0 ? (
               <div className="nw-empty-state">
                 <p>No liabilities added yet</p>
-                <button 
-                  className="nw-empty-add-btn liability"
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  leftIcon={<Plus size={16} />}
                   onClick={() => openAddModal('liability')}
                 >
-                  <Plus size={16} /> Add your first liability
-                </button>
+                  Add your first liability
+                </Button>
               </div>
             ) : (
               liabilities.map(liability => (

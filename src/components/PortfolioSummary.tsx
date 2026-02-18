@@ -10,6 +10,7 @@
  */
 
 import { Info } from 'lucide-react';
+import { IconButton } from '@quentinlachaud/app-component-library';
 
 interface PortfolioSummaryProps {
   initialValue: number;
@@ -91,9 +92,12 @@ export function PortfolioSummary({
           <div className="return-item">
             <span className="return-label">
               Real
-              <button className="info-btn" title={`Adjusted for ${inflationRate}% annual inflation`}>
-                <Info size={10} />
-              </button>
+              <IconButton
+                icon={<Info size={10} />}
+                label={`Adjusted for ${inflationRate}% annual inflation`}
+                variant="ghost"
+                size="sm"
+              />
             </span>
             <span className={`return-value ${realGrowthPercent >= 0 ? 'positive' : 'negative'}`}>
               {realGrowthPercent >= 0 ? '+' : ''}{realGrowthPercent.toFixed(1)}%
@@ -124,9 +128,12 @@ export function PortfolioSummary({
           <div className="survival-row">
             <span className="survival-label">
               Survival Rate
-              <button className="info-btn" title="Percentage of simulations where portfolio value stayed above zero">
-                <Info size={10} />
-              </button>
+              <IconButton
+                icon={<Info size={10} />}
+                label="Percentage of simulations where portfolio value stayed above zero"
+                variant="ghost"
+                size="sm"
+              />
             </span>
             <span className={`survival-value ${survivalRate >= 95 ? 'excellent' : survivalRate >= 80 ? 'good' : 'warning'}`}>
               {survivalRate.toFixed(1)}%

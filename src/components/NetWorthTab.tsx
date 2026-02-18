@@ -32,6 +32,7 @@ import {
   Asset,
   Liability,
 } from '../store/useNetWorthStore';
+import { Button, IconButton, NumberInput, SegmentedToggle } from '@quentinlachaud/app-component-library';
 
 // Green color palette for assets
 const ASSET_COLORS = [
@@ -97,9 +98,9 @@ export function NetWorthTab() {
   
   // Form state
   const [selectedType, setSelectedType] = useState('');
-  const [value, setValue] = useState('');
+  const [value, setValue] = useState<number | undefined>(undefined);
   const [date, setDate] = useState(getTodayDate());
-  const [interestRate, setInterestRate] = useState('');
+  const [interestRate, setInterestRate] = useState<number | undefined>(undefined);
   const [typeSearch, setTypeSearch] = useState('');
   const [showTypeDropdown, setShowTypeDropdown] = useState(false);
   
@@ -107,9 +108,9 @@ export function NetWorthTab() {
   const openModal = (mode: 'asset' | 'liability') => {
     setModalMode(mode);
     setSelectedType('');
-    setValue('');
+    setValue(undefined);
     setDate(getTodayDate());
-    setInterestRate('');
+    setInterestRate(undefined);
     setTypeSearch('');
     setShowModal(true);
   };
@@ -121,24 +122,21 @@ export function NetWorthTab() {
   
   // Handle form submit
   const handleSubmit = () => {
-    if (!selectedType || !value) return;
-    
-    const numValue = parseFloat(value);
-    if (isNaN(numValue)) return;
+    if (!selectedType || value === undefined) return;
     
     if (modalMode === 'asset') {
       addAsset({
         type: selectedType,
-        value: Math.abs(numValue),
+        value: Math.abs(value),
         date,
         liquidityIndex: getLiquidityIndex(selectedType),
       });
     } else {
       addLiability({
         type: selectedType,
-        value: -Math.abs(numValue), // Ensure negative
+        value: -Math.abs(value), // Ensure negative
         date,
-        interestRate: interestRate ? parseFloat(interestRate) : undefined,
+        interestRate,
       });
     }
     
@@ -210,22 +208,22 @@ export function NetWorthTab() {
         <div className="net-worth-column">
           <div className="column-header">
             <h3 className="column-title">Assets</h3>
-            <button 
-              className="add-btn add-btn-asset" 
+            <IconButton
+              icon={<Plus size={20} />}
+              label="Add Asset"
+              variant="primary"
+              size="sm"
               onClick={() => openModal('asset')}
-              title="Add Asset"
-            >
-              <Plus size={20} />
-            </button>
+            />
           </div>
           
           <div className="items-list">
             {assets.length === 0 ? (
               <div className="empty-state">
                 <p>No assets added yet</p>
-                <button className="empty-add-btn" onClick={() => openModal('asset')}>
-                  <Plus size={16} /> Add your first asset
-                </button>
+                <Button variant="secondary" leftIcon={<Plus size={16} />} onClick={() => openModal('asset')}>
+                  Add your first asset
+                </Button>
               </div>
             ) : (
               assets.map(asset => (
@@ -238,13 +236,13 @@ export function NetWorthTab() {
                     <span className="item-date">{new Date(asset.date).toLocaleDateString('en-GB')}</span>
                     <span className="liquidity-badge">Liquidity: {asset.liquidityIndex}/10</span>
                   </div>
-                  <button 
-                    className="delete-btn"
+                  <IconButton
+                    icon={<Trash2 size={14} />}
+                    label="Delete"
+                    variant="ghost"
+                    size="sm"
                     onClick={() => deleteAsset(asset.id)}
-                    title="Delete"
-                  >
-                    <Trash2 size={14} />
-                  </button>
+                  />
                 </div>
               ))
             )}
@@ -262,22 +260,22 @@ export function NetWorthTab() {
         <div className="net-worth-column">
           <div className="column-header">
             <h3 className="column-title liabilities">Liabilities</h3>
-            <button 
-              className="add-btn add-btn-liability" 
+            <IconButton
+              icon={<Plus size={20} />}
+              label="Add Liability"
+              variant="primary"
+              size="sm"
               onClick={() => openModal('liability')}
-              title="Add Liability"
-            >
-              <Plus size={20} />
-            </button>
+            />
           </div>
           
           <div className="items-list">
             {liabilities.length === 0 ? (
               <div className="empty-state">
                 <p>No liabilities added yet</p>
-                <button className="empty-add-btn liability" onClick={() => openModal('liability')}>
-                  <Plus size={16} /> Add your first liability
-                </button>
+                <Button variant="secondary" leftIcon={<Plus size={16} />} onClick={() => openModal('liability')}>
+                  Add your first liability
+                </Button>
               </div>
             ) : (
               liabilities.map(liability => (
@@ -292,13 +290,13 @@ export function NetWorthTab() {
                       <span className="interest-badge">{liability.interestRate}% APR</span>
                     )}
                   </div>
-                  <button 
-                    className="delete-btn"
+                  <IconButton
+                    icon={<Trash2 size={14} />}
+                    label="Delete"
+                    variant="ghost"
+                    size="sm"
                     onClick={() => deleteLiability(liability.id)}
-                    title="Delete"
-                  >
-                    <Trash2 size={14} />
-                  </button>
+                  />
                 </div>
               ))
             )}
@@ -441,37 +439,27 @@ export function NetWorthTab() {
             onClick={(e) => e.stopPropagation()}
           >
             {/* Close button */}
-            <button className="modal-close-btn" onClick={closeModal}>
-              <X size={20} />
-            </button>
+            <IconButton
+              icon={<X size={20} />}
+              label="Close"
+              variant="ghost"
+              size="sm"
+              onClick={closeModal}
+            />
             
             {/* Mode Switch */}
-            <div className="modal-mode-switch">
-              <button
-                className={`mode-switch-btn ${modalMode === 'asset' ? 'active' : ''}`}
-                onClick={() => {
-                  setModalMode('asset');
-                  setSelectedType('');
-                  setTypeSearch('');
-                }}
-              >
-                Asset
-              </button>
-              <button
-                className={`mode-switch-btn liability ${modalMode === 'liability' ? 'active' : ''}`}
-                onClick={() => {
-                  setModalMode('liability');
-                  setSelectedType('');
-                  setTypeSearch('');
-                }}
-              >
-                Liability
-              </button>
-              <div 
-                className="switch-slider"
-                style={{ transform: modalMode === 'liability' ? 'translateX(100%)' : 'translateX(0)' }}
-              />
-            </div>
+            <SegmentedToggle
+              options={[
+                { value: 'asset', label: 'Asset' },
+                { value: 'liability', label: 'Liability' },
+              ]}
+              value={modalMode}
+              onChange={(v) => {
+                setModalMode(v as 'asset' | 'liability');
+                setSelectedType('');
+                setTypeSearch('');
+              }}
+            />
             
             {/* Title */}
             <h3 className={`modal-title ${modalMode}`}>
@@ -542,37 +530,29 @@ export function NetWorthTab() {
               
               {/* Value Input */}
               <div className="form-field">
-                <label>Current Value</label>
-                <div className="value-input-wrapper">
-                  <span className="currency-symbol">£</span>
-                  <input
-                    type="number"
-                    placeholder={modalMode === 'liability' ? 'Enter amount (will be negative)' : 'Enter value'}
-                    value={value}
-                    onChange={(e) => setValue(e.target.value)}
-                    min={0}
-                  />
-                </div>
-                {modalMode === 'liability' && value && (
-                  <span className="value-preview">Will be recorded as: {formatCurrency(-Math.abs(parseFloat(value) || 0))}</span>
+                <NumberInput
+                  label="Current Value"
+                  value={value}
+                  onChange={setValue}
+                  min={0}
+                  fullWidth
+                />
+                {modalMode === 'liability' && value !== undefined && (
+                  <span className="value-preview">Will be recorded as: {formatCurrency(-Math.abs(value))}</span>
                 )}
               </div>
               
               {/* Interest Rate (liabilities only) */}
               {modalMode === 'liability' && (
                 <div className="form-field">
-                  <label>Interest Rate (Optional)</label>
-                  <div className="rate-input-wrapper">
-                    <input
-                      type="number"
-                      placeholder="e.g., 5.5"
-                      value={interestRate}
-                      onChange={(e) => setInterestRate(e.target.value)}
-                      step={0.1}
-                      min={0}
-                    />
-                    <span className="rate-suffix">% APR</span>
-                  </div>
+                  <NumberInput
+                    label="Interest Rate (Optional)"
+                    value={interestRate}
+                    onChange={setInterestRate}
+                    step={0.1}
+                    min={0}
+                    fullWidth
+                  />
                 </div>
               )}
               
@@ -589,13 +569,14 @@ export function NetWorthTab() {
             </div>
             
             {/* Submit Button */}
-            <button 
-              className={`submit-btn ${modalMode}`}
+            <Button
+              variant="primary"
+              fullWidth
               onClick={handleSubmit}
-              disabled={!selectedType || !value}
+              disabled={!selectedType || value === undefined}
             >
               {modalMode === 'asset' ? 'Add Asset' : 'Add Liability'}
-            </button>
+            </Button>
           </div>
         </div>
       )}

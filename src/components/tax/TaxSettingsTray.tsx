@@ -8,6 +8,7 @@
  */
 
 import { Info, Minus, Plus } from 'lucide-react';
+import { Slider, SegmentedToggle, IconButton } from '@quentinlachaud/app-component-library';
 import { TaxRegion } from '../../utils/ukTaxCalculator';
 
 interface TaxSettingsTrayProps {
@@ -41,41 +42,15 @@ function PensionSliderInput({
 
   return (
     <div className="pension-slider-group">
-      <div className="pension-slider-header">
-        <span className="pension-slider-label">{label}</span>
-        <span className="pension-slider-value">{value}%</span>
-      </div>
-      
-      {/* Main slider */}
-      <div className="pension-slider-row">
-        <button 
-          className="pension-stepper-btn" 
-          onClick={decrement}
-          disabled={value <= 0}
-          type="button"
-        >
-          <Minus size={14} />
-        </button>
-        
-        <input
-          type="range"
-          min={0}
-          max={max}
-          step={1}
-          value={value}
-          onChange={(e) => onChange(parseInt(e.target.value))}
-          className="pension-slider"
-        />
-        
-        <button 
-          className="pension-stepper-btn" 
-          onClick={increment}
-          disabled={value >= max}
-          type="button"
-        >
-          <Plus size={14} />
-        </button>
-      </div>
+      <Slider
+        label={label}
+        value={value}
+        onChange={onChange}
+        min={0}
+        max={max}
+        step={1}
+        formatValue={(v) => `${v}%`}
+      />
       
       {/* Preset buttons */}
       <div className="pension-presets">
@@ -117,24 +92,16 @@ export function TaxSettingsTray({
         {/* Tax Region Toggle */}
         <div className="tray-section">
           <label className="section-label">Tax Region</label>
-          <div className="region-toggle">
-            <button
-              className={`region-option ${region === 'england' ? 'active' : ''}`}
-              onClick={() => onRegionChange('england')}
-            >
-              England
-            </button>
-            <button
-              className={`region-option ${region === 'scotland' ? 'active' : ''}`}
-              onClick={() => onRegionChange('scotland')}
-            >
-              Scotland
-            </button>
-            <div 
-              className="region-indicator" 
-              style={{ transform: region === 'scotland' ? 'translateX(100%)' : 'translateX(0)' }}
-            />
-          </div>
+          <SegmentedToggle
+            options={[
+              { value: 'england', label: 'England' },
+              { value: 'scotland', label: 'Scotland' },
+            ]}
+            value={region}
+            onChange={(v) => onRegionChange(v as TaxRegion)}
+            size="sm"
+            fullWidth
+          />
           <span className="section-hint">
             {region === 'scotland' ? '6 tax bands (19%-48%)' : '4 tax bands (0%-45%)'}
           </span>
@@ -144,12 +111,12 @@ export function TaxSettingsTray({
         <div className="tray-section pension-section">
           <div className="section-header">
             <label className="section-label">Pension</label>
-            <button 
-              className="info-btn" 
-              title="Your contribution is deducted from gross salary before tax. Base & Employer Match don't reduce your taxable income."
-            >
-              <Info size={14} />
-            </button>
+            <IconButton
+              icon={<Info size={14} />}
+              label="Your contribution is deducted from gross salary before tax. Base & Employer Match don't reduce your taxable income."
+              variant="ghost"
+              size="sm"
+            />
           </div>
           
           <div className="pension-sliders">

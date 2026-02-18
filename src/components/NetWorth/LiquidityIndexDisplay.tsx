@@ -6,6 +6,7 @@
 
 import { useState } from 'react';
 import { Info } from 'lucide-react';
+import { IconButton } from '@quentinlachaud/app-component-library';
 import { Asset } from '../../store/useNetWorthStore';
 import { calculateLiquidityIndex, getLiquidityFormulaExplanation } from '../../utils/liquidityCalculator';
 
@@ -28,15 +29,16 @@ export function LiquidityIndexDisplay({ assets }: LiquidityIndexDisplayProps) {
         <div className="liquidity-header" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, marginBottom: 8 }}>
           <h4 className="liquidity-title" style={{ margin: 0, fontSize: '0.85rem', fontWeight: 700 }}>Liquidity Index</h4>
           <div className="liquidity-info-wrapper">
-            <button 
+            <IconButton 
+              icon={<Info size={14} />}
+              label="What is Liquidity Index"
+              variant="ghost"
+              size="sm"
               className="liquidity-info-btn"
               onMouseEnter={() => setShowTooltip(true)}
               onMouseLeave={() => setShowTooltip(false)}
               onClick={() => setShowTooltip(!showTooltip)}
-              aria-label="What is Liquidity Index"
-            >
-              <Info size={14} />
-            </button>
+            />
 
             {showTooltip && (
               <div className="liquidity-info-tooltip">

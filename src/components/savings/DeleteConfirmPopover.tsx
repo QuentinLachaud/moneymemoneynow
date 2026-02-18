@@ -7,6 +7,7 @@
 
 import { useRef, useEffect, ReactNode, useState } from 'react';
 import { X } from 'lucide-react';
+import { Button } from '@quentinlachaud/app-component-library';
 
 interface DeleteConfirmPopoverProps {
   /** The trigger element (e.g., a delete button) */
@@ -80,20 +81,12 @@ export function DeleteConfirmPopover({
         <div className="delete-confirm-popover" ref={popoverRef}>
           <p className="popover-message">{message}</p>
           <div className="popover-actions">
-            <button 
-              type="button" 
-              className="popover-btn cancel" 
-              onClick={() => setIsOpen(false)}
-            >
+            <Button variant="secondary" size="sm" onClick={() => setIsOpen(false)}>
               Cancel
-            </button>
-            <button 
-              type="button" 
-              className="popover-btn delete" 
-              onClick={handleConfirm}
-            >
+            </Button>
+            <Button variant="primary" size="sm" onClick={handleConfirm}>
               Delete
-            </button>
+            </Button>
           </div>
         </div>
       )}

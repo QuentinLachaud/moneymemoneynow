@@ -26,6 +26,7 @@ import { useState, useEffect } from 'react';
 import { Account } from '../App';
 import { Plus, Check } from 'lucide-react';
 import { calculateAccountValue } from '../utils/calculations';
+import { TextInput, NumberInput, Slider, SegmentedToggle, Button } from '@quentinlachaud/app-component-library';
 
 interface AccountFormProps {
   onSubmit: (account: Omit<Account, 'id'>) => void;
@@ -127,89 +128,71 @@ export function AccountForm({
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       {/* Transaction Type Toggle - First element */}
-      <div className="transaction-type-toggle-container">
-        <label className="block text-sm text-gray-700 mb-2">Type</label>
-        <div className="transaction-type-toggle">
-          <button
-            type="button"
-            className={`toggle-option deposit ${transactionType === 'deposit' ? 'active' : ''}`}
-            onClick={() => setTransactionType('deposit')}
-          >
-            {transactionType === 'deposit' && <Check size={14} />}
-            Deposit
-          </button>
-          <button
-            type="button"
-            className={`toggle-option withdraw ${transactionType === 'withdraw' ? 'active' : ''}`}
-            onClick={() => setTransactionType('withdraw')}
-          >
-            {transactionType === 'withdraw' && <Check size={14} />}
-            Drawdown
-          </button>
-        </div>
-      </div>
-
       <div>
-        <label className="block text-sm text-gray-700 mb-1">Asset Name</label>
-        <input
-          type="text"
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-          placeholder="e.g., ISA, Pension"
-          required
+        <label className="block text-sm text-text-secondary mb-2">Type</label>
+        <SegmentedToggle
+          options={[
+            { value: 'deposit', label: 'Deposit' },
+            { value: 'withdraw', label: 'Drawdown' },
+          ]}
+          value={transactionType}
+          onChange={(v) => setTransactionType(v as 'deposit' | 'withdraw')}
+          size="sm"
+          fullWidth
         />
       </div>
+
+      <TextInput
+        label="Asset Name"
+        value={name}
+        onChange={(e) => setName(e.target.value)}
+        placeholder="e.g., ISA, Pension"
+        required
+        fullWidth
+      />
 
       {/* Current Amount - Shown for both types */}
-      <div>
-        <label className="block text-sm text-gray-700 mb-1">
-          {transactionType === 'deposit' ? 'Current Amount ($)' : 'Starting Value ($)'}
-        </label>
-        <input
-          type="number"
-          value={amount}
-          onChange={(e) => setAmount(e.target.value)}
-          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-          placeholder={transactionType === 'deposit' ? '10000' : 'Auto-populated from existing asset'}
-          step="0.01"
-          required
-        />
-      </div>
+      <NumberInput
+        label={transactionType === 'deposit' ? 'Current Amount ($)' : 'Starting Value ($)'}
+        value={amount === '' ? undefined : parseFloat(amount)}
+        onChange={(v) => setAmount(v !== undefined ? v.toString() : '')}
+        placeholder={transactionType === 'deposit' ? '10000' : 'Auto-populated from existing asset'}
+        step={0.01}
+        hideControls
+        fullWidth
+      />
 
       <div>
-        <label className="block text-sm text-gray-700 mb-1">Date</label>
+        <label className="block text-sm font-medium text-text-secondary mb-1.5">Date</label>
         <input
           type="date"
           value={date}
           onChange={(e) => setDate(e.target.value)}
-          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="w-full bg-bg-surface border border-border-subtle rounded-md px-3 py-2 text-sm text-text-primary focus:outline-none focus:ring-2 focus:ring-accent-primary/30 focus:border-accent-primary"
         />
       </div>
 
       {/* Expected Return - only shown for deposits */}
       {transactionType === 'deposit' && (
-        <div>
-          <label className="block text-sm text-gray-700 mb-1">Expected Return (%)</label>
-          <input
-            type="number"
-            value={expectedReturn}
-            onChange={(e) => setExpectedReturn(e.target.value)}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-            placeholder="7"
-            step="0.1"
-          />
-        </div>
+        <NumberInput
+          label="Expected Return (%)"
+          value={expectedReturn === '' ? undefined : parseFloat(expectedReturn)}
+          onChange={(v) => setExpectedReturn(v !== undefined ? v.toString() : '')}
+          placeholder="7"
+          step={0.1}
+          hideControls
+          fullWidth
+        />
       )}
 
       {/* Volatility - only shown for deposits */}
       {transactionType === 'deposit' && (
         <div>
-          <label className="block text-sm text-gray-700 mb-1">Volatility (Optional)</label>
+          <label className="block text-sm font-medium text-text-secondary mb-1.5">Volatility (Optional)</label>
           <select
             value={volatility}
             onChange={(e) => setVolatility(e.target.value)}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full bg-bg-surface border border-border-subtle rounded-md px-3 py-2 text-sm text-text-primary focus:outline-none focus:ring-2 focus:ring-accent-primary/30 focus:border-accent-primary"
           >
             <option value="">None</option>
             <option value="low">Low (5%)</option>
@@ -219,86 +202,67 @@ export function AccountForm({
         </div>
       )}
 
-      <div>
-        <label className="block text-sm text-gray-700 mb-2">
-          Time Horizon: {timeHorizon} years
-        </label>
-        <input
-          type="range"
-          min="1"
-          max="50"
-          value={timeHorizon}
-          onChange={(e) => setTimeHorizon(parseInt(e.target.value))}
-          className="w-full"
-        />
-      </div>
+      <Slider
+        label="Time Horizon"
+        value={timeHorizon}
+        min={1}
+        max={50}
+        step={1}
+        onChange={(v) => setTimeHorizon(v)}
+        formatValue={(v) => `${v} years`}
+      />
 
-      <div className="border-t pt-4">
-        <label className="block text-sm text-gray-700 mb-2">Transaction Frequency</label>
-        <div className="frequency-toggle">
-          <button
-            type="button"
-            className={`frequency-option ${frequency === 'annual' ? 'active' : ''}`}
-            onClick={() => setFrequency('annual')}
-          >
-            Annual
-          </button>
-          <button
-            type="button"
-            className={`frequency-option ${frequency === 'monthly' ? 'active' : ''}`}
-            onClick={() => setFrequency('monthly')}
-          >
-            Monthly
-          </button>
-          <div 
-            className="frequency-indicator" 
-            style={{ transform: frequency === 'monthly' ? 'translateX(100%)' : 'translateX(0)' }}
+      <div className="border-t border-border-subtle pt-4">
+        <label className="block text-sm font-medium text-text-secondary mb-2">Transaction Frequency</label>
+        <SegmentedToggle
+          options={[
+            { value: 'annual', label: 'Annual' },
+            { value: 'monthly', label: 'Monthly' },
+          ]}
+          value={frequency}
+          onChange={(v) => setFrequency(v as 'monthly' | 'annual')}
+          size="sm"
+          fullWidth
+        />
+
+        <div className="mt-4">
+          <NumberInput
+            label={`${transactionType === 'deposit' ? 'Deposit' : 'Drawdown'} Amount ($)`}
+            value={transactionAmount === '' ? undefined : parseFloat(transactionAmount)}
+            onChange={(v) => setTransactionAmount(v !== undefined ? v.toString() : '')}
+            placeholder="1000"
+            step={0.01}
+            hideControls
+            fullWidth
           />
         </div>
-
-        <label className="block text-sm text-gray-700 mb-1 mt-4">
-          {transactionType === 'deposit' ? 'Deposit' : 'Drawdown'} Amount ($)
-        </label>
-        <input
-          type="number"
-          value={transactionAmount}
-          onChange={(e) => setTransactionAmount(e.target.value)}
-          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-          placeholder="1000"
-          step="0.01"
-        />
         
-        <label className="block text-sm text-gray-700 mb-2 mt-4">
+        <label className="block text-sm font-medium text-text-secondary mb-2 mt-4">
           Annual Increase
         </label>
-        <div className="annual-increase-toggle">
-          {[0, 1, 2, 3, 5].map((rate, index) => (
-            <button
-              key={rate}
-              type="button"
-              className={`annual-increase-option ${parseFloat(annualIncreaseRate) === rate ? 'active' : ''}`}
-              onClick={() => setAnnualIncreaseRate(rate.toString())}
-              style={{
-                '--increase-color': `rgba(${34 + index * 20}, ${197 - index * 10}, ${94 - index * 5}, ${0.4 + index * 0.15})`,
-                '--increase-color-active': `rgba(${34 + index * 20}, ${197 - index * 10}, ${94 - index * 5}, 1)`,
-              } as React.CSSProperties}
-            >
-              {rate}%
-            </button>
-          ))}
-        </div>
-        <span className="text-xs text-gray-500 mt-1 block">
+        <SegmentedToggle
+          options={[0, 1, 2, 3, 5].map((rate) => ({
+            value: rate.toString(),
+            label: `${rate}%`,
+          }))}
+          value={(parseFloat(annualIncreaseRate) || 0).toString()}
+          onChange={(v) => setAnnualIncreaseRate(v)}
+          size="sm"
+          fullWidth
+        />
+        <span className="text-xs text-text-muted mt-1 block">
           Increase {transactionType === 'deposit' ? 'contributions' : 'withdrawals'} by this % each year
         </span>
       </div>
 
-      <button
+      <Button
         type="submit"
-        className="w-full btn-primary flex items-center justify-center gap-2"
+        variant="primary"
+        leftIcon={<Plus size={20} />}
+        fullWidth
       >
-        <Plus size={20} />
         {submitLabel}
-      </button>
+      </Button>
     </form>
   );
 }

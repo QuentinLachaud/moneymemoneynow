@@ -31,6 +31,7 @@ import {
   ChevronDown,
   ChevronUp
 } from 'lucide-react';
+import { Button, IconButton, Slider, SegmentedToggle } from '@quentinlachaud/app-component-library';
 
 interface ProjectionPortfolioPanelProps {
   accounts: Account[];
@@ -358,22 +359,15 @@ export function ProjectionPortfolioPanel({ accounts }: ProjectionPortfolioPanelP
         <div className="controls-left">
           {/* Mode Toggle */}
           <div className="control-group mode-toggle">
-            <button
-              className={`mode-btn ${isDeterministic ? '' : 'active'}`}
-              onClick={() => setIsDeterministic(false)}
-              title="Monte Carlo simulation"
-            >
-              <Activity size={14} />
-              Monte Carlo
-            </button>
-            <button
-              className={`mode-btn ${isDeterministic ? 'active' : ''}`}
-              onClick={() => setIsDeterministic(true)}
-              title="Deterministic projection"
-            >
-              <Zap size={14} />
-              Deterministic
-            </button>
+            <SegmentedToggle
+              options={[
+                { value: 'mc', label: <><Activity size={14} /> Monte Carlo</> },
+                { value: 'det', label: <><Zap size={14} /> Deterministic</> },
+              ]}
+              value={isDeterministic ? 'det' : 'mc'}
+              onChange={(v) => setIsDeterministic(v === 'det')}
+              size="sm"
+            />
           </div>
 
           {/* Stacked Volatility & Projection Sliders */}
@@ -381,41 +375,43 @@ export function ProjectionPortfolioPanel({ accounts }: ProjectionPortfolioPanelP
             {/* Volatility Control */}
             {!isDeterministic && (
               <div className="slider-row">
-                <label>Volatility: {globalVolatilityOverride}%</label>
-                <input
-                  type="range"
-                  min="0"
-                  max="50"
-                  step="1"
+                <Slider
+                  label="Volatility"
                   value={globalVolatilityOverride}
-                  onChange={(e) => handleGlobalVolatilityChange(parseInt(e.target.value))}
-                  className="wide-slider"
+                  onChange={handleGlobalVolatilityChange}
+                  min={0}
+                  max={50}
+                  step={1}
+                  showValue
+                  formatValue={(v) => `${v}%`}
                 />
               </div>
             )}
 
             {/* Projection Years */}
             <div className="slider-row">
-              <label>
-                Projection: {effectiveProjectionYears}y
-                {projectionYearsOverride !== null && (
-                  <button 
-                    className="reset-btn-inline" 
-                    onClick={() => setProjectionYearsOverride(null)}
-                    title="Reset to natural horizon"
-                  >
-                    ↺
-                  </button>
-                )}
-              </label>
-              <input
-                type="range"
-                min="1"
-                max="100"
-                step="1"
+              <Slider
+                label={
+                  <>
+                    Projection
+                    {projectionYearsOverride !== null && (
+                      <button
+                        className="reset-btn-inline"
+                        onClick={() => setProjectionYearsOverride(null)}
+                        title="Reset to natural horizon"
+                      >
+                        ↺
+                      </button>
+                    )}
+                  </>
+                }
                 value={effectiveProjectionYears}
-                onChange={(e) => setProjectionYearsOverride(parseInt(e.target.value))}
-                className="wide-slider"
+                onChange={(v) => setProjectionYearsOverride(v)}
+                min={1}
+                max={100}
+                step={1}
+                showValue
+                formatValue={(v) => `${v}y`}
               />
             </div>
           </div>
@@ -424,56 +420,37 @@ export function ProjectionPortfolioPanel({ accounts }: ProjectionPortfolioPanelP
 
           {/* Inflation Toggle */}
           <div className="control-group toggle-slider-group">
-            <label>Values</label>
-            <div className="toggle-slider">
-              <button
-                className={`toggle-option ${!adjustForInflation ? 'active' : ''}`}
-                onClick={() => setAdjustForInflation(false)}
-              >
-                Nominal
-              </button>
-              <button
-                className={`toggle-option ${adjustForInflation ? 'active' : ''}`}
-                onClick={() => setAdjustForInflation(true)}
-              >
-                Real
-              </button>
-              <div 
-                className="toggle-slider-indicator" 
-                style={{ transform: adjustForInflation ? 'translateX(100%)' : 'translateX(0)' }}
-              />
-            </div>
-            <button 
-              className="info-btn" 
-              title={adjustForInflation 
-                ? `Values adjusted for ${DEFAULT_INFLATION_RATE}% annual inflation` 
+            <SegmentedToggle
+              options={[
+                { value: 'nominal', label: 'Nominal' },
+                { value: 'real', label: 'Real' },
+              ]}
+              value={adjustForInflation ? 'real' : 'nominal'}
+              onChange={(v) => setAdjustForInflation(v === 'real')}
+              size="sm"
+            />
+            <IconButton
+              icon={<Info size={12} />}
+              label={adjustForInflation
+                ? `Values adjusted for ${DEFAULT_INFLATION_RATE}% annual inflation`
                 : 'Values shown in nominal terms'}
-            >
-              <Info size={12} />
-            </button>
+              variant="ghost"
+              size="sm"
+              onClick={() => {}}
+            />
           </div>
 
           {/* Scale Toggle */}
           <div className="control-group toggle-slider-group">
-            <label>Scale</label>
-            <div className="toggle-slider">
-              <button
-                className={`toggle-option ${!useLogScale ? 'active' : ''}`}
-                onClick={() => setUseLogScale(false)}
-              >
-                Linear
-              </button>
-              <button
-                className={`toggle-option ${useLogScale ? 'active' : ''}`}
-                onClick={() => setUseLogScale(true)}
-              >
-                Log
-              </button>
-              <div 
-                className="toggle-slider-indicator" 
-                style={{ transform: useLogScale ? 'translateX(100%)' : 'translateX(0)' }}
-              />
-            </div>
+            <SegmentedToggle
+              options={[
+                { value: 'linear', label: 'Linear' },
+                { value: 'log', label: 'Log' },
+              ]}
+              value={useLogScale ? 'log' : 'linear'}
+              onChange={(v) => setUseLogScale(v === 'log')}
+              size="sm"
+            />
           </div>
         </div>
 
@@ -544,27 +521,16 @@ export function ProjectionPortfolioPanel({ accounts }: ProjectionPortfolioPanelP
                 )}
               </h3>
               <div className="view-toggle">
-                <button
-                  className={activeView === 'projection' ? 'active' : ''}
-                  onClick={() => setActiveView('projection')}
-                >
-                  Monte Carlo
-                </button>
-                {!isDeterministic && (
-                  <button
-                    className={activeView === 'distribution' ? 'active' : ''}
-                    onClick={() => setActiveView('distribution')}
-                  >
-                    Final Value
-                  </button>
-                )}
-                <button
-                  className={activeView === 'table' ? 'active' : ''}
-                  onClick={() => setActiveView('table')}
-                >
-                  Data Table
-                </button>
-                <div className="view-indicator" data-view={activeView} />
+                <SegmentedToggle
+                  options={[
+                    { value: 'projection', label: 'Monte Carlo' },
+                    ...(!isDeterministic ? [{ value: 'distribution', label: 'Final Value' }] : []),
+                    { value: 'table', label: 'Data Table' },
+                  ]}
+                  value={activeView}
+                  onChange={(v) => setActiveView(v as 'projection' | 'distribution' | 'table')}
+                  size="sm"
+                />
               </div>
             </div>
             <div className="section-meta">
@@ -590,14 +556,14 @@ export function ProjectionPortfolioPanel({ accounts }: ProjectionPortfolioPanelP
             {activeView === 'distribution' && !isDeterministic && finalValues.length > 0 && (
               <div className="chart-container triple">
                 <div className="bin-control">
-                  <label>Bins: {histogramBins}</label>
-                  <input
-                    type="range"
-                    min="5"
-                    max="100"
-                    step="5"
+                  <Slider
+                    label="Bins"
                     value={histogramBins}
-                    onChange={(e) => setHistogramBins(parseInt(e.target.value))}
+                    onChange={setHistogramBins}
+                    min={5}
+                    max={100}
+                    step={5}
+                    showValue
                   />
                 </div>
                 <HistogramChart
@@ -653,32 +619,32 @@ export function ProjectionPortfolioPanel({ accounts }: ProjectionPortfolioPanelP
             <div className="header-left">
               <h3>Portfolio Cash Flow</h3>
               <div className="header-actions">
-                <button
-                  className={`data-toggle-btn ${showCashFlowTable ? 'active' : ''}`}
+                <Button
+                  variant={showCashFlowTable ? 'primary' : 'secondary'}
+                  size="sm"
+                  leftIcon={showCashFlowTable ? <LineChart size={14} /> : <Table size={14} />}
                   onClick={() => setShowCashFlowTable(!showCashFlowTable)}
                 >
-                  {showCashFlowTable ? <LineChart size={14} /> : <Table size={14} />}
-                  <span className="action-label">{showCashFlowTable ? 'Graph' : 'Data'}</span>
-                </button>
-                <button
-                  className="download-btn download-csv"
+                  {showCashFlowTable ? 'Graph' : 'Data'}
+                </Button>
+                <IconButton
+                  icon={<Download size={14} />}
+                  label="Download CSV"
+                  variant="ghost"
+                  size="sm"
                   onClick={() => downloadCSV(cashFlowData, cashFlowColumns, 'portfolio-cash-flow')}
-                  title="Download CSV"
-                >
-                  <ChevronDown size={14} />
-                  <span className="download-label">CSV</span>
-                </button>
+                />
               </div>
             </div>
             {/* ───── Right: Collapse Toggle ───── */}
             <div className="section-right">
-              <button
-                className="collapse-btn"
+              <IconButton
+                icon={isCashFlowCollapsed ? <ChevronDown size={14} /> : <ChevronUp size={14} />}
+                label={isCashFlowCollapsed ? 'Expand cash flow chart' : 'Collapse cash flow chart'}
+                variant="ghost"
+                size="sm"
                 onClick={() => setIsCashFlowCollapsed(!isCashFlowCollapsed)}
-                aria-label={isCashFlowCollapsed ? 'Expand cash flow chart' : 'Collapse cash flow chart'}
-              >
-                {isCashFlowCollapsed ? <ChevronDown size={14} /> : <ChevronUp size={14} />}
-              </button>
+              />
             </div>
           </div>
           {/* ───── Chart Container (hidden when collapsed) ───── */}

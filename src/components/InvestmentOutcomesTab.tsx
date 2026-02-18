@@ -17,7 +17,7 @@
  */
 
 import { useState, useMemo, useCallback, useEffect, useRef } from 'react';
-import { Settings, ChevronDown, ChevronUp, Plus, Minus, HelpCircle, X, Download, Pencil, Info } from 'lucide-react';
+import { ChevronDown, ChevronUp, X, Download, Pencil, Info } from 'lucide-react';
 import {
   ComposedChart,
   Line,
@@ -40,6 +40,7 @@ import {
   calculateGrossPension,
 } from '../utils/investmentSimulation';
 import { useAppStore } from '../store/useAppStore';
+import { Button, IconButton, NumberInput, Slider, SegmentedToggle } from '@quentinlachaud/app-component-library';
 
 /** Investment mode type */
 type InvestmentMode = 'lump-sum' | 'monthly' | 'both';
@@ -231,15 +232,6 @@ export function InvestmentOutcomesTab() {
   
   // ─── SAVINGS INTEREST RATE ────────────────────────────────────────
   const [savingsRate, setSavingsRate] = useState(0.04);
-  
-  // Savings rate increment/decrement by 0.25%
-  const incrementSavingsRate = useCallback(() => {
-    setSavingsRate(prev => Math.min(0.15, prev + 0.0025));
-  }, []);
-  
-  const decrementSavingsRate = useCallback(() => {
-    setSavingsRate(prev => Math.max(0, prev - 0.0025));
-  }, []);
   
   // ─── UI STATE ─────────────────────────────────────────────────────
   const [tableExpanded, setTableExpanded] = useState(false);
@@ -640,16 +632,15 @@ export function InvestmentOutcomesTab() {
         {/* SECTION 1: Currency + Inflation Adjuster */}
         <div className="ribbon-section ribbon-section-1">
           <div className="currency-selector-v5">
-            {PRIMARY_CURRENCIES.map(c => (
-              <button
-                key={c}
-                className={`currency-btn-v5 ${currency === c ? 'active' : ''}`}
-                onClick={() => setCurrency(c)}
-              >
-                <span className="currency-symbol">{CURRENCY_SYMBOLS[c]}</span>
-                <span className="currency-code">{c}</span>
-              </button>
-            ))}
+            <SegmentedToggle
+              options={PRIMARY_CURRENCIES.map(c => ({
+                value: c,
+                label: <><span className="currency-symbol">{CURRENCY_SYMBOLS[c]}</span><span className="currency-code">{c}</span></>,
+              }))}
+              value={currency}
+              onChange={(v) => setCurrency(v as Currency)}
+              size="sm"
+            />
             <div className="currency-more-v5">
               <button
                 className="currency-btn-v5 more"
@@ -675,18 +666,21 @@ export function InvestmentOutcomesTab() {
           
           {/* Inflation Toggle (applies −2.5% annually to all assets when enabled) */}
           <div className="inflation-toggle-v5">
-            <button
-              className={`inflation-btn ${inflationAdjustEnabled ? 'active' : ''}`}
-              onClick={() => setInflationAdjustEnabled(!inflationAdjustEnabled)}
-            >
-              <span className="toggle-track">
-                <span className="toggle-thumb" />
-              </span>
-              <span className="toggle-label">Inflation Adjust</span>
-            </button>
-            <button className="info-btn" title="When enabled, applies −2.5% annual inflation adjustment to all assets (including cash).">
-              <Info size={14} />
-            </button>
+            <SegmentedToggle
+              options={[
+                { value: 'off', label: 'Off' },
+                { value: 'on', label: 'Inflation Adj.' },
+              ]}
+              value={inflationAdjustEnabled ? 'on' : 'off'}
+              onChange={(v) => setInflationAdjustEnabled(v === 'on')}
+              size="sm"
+            />
+            <IconButton
+              icon={<Info size={14} />}
+              label="When enabled, applies −2.5% annual inflation adjustment to all assets (including cash)."
+              variant="ghost"
+              size="sm"
+            />
           </div>
         </div>
         
@@ -695,26 +689,15 @@ export function InvestmentOutcomesTab() {
         {/* SECTION 2: Contribution Mode Toggle */}
         <div className="ribbon-section ribbon-section-2">
           <span className="section-label">Contribution Mode</span>
-          <div className="mode-slider-v5">
-            <button
-              className={`mode-option ${investmentMode === 'lump-sum' ? 'active' : ''}`}
-              onClick={() => setInvestmentMode('lump-sum')}
-            >
-              Lump Sum
-            </button>
-            <button
-              className={`mode-option ${investmentMode === 'monthly' ? 'active' : ''}`}
-              onClick={() => setInvestmentMode('monthly')}
-            >
-              Monthly
-            </button>
-            <button
-              className={`mode-option ${investmentMode === 'both' ? 'active' : ''}`}
-              onClick={() => setInvestmentMode('both')}
-            >
-              Both
-            </button>
-          </div>
+          <SegmentedToggle
+            options={[
+              { value: 'lump-sum', label: 'Lump Sum' },
+              { value: 'monthly', label: 'Monthly' },
+              { value: 'both', label: 'Both' },
+            ]}
+            value={investmentMode}
+            onChange={(v) => setInvestmentMode(v as InvestmentMode)}
+          />
         </div>
         
         <div className="ribbon-divider" />
@@ -724,32 +707,24 @@ export function InvestmentOutcomesTab() {
           <span className="section-label">Contribution Amounts</span>
           <div className="contribution-inputs-v5">
             {(investmentMode === 'lump-sum' || investmentMode === 'both') && (
-              <div className="input-field-v5">
-                <span className="field-label">Initial Deposit</span>
-                <div className="input-wrapper-v5">
-                  <span className="symbol">{symbol}</span>
-                  <input
-                    type="number"
-                    value={lumpSumAmount}
-                    onChange={(e) => setLumpSumAmount(parseFloat(e.target.value) || 0)}
-                    min={0}
-                  />
-                </div>
-              </div>
+              <NumberInput
+                label="Initial Deposit"
+                value={lumpSumAmount}
+                onChange={(v) => setLumpSumAmount(v ?? 0)}
+                min={0}
+                step={100}
+                hideControls
+              />
             )}
             {(investmentMode === 'monthly' || investmentMode === 'both') && (
-              <div className="input-field-v5">
-                <span className="field-label">Monthly Amount</span>
-                <div className="input-wrapper-v5">
-                  <span className="symbol">{symbol}</span>
-                  <input
-                    type="number"
-                    value={monthlyAmount}
-                    onChange={(e) => setMonthlyAmount(parseFloat(e.target.value) || 0)}
-                    min={0}
-                  />
-                </div>
-              </div>
+              <NumberInput
+                label="Monthly Amount"
+                value={monthlyAmount}
+                onChange={(v) => setMonthlyAmount(v ?? 0)}
+                min={0}
+                step={50}
+                hideControls
+              />
             )}
             {(investmentMode === 'monthly' || investmentMode === 'both') && (
               <div className="input-field-v5">
@@ -775,18 +750,15 @@ export function InvestmentOutcomesTab() {
         {/* SECTION 4: Investment Period Slider */}
         <div className="ribbon-section ribbon-section-4">
           <span className="section-label">Investment Period</span>
-          <div className="period-slider-v5">
-            <span className="slider-min">{HORIZON_MIN}yr</span>
-            <input
-              type="range"
-              min={HORIZON_MIN}
-              max={horizonMax}
-              value={horizonYears}
-              onChange={(e) => handleHorizonChange(parseInt(e.target.value))}
-            />
-            <span className="slider-max">{horizonMax}yr</span>
-            <span className="slider-value">{horizonYears} years</span>
-          </div>
+          <Slider
+            value={horizonYears}
+            onChange={(v) => handleHorizonChange(v)}
+            min={HORIZON_MIN}
+            max={horizonMax}
+            step={1}
+            showValue
+            formatValue={(v) => `${v} years`}
+          />
         </div>
       </div>
 
@@ -851,20 +823,15 @@ export function InvestmentOutcomesTab() {
         <div className={`outcomes-content-v5 assets-${activeList.length}`}>
           {/* Graph/Table Toggle - now at top right of content */}
           <div className="content-header-v5">
-            <div className="view-toggle-v5">
-              <button
-                className={`view-btn-v5 ${viewMode === 'graph' ? 'active' : ''}`}
-                onClick={() => setViewMode('graph')}
-              >
-                Graph
-              </button>
-              <button
-                className={`view-btn-v5 ${viewMode === 'table' ? 'active' : ''}`}
-                onClick={() => setViewMode('table')}
-              >
-                Table
-              </button>
-            </div>
+            <SegmentedToggle
+              options={[
+                { value: 'graph', label: 'Graph' },
+                { value: 'table', label: 'Table' },
+              ]}
+              value={viewMode}
+              onChange={(v) => setViewMode(v as ViewMode)}
+              size="sm"
+            />
           </div>
           
           {viewMode === 'graph' && (
@@ -887,10 +854,13 @@ export function InvestmentOutcomesTab() {
                     Running Balance
                   </button>
                 </div>
-                <button className="export-btn-v5" onClick={handleDownloadPNG} title="Download PNG">
-                  <Download size={16} />
-                  PNG
-                </button>
+                <IconButton
+                  icon={<Download size={16} />}
+                  label="Download PNG"
+                  variant="ghost"
+                  size="sm"
+                  onClick={handleDownloadPNG}
+                />
               </div>
 
               {/* Chart */}
@@ -1001,10 +971,13 @@ export function InvestmentOutcomesTab() {
             <div className="table-container-v5">
               <div className="table-header-v5">
                 <h4>Projected Values by Year</h4>
-                <button className="export-btn-v5" onClick={handleDownloadCSV} title="Download CSV">
-                  <Download size={16} />
-                  CSV
-                </button>
+                <IconButton
+                  icon={<Download size={16} />}
+                  label="Download CSV"
+                  variant="ghost"
+                  size="sm"
+                  onClick={handleDownloadCSV}
+                />
               </div>
               <div className={`table-scroll-v5 ${tableExpanded ? 'expanded' : ''}`}>
                 <table className="outcomes-table-v5">
@@ -1035,10 +1008,14 @@ export function InvestmentOutcomesTab() {
                 </table>
               </div>
               {tableData.length > 8 && (
-                <button className="expand-table-btn-v5" onClick={() => setTableExpanded(!tableExpanded)}>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setTableExpanded(!tableExpanded)}
+                  rightIcon={tableExpanded ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+                >
                   {tableExpanded ? 'Show Less' : `Show All ${tableData.length} Years`}
-                  {tableExpanded ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
-                </button>
+                </Button>
               )}
             </div>
           )}
@@ -1058,9 +1035,13 @@ export function InvestmentOutcomesTab() {
           >
             <div className="modal-header-v5">
               <h3 id="edit-modal-title">Configure {assetConfigs[editingAsset].name}</h3>
-              <button className="modal-close" onClick={closeEditModal}>
-                <X size={22} />
-              </button>
+              <IconButton
+                icon={<X size={22} />}
+                label="Close modal"
+                variant="ghost"
+                size="md"
+                onClick={closeEditModal}
+              />
             </div>
             
             <div className="modal-body-v5">
@@ -1078,56 +1059,30 @@ export function InvestmentOutcomesTab() {
                     </label>
                   </div>
                   {cashApplyInflation && (
-                    <div className="config-field">
-                      <label>Inflation Rate</label>
-                      <div className="slider-with-value">
-                        <input
-                          type="range"
-                          min={0}
-                          max={0.08}
-                          step={0.005}
-                          value={cashInflationRate}
-                          onChange={(e) => setCashInflationRate(parseFloat(e.target.value))}
-                        />
-                        <span className="slider-value">{(cashInflationRate * 100).toFixed(1)}%</span>
-                      </div>
-                    </div>
+                    <Slider
+                      label="Inflation Rate"
+                      value={cashInflationRate}
+                      onChange={(v) => setCashInflationRate(v)}
+                      min={0}
+                      max={0.08}
+                      step={0.005}
+                      showValue
+                      formatValue={(v) => `${(v * 100).toFixed(1)}%`}
+                    />
                   )}
                 </>
               )}
               
               {/* Savings config with ±0.25% buttons */}
               {editingAsset === 'savings' && (
-                <div className="config-field">
-                  <label>Interest Rate</label>
-                  <div className="rate-input-with-buttons">
-                    <button 
-                      className="rate-adjust-btn"
-                      onClick={decrementSavingsRate}
-                      disabled={savingsRate <= 0}
-                    >
-                      <Minus size={14} />
-                    </button>
-                    <input
-                      type="number"
-                      value={(savingsRate * 100).toFixed(2)}
-                      onChange={(e) => setSavingsRate(parseFloat(e.target.value) / 100 || 0)}
-                      step={0.25}
-                      min={0}
-                      max={15}
-                      className="rate-input"
-                    />
-                    <span className="rate-suffix">%</span>
-                    <button 
-                      className="rate-adjust-btn"
-                      onClick={incrementSavingsRate}
-                      disabled={savingsRate >= 0.15}
-                    >
-                      <Plus size={14} />
-                    </button>
-                  </div>
-                  <p className="config-hint">Use ± buttons to adjust by 0.25%, or type any value</p>
-                </div>
+                <NumberInput
+                  label="Interest Rate (%)"
+                  value={parseFloat((savingsRate * 100).toFixed(2))}
+                  onChange={(v) => setSavingsRate((v ?? 0) / 100)}
+                  step={0.25}
+                  min={0}
+                  max={15}
+                />
               )}
               
               {/* Pension config with mix selector */}
@@ -1157,48 +1112,33 @@ export function InvestmentOutcomesTab() {
               {/* Bonds, Index Fund, Car config */}
               {(editingAsset === 'bonds' || editingAsset === 'index-fund' || editingAsset === 'car') && (
                 <>
-                  <div className="config-field">
-                    <label>Expected Annual Return</label>
-                    <div className="input-with-suffix">
-                      <input
-                        type="number"
-                        value={(assetConfigs[editingAsset].expectedReturn * 100).toFixed(1)}
-                        onChange={(e) => updateAssetConfig(editingAsset, {
-                          expectedReturn: parseFloat(e.target.value) / 100,
-                        })}
-                        step={0.5}
-                      />
-                      <span className="suffix">%</span>
-                    </div>
-                  </div>
-                  <div className="config-field">
-                    <label>Annual Volatility</label>
-                    <div className="input-with-suffix">
-                      <input
-                        type="number"
-                        value={(assetConfigs[editingAsset].volatility * 100).toFixed(1)}
-                        onChange={(e) => updateAssetConfig(editingAsset, {
-                          volatility: parseFloat(e.target.value) / 100,
-                        })}
-                        step={1}
-                      />
-                      <span className="suffix">%</span>
-                    </div>
-                  </div>
-                  <div className="config-field">
-                    <label>Annual Fee</label>
-                    <div className="input-with-suffix">
-                      <input
-                        type="number"
-                        value={(assetConfigs[editingAsset].fee * 100).toFixed(2)}
-                        onChange={(e) => updateAssetConfig(editingAsset, {
-                          fee: parseFloat(e.target.value) / 100,
-                        })}
-                        step={0.05}
-                      />
-                      <span className="suffix">%</span>
-                    </div>
-                  </div>
+                  <NumberInput
+                    label="Expected Annual Return (%)"
+                    value={parseFloat((assetConfigs[editingAsset].expectedReturn * 100).toFixed(1))}
+                    onChange={(v) => updateAssetConfig(editingAsset, {
+                      expectedReturn: (v ?? 0) / 100,
+                    })}
+                    step={0.5}
+                    hideControls
+                  />
+                  <NumberInput
+                    label="Annual Volatility (%)"
+                    value={parseFloat((assetConfigs[editingAsset].volatility * 100).toFixed(1))}
+                    onChange={(v) => updateAssetConfig(editingAsset, {
+                      volatility: (v ?? 0) / 100,
+                    })}
+                    step={1}
+                    hideControls
+                  />
+                  <NumberInput
+                    label="Annual Fee (%)"
+                    value={parseFloat((assetConfigs[editingAsset].fee * 100).toFixed(2))}
+                    onChange={(v) => updateAssetConfig(editingAsset, {
+                      fee: (v ?? 0) / 100,
+                    })}
+                    step={0.05}
+                    hideControls
+                  />
                   {assetConfigs[editingAsset].isHistorical && (
                     <p className="config-warning">
                       ⚠️ These are based on historical data. Your changes will override the defaults.
@@ -1209,9 +1149,9 @@ export function InvestmentOutcomesTab() {
             </div>
             
             <div className="modal-footer-v5">
-              <button className="modal-btn-v5 save" onClick={closeEditModal}>
+              <Button variant="primary" onClick={closeEditModal}>
                 Done
-              </button>
+              </Button>
             </div>
           </div>
         </div>
@@ -1227,8 +1167,8 @@ export function InvestmentOutcomesTab() {
               Are you sure you want to override them with your own assumptions?
             </p>
             <div className="modal-actions">
-              <button onClick={() => setShowOverrideModal(false)}>Cancel</button>
-              <button className="confirm" onClick={confirmOverride}>Yes, Override</button>
+              <Button variant="secondary" onClick={() => setShowOverrideModal(false)}>Cancel</Button>
+              <Button variant="primary" onClick={confirmOverride}>Yes, Override</Button>
             </div>
           </div>
         </div>
@@ -1240,9 +1180,13 @@ export function InvestmentOutcomesTab() {
           <div className="modal-content pension-tax-modal" onClick={(e) => e.stopPropagation()}>
             <div className="modal-header">
               <h3>Configure Pension Tax Relief</h3>
-              <button className="modal-close" onClick={cancelPensionTax}>
-                <X size={20} />
-              </button>
+              <IconButton
+                icon={<X size={20} />}
+                label="Close pension tax modal"
+                variant="ghost"
+                size="sm"
+                onClick={cancelPensionTax}
+              />
             </div>
             
             <div className="modal-body">
@@ -1308,12 +1252,12 @@ export function InvestmentOutcomesTab() {
             </div>
             
             <div className="modal-footer">
-              <button className="modal-btn cancel" onClick={cancelPensionTax}>
+              <Button variant="secondary" onClick={cancelPensionTax}>
                 Cancel
-              </button>
-              <button className="modal-btn save" onClick={confirmPensionTax}>
+              </Button>
+              <Button variant="primary" onClick={confirmPensionTax}>
                 {activeAssets.has('pension') ? 'Update Settings' : 'Add Pension'}
-              </button>
+              </Button>
             </div>
           </div>
         </div>

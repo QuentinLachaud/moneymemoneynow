@@ -16,6 +16,7 @@
 
 import { useState, ReactNode } from 'react';
 import { Download, Table, LineChart } from 'lucide-react';
+import { Panel, Button, IconButton } from '@quentinlachaud/app-component-library';
 
 interface Column {
   key: string;
@@ -64,82 +65,60 @@ export function GraphPanel({ title, data, columns, children, headerControls }: G
   const filename = title.toLowerCase().replace(/\s+/g, '-');
 
   return (
-    <div className={`graph-panel-wrapper card ${showTable ? 'show-table' : ''}`}>
-      {/* Main content area */}
-      <div className={`graph-panel-main ${showTable ? 'with-table' : ''}`}>
-        {/* Header */}
-        <div className="graph-header">
-          <h3>{title}</h3>
-          <div className="graph-controls">
-            {headerControls}
-            {/* Data/Graph toggle button - prominent in header */}
-            <button
-              className={`data-toggle-btn ${showTable ? 'active' : ''}`}
-              onClick={() => setShowTable(!showTable)}
-              title={showTable ? 'Show graph' : 'Show data'}
-            >
-              {showTable ? (
-                <>
-                  <LineChart size={14} />
-                  Graph
-                </>
-              ) : (
-                <>
-                  <Table size={14} />
-                  Data
-                </>
-              )}
-            </button>
-          </div>
+    <Panel
+      title={title}
+      headerActions={
+        <div className="flex items-center gap-2">
+          {headerControls}
+          <Button
+            variant={showTable ? 'secondary' : 'ghost'}
+            size="sm"
+            leftIcon={showTable ? <LineChart size={14} /> : <Table size={14} />}
+            onClick={() => setShowTable(!showTable)}
+          >
+            {showTable ? 'Graph' : 'Data'}
+          </Button>
+          <IconButton
+            icon={<Download size={16} />}
+            label="Download data as CSV"
+            variant="ghost"
+            size="sm"
+            onClick={() => downloadCSV(data, columns, filename)}
+          />
         </div>
-
-        {/* Content: Chart or Table */}
-        {showTable ? (
-          <div className="data-table-container graph-data-table">
-            <table className="data-table">
-              <thead>
-                <tr>
+      }
+    >
+      {/* Content: Chart or Table */}
+      {showTable ? (
+        <div className="data-table-container graph-data-table">
+          <table className="data-table">
+            <thead>
+              <tr>
+                {columns.map(col => (
+                  <th key={col.key}>{col.label}</th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {data.map((row, idx) => (
+                <tr key={idx}>
                   {columns.map(col => (
-                    <th key={col.key}>{col.label}</th>
+                    <td key={col.key}>
+                      {col.format 
+                        ? col.format(row[col.key]) 
+                        : row[col.key]}
+                    </td>
                   ))}
                 </tr>
-              </thead>
-              <tbody>
-                {data.map((row, idx) => (
-                  <tr key={idx}>
-                    {columns.map(col => (
-                      <td key={col.key}>
-                        {col.format 
-                          ? col.format(row[col.key]) 
-                          : row[col.key]}
-                      </td>
-                    ))}
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        ) : (
-          <div className="graph-container">
-            {children}
-          </div>
-        )}
-      </div>
-
-      {/* Right-side tray - download only */}
-      <div className="graph-tray collapsed">
-        {/* Tray actions */}
-        <div className="tray-actions">
-          {/* Download button */}
-          <button
-            className="tray-button"
-            onClick={() => downloadCSV(data, columns, filename)}
-            title="Download data as CSV"
-          >
-            <Download size={16} />
-          </button>
+              ))}
+            </tbody>
+          </table>
         </div>
-      </div>
-    </div>
+      ) : (
+        <div className="graph-container">
+          {children}
+        </div>
+      )}
+    </Panel>
   );
 }

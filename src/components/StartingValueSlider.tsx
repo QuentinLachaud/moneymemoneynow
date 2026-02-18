@@ -7,7 +7,7 @@
  * Fixed range: £0 to £1,000,000 in £50,000 increments
  */
 
-import { useState, useCallback, useMemo } from 'react';
+import { Slider } from '@quentinlachaud/app-component-library';
 
 interface StartingValueSliderProps {
   /** Current starting value */
@@ -34,65 +34,19 @@ export function StartingValueSlider({
   onChange,
   disabled = false,
 }: StartingValueSliderProps) {
-  const [isDragging, setIsDragging] = useState(false);
-
-  const handleChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    onChange(parseFloat(e.target.value));
-  }, [onChange]);
-
-  const percentage = (value / SLIDER_MAX) * 100;
-
-  // Generate graduated marks
-  const marks = useMemo(() => {
-    const markValues = [1000000, 750000, 500000, 250000, 0];
-    return markValues.map(v => ({
-      value: v,
-      label: formatCurrency(v),
-      position: 100 - (v / SLIDER_MAX) * 100,
-    }));
-  }, []);
-
   return (
-    <div className={`starting-value-slider wide ${disabled ? 'disabled' : ''} ${isDragging ? 'dragging' : ''}`}>
-      <div className="slider-header">
-        <span className="slider-label">Starting Value</span>
-        <span className="slider-value">{formatCurrency(value)}</span>
-      </div>
-      
-      <div className="slider-track-container">
-        <div className="slider-track">
-          <div 
-            className="slider-fill" 
-            style={{ height: `${percentage}%` }}
-          />
-          <input
-            type="range"
-            min={0}
-            max={SLIDER_MAX}
-            step={SLIDER_STEP}
-            value={value}
-            onChange={handleChange}
-            onMouseDown={() => setIsDragging(true)}
-            onMouseUp={() => setIsDragging(false)}
-            onTouchStart={() => setIsDragging(true)}
-            onTouchEnd={() => setIsDragging(false)}
-            className="vertical-slider"
-            disabled={disabled}
-          />
-        </div>
-        
-        <div className="slider-marks graduated">
-          {marks.map(mark => (
-            <span 
-              key={mark.value} 
-              className="mark-label"
-              style={{ top: `${mark.position}%` }}
-            >
-              {mark.label}
-            </span>
-          ))}
-        </div>
-      </div>
+    <div className={`starting-value-slider wide ${disabled ? 'disabled' : ''}`}>
+      <Slider
+        label="Starting Value"
+        value={value}
+        min={0}
+        max={SLIDER_MAX}
+        step={SLIDER_STEP}
+        onChange={onChange}
+        formatValue={formatCurrency}
+        disabled={disabled}
+        orientation="vertical"
+      />
     </div>
   );
 }

@@ -6,6 +6,7 @@
  */
 
 import { Trash2 } from 'lucide-react';
+import { Button } from '@quentinlachaud/app-component-library';
 
 interface DeleteConfirmationModalProps {
   isOpen: boolean;
@@ -43,12 +44,12 @@ export function DeleteConfirmationModal({
         </p>
         
         <div className="delete-confirm-actions">
-          <button className="cancel-btn" onClick={onCancel}>
+          <Button variant="secondary" onClick={onCancel}>
             Cancel
-          </button>
-          <button className={`confirm-btn ${itemType}`} onClick={onConfirm}>
+          </Button>
+          <Button variant="primary" onClick={onConfirm}>
             Delete
-          </button>
+          </Button>
         </div>
       </div>
     </div>

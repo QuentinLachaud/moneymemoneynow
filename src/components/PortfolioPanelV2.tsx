@@ -32,6 +32,7 @@ import {
   Zap,
   Activity
 } from 'lucide-react';
+import { Button, IconButton, NumberInput, Slider, SegmentedToggle } from '@quentinlachaud/app-component-library';
 
 interface PortfolioPanelProps {
   accounts: Account[];
@@ -315,55 +316,46 @@ export function PortfolioPanel({ accounts, selectedAccountIds }: PortfolioPanelP
         <div className="controls-left">
           {/* Mode Toggle */}
           <div className="control-group mode-toggle">
-            <button
-              className={`mode-btn ${isDeterministic ? '' : 'active'}`}
-              onClick={() => setIsDeterministic(false)}
-              title="Monte Carlo simulation with randomized returns"
-            >
-              <Activity size={14} />
-              Monte Carlo
-            </button>
-            <button
-              className={`mode-btn ${isDeterministic ? 'active' : ''}`}
-              onClick={() => setIsDeterministic(true)}
-              title="Deterministic projection using expected returns only"
-            >
-              <Zap size={14} />
-              Deterministic
-            </button>
+            <SegmentedToggle
+              options={[
+                { value: 'montecarlo', label: <><Activity size={14} /> Monte Carlo</> },
+                { value: 'deterministic', label: <><Zap size={14} /> Deterministic</> },
+              ]}
+              value={isDeterministic ? 'deterministic' : 'montecarlo'}
+              onChange={(v) => setIsDeterministic(v === 'deterministic')}
+              size="sm"
+            />
           </div>
 
           {/* Simulation Count (only for Monte Carlo) */}
           {!isDeterministic && (
             <div className="control-group simulations-control">
               <label>Simulations</label>
-              <div className="btn-group-sm">
-                {SIMULATION_COUNTS.map(count => (
-                  <button
-                    key={count}
-                    className={`btn-sm ${numSimulations === count ? 'active' : ''}`}
-                    onClick={() => setNumSimulations(count)}
-                  >
-                    {count >= 1000 ? `${count / 1000}k` : count}
-                  </button>
-                ))}
-              </div>
+              <SegmentedToggle
+                options={SIMULATION_COUNTS.map(count => ({
+                  value: String(count),
+                  label: count >= 1000 ? `${count / 1000}k` : String(count),
+                }))}
+                value={String(numSimulations)}
+                onChange={(v) => setNumSimulations(Number(v))}
+                size="sm"
+              />
             </div>
           )}
 
           {/* Volatility Control (only for Monte Carlo) */}
           {!isDeterministic && (
             <div className="control-group volatility-control-compact">
-              <label>Volatility: {globalVolatilityOverride}%</label>
               <div className="slider-with-presets">
-                <input
-                  type="range"
-                  min="0"
-                  max="50"
-                  step="1"
+                <Slider
                   value={globalVolatilityOverride}
-                  onChange={(e) => handleGlobalVolatilityChange(parseInt(e.target.value))}
-                  className="compact-slider"
+                  onChange={handleGlobalVolatilityChange}
+                  label="Volatility"
+                  min={0}
+                  max={50}
+                  step={1}
+                  showValue
+                  formatValue={(v) => `${v}%`}
                 />
                 <div className="preset-btns">
                   {[0, 10, 20, 30].map(v => (
@@ -384,81 +376,66 @@ export function PortfolioPanel({ accounts, selectedAccountIds }: PortfolioPanelP
 
           {/* Projection Years */}
           <div className="control-group projection-control">
-            <label>
-              Projection: {effectiveProjectionYears}y
-              {projectionYearsOverride !== null && (
-                <button 
-                  className="reset-btn-inline" 
-                  onClick={() => setProjectionYearsOverride(null)}
-                  title="Reset to natural horizon"
-                >
-                  ↺
-                </button>
-              )}
-            </label>
-            <input
-              type="range"
-              min="1"
-              max="100"
-              step="1"
+            <Slider
               value={effectiveProjectionYears}
-              onChange={(e) => setProjectionYearsOverride(parseInt(e.target.value))}
-              className="projection-slider-wide"
+              onChange={(v) => setProjectionYearsOverride(v)}
+              label={
+                <>
+                  Projection
+                  {projectionYearsOverride !== null && (
+                    <button 
+                      className="reset-btn-inline" 
+                      onClick={() => setProjectionYearsOverride(null)}
+                      title="Reset to natural horizon"
+                    >
+                      ↺
+                    </button>
+                  )}
+                </>
+              }
+              min={1}
+              max={100}
+              step={1}
+              showValue
+              formatValue={(v) => `${v}y`}
             />
           </div>
 
-          {/* Inflation Toggle - Slider Style */}
+          {/* Inflation Toggle */}
           <div className="control-group toggle-slider-group">
             <label>Values</label>
-            <div className="toggle-slider">
-              <button
-                className={`toggle-option ${!adjustForInflation ? 'active' : ''}`}
-                onClick={() => setAdjustForInflation(false)}
-              >
-                Nominal
-              </button>
-              <button
-                className={`toggle-option ${adjustForInflation ? 'active' : ''}`}
-                onClick={() => setAdjustForInflation(true)}
-              >
-                Real
-              </button>
-              <div 
-                className="toggle-slider-indicator" 
-                style={{ transform: adjustForInflation ? 'translateX(100%)' : 'translateX(0)' }}
-              />
-            </div>
-            <button 
-              className="info-btn" 
-              title={adjustForInflation 
+            <SegmentedToggle
+              options={[
+                { value: 'nominal', label: 'Nominal' },
+                { value: 'real', label: 'Real' },
+              ]}
+              value={adjustForInflation ? 'real' : 'nominal'}
+              onChange={(v) => setAdjustForInflation(v === 'real')}
+              size="sm"
+            />
+            <IconButton
+              icon={<Info size={12} />}
+              label={adjustForInflation 
                 ? `Values adjusted for ${DEFAULT_INFLATION_RATE}% annual inflation (real purchasing power)` 
                 : 'Values shown in nominal terms (not adjusted for inflation)'}
-            >
-              <Info size={12} />
-            </button>
+              variant="ghost"
+              size="sm"
+              onClick={() => {}}
+            />
           </div>
 
-          {/* Scale Toggle - Slider Style */}
+          {/* Scale Toggle */}
           <div className="control-group toggle-slider-group">
             <label>Scale</label>
-            <div className="toggle-slider">
-              <button
-                className={`toggle-option ${!useLogScale ? 'active' : ''}`}
-                onClick={() => setUseLogScale(false)}
-              >
-                Linear
-              </button>
-              <button
-                className={`toggle-option ${useLogScale ? 'active' : ''}`}
-                onClick={() => setUseLogScale(true)}
-              >
-                Log
-              </button>
-              <div 
-                className="toggle-slider-indicator" 
-                style={{ transform: useLogScale ? 'translateX(100%)' : 'translateX(0)' }}
-              />
-            </div>
+            <SegmentedToggle
+              options={[
+                { value: 'linear', label: 'Linear' },
+                { value: 'log', label: 'Log' },
+              ]}
+              value={useLogScale ? 'log' : 'linear'}
+              onChange={(v) => setUseLogScale(v === 'log')}
+              size="sm"
+            />
           </div>
         </div>
 
@@ -507,20 +484,21 @@ export function PortfolioPanel({ accounts, selectedAccountIds }: PortfolioPanelP
             <div className="section-header">
               <h3>Portfolio Cash Flow</h3>
               <div className="header-actions">
-                <button
-                  className={`data-toggle-btn ${showCashFlowTable ? 'active' : ''}`}
+                <Button
+                  variant={showCashFlowTable ? 'primary' : 'secondary'}
+                  size="sm"
+                  leftIcon={showCashFlowTable ? <LineChart size={14} /> : <Table size={14} />}
                   onClick={() => setShowCashFlowTable(!showCashFlowTable)}
                 >
-                  {showCashFlowTable ? <LineChart size={14} /> : <Table size={14} />}
                   {showCashFlowTable ? 'Graph' : 'Data'}
-                </button>
-                <button
-                  className="download-btn"
+                </Button>
+                <IconButton
+                  icon={<Download size={14} />}
+                  label="Download as CSV"
+                  variant="ghost"
+                  size="sm"
                   onClick={() => downloadCSV(cashFlowData, cashFlowColumns, 'portfolio-cash-flow')}
-                  title="Download as CSV"
-                >
-                  <Download size={14} />
-                </button>
+                />
               </div>
             </div>
             <div className="chart-container cashflow-extra-tall">
@@ -572,21 +550,23 @@ export function PortfolioPanel({ accounts, selectedAccountIds }: PortfolioPanelP
           {/* Toggle Buttons */}
           <div className="side-panel-toggles">
             {!isDeterministic && (
-              <button
-                className={`toggle-btn ${showHistogram ? 'active' : ''}`}
+              <Button
+                variant={showHistogram ? 'primary' : 'secondary'}
+                size="sm"
+                leftIcon={<BarChart3 size={16} />}
                 onClick={() => setShowHistogram(!showHistogram)}
               >
-                <BarChart3 size={16} />
                 Distribution
-              </button>
+              </Button>
             )}
-            <button
-              className={`toggle-btn ${showDataTable ? 'active' : ''}`}
+            <Button
+              variant={showDataTable ? 'primary' : 'secondary'}
+              size="sm"
+              leftIcon={<Table size={16} />}
               onClick={() => setShowDataTable(!showDataTable)}
             >
-              <Table size={16} />
               Data
-            </button>
+            </Button>
           </div>
 
           {/* Histogram Section */}
@@ -595,14 +575,14 @@ export function PortfolioPanel({ accounts, selectedAccountIds }: PortfolioPanelP
               <div className="section-header">
                 <h4>Final Value Distribution</h4>
                 <div className="bin-control">
-                  <label>Bins: {histogramBins}</label>
-                  <input
-                    type="range"
-                    min="5"
-                    max="100"
-                    step="5"
+                  <Slider
                     value={histogramBins}
-                    onChange={(e) => setHistogramBins(parseInt(e.target.value))}
+                    onChange={(v) => setHistogramBins(v)}
+                    label="Bins"
+                    min={5}
+                    max={100}
+                    step={5}
+                    showValue
                   />
                 </div>
               </div>
@@ -652,33 +632,25 @@ export function PortfolioPanel({ accounts, selectedAccountIds }: PortfolioPanelP
                     </div>
                     <div className="asset-overrides-compact">
                       <div className="override-field">
-                        <label>Return</label>
-                        <input
-                          type="number"
-                          min="0"
-                          max="50"
-                          step="0.5"
+                        <NumberInput
                           value={currentReturn}
-                          onChange={(e) => {
-                            const val = e.target.value === '' ? null : parseFloat(e.target.value);
-                            handleAssetReturnOverride(c.name, val);
-                          }}
+                          onChange={(val) => handleAssetReturnOverride(c.name, val ?? null)}
+                          label="Return"
+                          min={0}
+                          max={50}
+                          step={0.5}
                         />
                         <span>%</span>
                       </div>
                       {!isDeterministic && (
                         <div className="override-field">
-                          <label>σ</label>
-                          <input
-                            type="number"
-                            min="0"
-                            max="100"
-                            step="1"
+                          <NumberInput
                             value={currentVolatility}
-                            onChange={(e) => {
-                              const val = e.target.value === '' ? null : parseFloat(e.target.value);
-                              handleAssetVolatilityOverride(c.name, val);
-                            }}
+                            onChange={(val) => handleAssetVolatilityOverride(c.name, val ?? null)}
+                            label="σ"
+                            min={0}
+                            max={100}
+                            step={1}
                           />
                           <span>%</span>
                         </div>

@@ -12,6 +12,7 @@
 
 import { useState } from 'react';
 import { Wallet, TrendingUp, ChevronDown, ChevronRight, Percent } from 'lucide-react';
+import { SegmentedToggle } from '@quentinlachaud/app-component-library';
 import { TaxCalculationResult } from '../../utils/ukTaxCalculator';
 
 type ViewMode = 'annual' | 'monthly';
@@ -93,24 +94,15 @@ export function SalaryBreakdownTable({
         <h4 className="panel-title-modern">{title}</h4>
         
         {/* Pill Switch Toggle - Annual/Monthly */}
-        <div className="pill-switch compact">
-          <button
-            className={`pill-option ${viewMode === 'annual' ? 'active' : ''}`}
-            onClick={() => setViewMode('annual')}
-          >
-            Annual
-          </button>
-          <button
-            className={`pill-option ${viewMode === 'monthly' ? 'active' : ''}`}
-            onClick={() => setViewMode('monthly')}
-          >
-            Monthly
-          </button>
-          <div 
-            className="pill-indicator"
-            style={{ transform: viewMode === 'monthly' ? 'translateX(100%)' : 'translateX(0)' }}
-          />
-        </div>
+        <SegmentedToggle
+          options={[
+            { value: 'annual', label: 'Annual' },
+            { value: 'monthly', label: 'Monthly' },
+          ]}
+          value={viewMode}
+          onChange={(v) => setViewMode(v as ViewMode)}
+          size="sm"
+        />
       </div>
 
       {/* Prominent Tax Rates Section */}

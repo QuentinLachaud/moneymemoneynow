@@ -7,6 +7,7 @@
 
 import { useMemo } from 'react';
 import { Zap } from 'lucide-react';
+import { Slider } from '@quentinlachaud/app-component-library';
 import { useMarketCrashStore } from '../store/useMarketCrashStore';
 
 interface CrashYearSliderProps {
@@ -32,21 +33,10 @@ export function CrashYearSlider({ startYear, endYear }: CrashYearSliderProps) {
   const totalYears = endYear - startYear;
   const yearFromStart = activeCrash.crashYear - startYear;
 
-  const handleSliderChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const yearOffset = parseInt(e.target.value);
-    const newCrashYear = startYear + yearOffset;
+  const handleSliderChange = (value: number) => {
+    const newCrashYear = startYear + value;
     setCrashYear(activeCrash.id, newCrashYear);
   };
-
-  // Generate tick marks for years
-  const ticks = useMemo(() => {
-    const result: number[] = [];
-    const step = totalYears <= 20 ? 1 : totalYears <= 40 ? 5 : 10;
-    for (let i = 0; i <= totalYears; i += step) {
-      result.push(i);
-    }
-    return result;
-  }, [totalYears]);
 
   return (
     <div className="crash-year-slider-container compact">
@@ -66,30 +56,14 @@ export function CrashYearSlider({ startYear, endYear }: CrashYearSliderProps) {
         </div>
       </div>
       
-      <div className="crash-slider-track">
-        <input
-          type="range"
-          min={0}
-          max={totalYears - 1}
-          value={yearFromStart}
-          onChange={handleSliderChange}
-          className="crash-year-input"
-        />
-        
-        {/* Tick marks */}
-        <div className="crash-slider-ticks">
-          {ticks.map((tick) => (
-            <div
-              key={tick}
-              className="tick-mark"
-              style={{ left: `${(tick / (totalYears - 1)) * 100}%` }}
-            >
-              <div className="tick-line" />
-              <span className="tick-label">{startYear + tick}</span>
-            </div>
-          ))}
-        </div>
-      </div>
+      <Slider
+        value={yearFromStart}
+        min={0}
+        max={totalYears - 1}
+        step={1}
+        onChange={handleSliderChange}
+        showValue={false}
+      />
     </div>
   );
 }

@@ -17,6 +17,7 @@
 
 import { useMemo, useCallback, useEffect } from 'react';
 import { Calculator, RotateCcw } from 'lucide-react';
+import { Button, NumberInput, TextInput } from '@quentinlachaud/app-component-library';
 import {
   calculateIncomeTax,
   calculateEmployerPension,
@@ -228,64 +229,50 @@ export function TaxCalculatorPanel() {
           <form onSubmit={handleSalarySubmit} className="controls-form">
             {/* Salary Input - Left aligned */}
             <div className="control-group salary-group">
-              <label htmlFor="salary-input">Salary</label>
-              <div className="salary-input-wrapper">
-                <span className="currency-symbol">£</span>
-                <input
-                  id="salary-input"
-                  type="text"
-                  value={salaryInput}
-                  onChange={(e) => setSalaryInput(e.target.value)}
-                  onKeyDown={handleSalaryKeyDown}
-                  onBlur={(e) => setSalaryInput(formatDisplaySalary(e.target.value))}
-                  placeholder="Annual salary"
-                  className="salary-input"
-                  autoFocus
-                />
-              </div>
+              <TextInput
+                label="Salary"
+                value={salaryInput}
+                onChange={(e) => setSalaryInput(e.target.value)}
+                onKeyDown={handleSalaryKeyDown}
+                onBlur={(e) => setSalaryInput(formatDisplaySalary(e.target.value))}
+                placeholder="Annual salary"
+                size="md"
+              />
             </div>
 
             {/* Age Input */}
             <div className="control-group age-group">
-              <label htmlFor="age-input">Age</label>
-              <input
-                id="age-input"
-                type="number"
+              <NumberInput
+                label="Age"
                 value={age}
-                onChange={(e) => handleAgeChange(parseInt(e.target.value) || 38)}
+                onChange={(v) => handleAgeChange(v ?? 38)}
                 min={16}
                 max={100}
-                className="age-input"
               />
             </div>
 
             {/* Retirement Age Selector */}
             <div className="control-group retirement-group">
-              <label htmlFor="retirement-input">Retirement Age</label>
-              <input
-                id="retirement-input"
-                type="number"
+              <NumberInput
+                label="Retirement Age"
                 value={retirementAge}
-                onChange={(e) => setRetirementAge(Math.max(age, parseInt(e.target.value) || age))}
+                onChange={(v) => setRetirementAge(Math.max(age, v ?? age))}
                 min={age}
                 max={100}
-                className="retirement-input"
               />
             </div>
 
             {/* Button Group */}
             <div className="button-group">
               {/* Calculate Button */}
-              <button type="submit" className="calculate-btn">
-                <Calculator size={16} />
+              <Button type="submit" variant="primary" size="sm" leftIcon={<Calculator size={16} />}>
                 Calculate
-              </button>
+              </Button>
 
               {/* Reset Button */}
-              <button type="button" className="reset-btn" onClick={handleReset}>
-                <RotateCcw size={16} />
+              <Button type="button" variant="secondary" size="sm" leftIcon={<RotateCcw size={16} />} onClick={handleReset}>
                 Reset
-              </button>
+              </Button>
             </div>
           </form>
         </div>

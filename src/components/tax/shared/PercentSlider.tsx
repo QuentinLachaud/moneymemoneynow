@@ -3,6 +3,7 @@
  */
 
 import { useCallback } from 'react';
+import { Slider } from '@quentinlachaud/app-component-library';
 
 interface PercentSliderProps {
   value: number;
@@ -30,32 +31,15 @@ export function PercentSlider({
 
   return (
     <div className={`percent-slider ${disabled ? 'disabled' : ''}`}>
-      {label && <label className="slider-label">{label}</label>}
-      <div className="slider-controls">
-        <input
-          type="range"
-          min={min}
-          max={max}
-          step={step}
-          value={value}
-          onChange={(e) => handleChange(parseInt(e.target.value))}
-          disabled={disabled}
-          className="slider-track"
-        />
-        <div className="slider-input-group">
-          <input
-            type="number"
-            min={min}
-            max={max}
-            step={step}
-            value={value}
-            onChange={(e) => handleChange(parseInt(e.target.value) || 0)}
-            disabled={disabled}
-            className="slider-input"
-          />
-          <span className="slider-unit">%</span>
-        </div>
-      </div>
+      <Slider
+        label={label || ''}
+        value={value}
+        onChange={handleChange}
+        min={min}
+        max={max}
+        step={step}
+        formatValue={(v) => `${v}%`}
+      />
     </div>
   );
 }

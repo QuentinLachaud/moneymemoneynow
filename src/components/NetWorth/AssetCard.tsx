@@ -5,6 +5,7 @@
  */
 
 import { Pencil, Trash2 } from 'lucide-react';
+import { IconButton } from '@quentinlachaud/app-component-library';
 import { Asset, getAssetTypeLabel } from '../../store/useNetWorthStore';
 import { getAssetIcon } from '../../utils/netWorthIcons';
 import { formatCurrency, formatDate } from './formatters';
@@ -33,13 +34,13 @@ export function AssetCard({ asset, onEdit, onDelete }: AssetCardProps) {
         <div className="item-primary-row">
           <div className="item-name-section">
             <span className="item-name">{displayName}</span>
-            <button 
-              className="inline-edit-btn"
+            <IconButton
+              icon={<Pencil size={14} />}
+              label="Edit"
+              variant="ghost"
+              size="sm"
               onClick={() => onEdit(asset)}
-              title="Edit"
-            >
-              <Pencil size={14} className="edit-icon" />
-            </button>
+            />
           </div>
           <span className="item-value positive">{formatCurrency(asset.value)}</span>
         </div>
@@ -58,13 +59,13 @@ export function AssetCard({ asset, onEdit, onDelete }: AssetCardProps) {
       </div>
       
       {/* Delete Button */}
-      <button 
-        className="card-delete-btn"
+      <IconButton
+        icon={<Trash2 size={16} />}
+        label="Delete"
+        variant="ghost"
+        size="sm"
         onClick={() => onDelete(asset)}
-        title="Delete"
-      >
-        <Trash2 size={16} className="delete-icon" />
-      </button>
+      />
     </div>
   );
 }

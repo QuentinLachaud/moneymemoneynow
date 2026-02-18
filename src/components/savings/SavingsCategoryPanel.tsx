@@ -12,6 +12,7 @@
 
 import { Home, Car, Tv, Baby, TrendingUp, Plus, Trash2, FolderOpen } from 'lucide-react';
 import { useState } from 'react';
+import { Button, IconButton, NumberInput } from '@quentinlachaud/app-component-library';
 import { ExpenseSection, Subcategory } from '../../utils/savingsCalculations';
 import { Currency, CURRENCY_SYMBOLS } from '../../utils/investmentSimulation';
 import { calculateSectionTotal } from '../../utils/savingsCalculations';
@@ -207,16 +208,11 @@ export function SavingsCategoryPanel({
               )}
               
               <div className="subcategory-input-group">
-                <div className="category-input-field">
-                  <span className="currency-prefix">{symbol}</span>
-                  <input
-                    type="number"
-                    value={sub.amount || ''}
-                    onChange={(e) => onUpdateSubcategory?.(sub.id, { amount: parseFloat(e.target.value) || 0 })}
-                    placeholder="0"
-                    min={0}
-                  />
-                </div>
+                <NumberInput
+                  value={sub.amount || undefined}
+                  onChange={(v) => onUpdateSubcategory?.(sub.id, { amount: v ?? 0 })}
+                  min={0}
+                />
                 
                 <DeleteConfirmPopover
                   onConfirm={() => onRemoveSubcategory?.(sub.id)}
@@ -237,14 +233,14 @@ export function SavingsCategoryPanel({
           
           {/* Add subcategory button */}
           {onAddSubcategory && (
-            <button
-              type="button"
-              className="add-subcategory-btn"
+            <Button
+              variant="ghost"
+              size="sm"
+              leftIcon={<Plus size={14} />}
               onClick={onAddSubcategory}
             >
-              <Plus size={14} />
-              <span>Add item</span>
-            </button>
+              Add item
+            </Button>
           )}
         </div>
       </div>

@@ -21,6 +21,7 @@ import {
   Zap, 
   Info 
 } from 'lucide-react';
+import { SegmentedToggle, Slider, IconButton } from '@quentinlachaud/app-component-library';
 
 interface SimulationStats {
   initialValue: number;
@@ -110,67 +111,55 @@ export function SimulationControlsBar({
       <div className="controls-left">
         {/* Mode Toggle */}
         <div className="control-group mode-toggle">
-          <button
-            className={`mode-btn ${isDeterministic ? '' : 'active'}`}
-            onClick={() => onSetDeterministic(false)}
-            title="Monte Carlo simulation with randomized returns"
-          >
-            <Activity size={14} />
-            Monte Carlo
-          </button>
-          <button
-            className={`mode-btn ${isDeterministic ? 'active' : ''}`}
-            onClick={() => onSetDeterministic(true)}
-            title="Deterministic projection using expected returns only"
-          >
-            <Zap size={14} />
-            Deterministic
-          </button>
+          <SegmentedToggle
+            options={[
+              { value: 'montecarlo', label: <span className="flex items-center gap-1"><Activity size={14} />Monte Carlo</span> },
+              { value: 'deterministic', label: <span className="flex items-center gap-1"><Zap size={14} />Deterministic</span> },
+            ]}
+            value={isDeterministic ? 'deterministic' : 'montecarlo'}
+            onChange={(v) => onSetDeterministic(v === 'deterministic')}
+            size="sm"
+          />
         </div>
 
         {/* Simulation Count (only for Monte Carlo) */}
         {!isDeterministic && (
           <div className="control-group simulations-control">
-            <label>Simulations</label>
-            <div className="btn-group-sm">
-              {SIMULATION_COUNTS.map(count => (
-                <button
-                  key={count}
-                  className={`btn-sm ${numSimulations === count ? 'active' : ''}`}
-                  onClick={() => onSetNumSimulations(count)}
-                >
-                  {count >= 1000 ? `${count / 1000}k` : count}
-                </button>
-              ))}
-            </div>
+            <label className="text-xs font-medium text-text-secondary">Simulations</label>
+            <SegmentedToggle
+              options={SIMULATION_COUNTS.map(count => ({
+                value: String(count),
+                label: count >= 1000 ? `${count / 1000}k` : String(count),
+              }))}
+              value={String(numSimulations)}
+              onChange={(v) => onSetNumSimulations(parseInt(v))}
+              size="sm"
+            />
           </div>
         )}
 
         {/* Volatility Control (only for Monte Carlo) */}
         {!isDeterministic && (
           <div className="control-group volatility-control-compact">
-            <label>Volatility: {volatility}%</label>
-            <div className="slider-with-presets">
-              <input
-                type="range"
-                min="0"
-                max="50"
-                step="1"
-                value={volatility}
-                onChange={(e) => onSetVolatility(parseInt(e.target.value))}
-                className="compact-slider"
-              />
-              <div className="preset-btns">
-                {[0, 10, 20, 30].map(v => (
-                  <button
-                    key={v}
-                    className={`preset-btn-sm ${volatility === v ? 'active' : ''}`}
-                    onClick={() => onSetVolatility(v)}
-                  >
-                    {v}
-                  </button>
-                ))}
-              </div>
+            <Slider
+              label={`Volatility`}
+              value={volatility}
+              min={0}
+              max={50}
+              step={1}
+              onChange={onSetVolatility}
+              formatValue={(v) => `${v}%`}
+            />
+            <div className="preset-btns">
+              {[0, 10, 20, 30].map(v => (
+                <button
+                  key={v}
+                  className={`preset-btn-sm ${volatility === v ? 'active' : ''}`}
+                  onClick={() => onSetVolatility(v)}
+                >
+                  {v}
+                </button>
+              ))}
             </div>
           </div>
         )}
@@ -179,81 +168,64 @@ export function SimulationControlsBar({
 
         {/* Projection Years */}
         <div className="control-group projection-control">
-          <label>
-            Projection: {projectionYears}y
-            {isProjectionOverridden && (
-              <button 
-                className="reset-btn-inline" 
-                onClick={() => onSetProjectionYears(null)}
-                title="Reset to natural horizon"
-              >
-                ↺
-              </button>
-            )}
-          </label>
-          <input
-            type="range"
-            min="1"
-            max="100"
-            step="1"
+          <Slider
+            label={
+              <span className="flex items-center gap-1">
+                Projection
+                {isProjectionOverridden && (
+                  <button 
+                    className="reset-btn-inline" 
+                    onClick={() => onSetProjectionYears(null)}
+                    title="Reset to natural horizon"
+                  >
+                    ↺
+                  </button>
+                )}
+              </span>
+            }
             value={projectionYears}
-            onChange={(e) => onSetProjectionYears(parseInt(e.target.value))}
-            className="projection-slider-wide"
+            min={1}
+            max={100}
+            step={1}
+            onChange={(v) => onSetProjectionYears(v)}
+            formatValue={(v) => `${v}y`}
           />
         </div>
 
-        {/* Inflation Toggle - Slider Style */}
+        {/* Inflation Toggle */}
         <div className="control-group toggle-slider-group">
-          <label>Values</label>
-          <div className="toggle-slider">
-            <button
-              className={`toggle-option ${!adjustForInflation ? 'active' : ''}`}
-              onClick={() => onSetAdjustForInflation(false)}
-            >
-              Nominal
-            </button>
-            <button
-              className={`toggle-option ${adjustForInflation ? 'active' : ''}`}
-              onClick={() => onSetAdjustForInflation(true)}
-            >
-              Real
-            </button>
-            <div 
-              className="toggle-slider-indicator" 
-              style={{ transform: adjustForInflation ? 'translateX(100%)' : 'translateX(0)' }}
-            />
-          </div>
-          <button 
-            className="info-btn" 
-            title={adjustForInflation 
+          <label className="text-xs font-medium text-text-secondary">Values</label>
+          <SegmentedToggle
+            options={[
+              { value: 'nominal', label: 'Nominal' },
+              { value: 'real', label: 'Real' },
+            ]}
+            value={adjustForInflation ? 'real' : 'nominal'}
+            onChange={(v) => onSetAdjustForInflation(v === 'real')}
+            size="sm"
+          />
+          <IconButton
+            icon={<Info size={12} />}
+            label={adjustForInflation 
               ? `Values adjusted for ${inflationRate}% annual inflation (real purchasing power)` 
               : 'Values shown in nominal terms (not adjusted for inflation)'}
-          >
-            <Info size={12} />
-          </button>
+            variant="ghost"
+            size="sm"
+          />
         </div>
 
-        {/* Scale Toggle - Slider Style */}
+        {/* Scale Toggle */}
         <div className="control-group toggle-slider-group">
-          <label>Scale</label>
-          <div className="toggle-slider">
-            <button
-              className={`toggle-option ${!useLogScale ? 'active' : ''}`}
-              onClick={() => onSetUseLogScale(false)}
-            >
-              Linear
-            </button>
-            <button
-              className={`toggle-option ${useLogScale ? 'active' : ''}`}
-              onClick={() => onSetUseLogScale(true)}
-            >
-              Log
-            </button>
-            <div 
-              className="toggle-slider-indicator" 
-              style={{ transform: useLogScale ? 'translateX(100%)' : 'translateX(0)' }}
-            />
-          </div>
+          <label className="text-xs font-medium text-text-secondary">Scale</label>
+          <SegmentedToggle
+            options={[
+              { value: 'linear', label: 'Linear' },
+              { value: 'log', label: 'Log' },
+            ]}
+            value={useLogScale ? 'log' : 'linear'}
+            onChange={(v) => onSetUseLogScale(v === 'log')}
+            size="sm"
+          />
         </div>
       </div>
 

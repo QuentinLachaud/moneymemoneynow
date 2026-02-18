@@ -34,6 +34,7 @@ import {
   ChevronDown,
   ChevronUp
 } from 'lucide-react';
+import { Button, IconButton, Slider, SegmentedToggle } from '@quentinlachaud/app-component-library';
 
 interface ProjectionsPanelV2Props {
   account: Account;
@@ -261,22 +262,15 @@ export function ProjectionsPanelV2({ account }: ProjectionsPanelV2Props) {
         <div className="controls-left">
           {/* Mode Toggle */}
           <div className="control-group mode-toggle">
-            <button
-              className={`mode-btn ${isDeterministic ? '' : 'active'}`}
-              onClick={() => setIsDeterministic(false)}
-              title="Monte Carlo simulation with randomized returns"
-            >
-              <Activity size={14} />
-              Monte Carlo
-            </button>
-            <button
-              className={`mode-btn ${isDeterministic ? 'active' : ''}`}
-              onClick={() => setIsDeterministic(true)}
-              title="Deterministic projection using expected returns only"
-            >
-              <Zap size={14} />
-              Deterministic
-            </button>
+            <SegmentedToggle
+              options={[
+                { value: 'montecarlo', label: <><Activity size={14} /> Monte Carlo</> },
+                { value: 'deterministic', label: <><Zap size={14} /> Deterministic</> },
+              ]}
+              value={isDeterministic ? 'deterministic' : 'montecarlo'}
+              onChange={(v) => setIsDeterministic(v === 'deterministic')}
+              size="sm"
+            />
           </div>
 
           {/* Stacked Volatility & Projection Sliders */}
@@ -284,41 +278,41 @@ export function ProjectionsPanelV2({ account }: ProjectionsPanelV2Props) {
             {/* Volatility Control */}
             {!isDeterministic && (
               <div className="slider-row">
-                <label>Volatility: {volatilityOverride}%</label>
-                <input
-                  type="range"
-                  min="0"
-                  max="50"
-                  step="1"
+                <Slider
+                  label={`Volatility: ${volatilityOverride}%`}
                   value={volatilityOverride}
-                  onChange={(e) => handleVolatilityChange(parseInt(e.target.value))}
-                  className="wide-slider"
+                  onChange={handleVolatilityChange}
+                  min={0}
+                  max={50}
+                  step={1}
+                  showValue={false}
                 />
               </div>
             )}
 
             {/* Projection Years */}
             <div className="slider-row">
-              <label>
-                Projection: {effectiveProjectionYears}y
-                {projectionYearsOverride !== null && (
-                  <button 
-                    className="reset-btn-inline" 
-                    onClick={() => setProjectionYearsOverride(null)}
-                    title="Reset to account default"
-                  >
-                    ↺
-                  </button>
-                )}
-              </label>
-              <input
-                type="range"
-                min="1"
-                max="100"
-                step="1"
+              <Slider
+                label={
+                  <>
+                    Projection: {effectiveProjectionYears}y
+                    {projectionYearsOverride !== null && (
+                      <button 
+                        className="reset-btn-inline" 
+                        onClick={() => setProjectionYearsOverride(null)}
+                        title="Reset to account default"
+                      >
+                        ↺
+                      </button>
+                    )}
+                  </>
+                }
                 value={effectiveProjectionYears}
-                onChange={(e) => setProjectionYearsOverride(parseInt(e.target.value))}
-                className="wide-slider"
+                onChange={(v) => setProjectionYearsOverride(v)}
+                min={1}
+                max={100}
+                step={1}
+                showValue={false}
               />
             </div>
           </div>
@@ -326,55 +320,38 @@ export function ProjectionsPanelV2({ account }: ProjectionsPanelV2Props) {
           {/* Inflation Toggle - Slider Style */}
           <div className="control-group toggle-slider-group">
             <label>Values</label>
-            <div className="toggle-slider">
-              <button
-                className={`toggle-option ${!adjustForInflation ? 'active' : ''}`}
-                onClick={() => setAdjustForInflation(false)}
-              >
-                Nominal
-              </button>
-              <button
-                className={`toggle-option ${adjustForInflation ? 'active' : ''}`}
-                onClick={() => setAdjustForInflation(true)}
-              >
-                Real
-              </button>
-              <div 
-                className="toggle-slider-indicator" 
-                style={{ transform: adjustForInflation ? 'translateX(100%)' : 'translateX(0)' }}
-              />
-            </div>
-            <button 
-              className="info-btn" 
-              title={adjustForInflation 
+            <SegmentedToggle
+              options={[
+                { value: 'nominal', label: 'Nominal' },
+                { value: 'real', label: 'Real' },
+              ]}
+              value={adjustForInflation ? 'real' : 'nominal'}
+              onChange={(v) => setAdjustForInflation(v === 'real')}
+              size="sm"
+            />
+            <IconButton
+              icon={<Info size={12} />}
+              label={adjustForInflation 
                 ? `Values adjusted for ${DEFAULT_INFLATION_RATE}% annual inflation` 
                 : 'Values shown in nominal terms'}
-            >
-              <Info size={12} />
-            </button>
+              variant="ghost"
+              size="sm"
+              onClick={() => {}}
+            />
           </div>
 
           {/* Scale Toggle - Slider Style */}
           <div className="control-group toggle-slider-group">
             <label>Scale</label>
-            <div className="toggle-slider">
-              <button
-                className={`toggle-option ${!useLogScale ? 'active' : ''}`}
-                onClick={() => setUseLogScale(false)}
-              >
-                Linear
-              </button>
-              <button
-                className={`toggle-option ${useLogScale ? 'active' : ''}`}
-                onClick={() => setUseLogScale(true)}
-              >
-                Log
-              </button>
-              <div 
-                className="toggle-slider-indicator" 
-                style={{ transform: useLogScale ? 'translateX(100%)' : 'translateX(0)' }}
-              />
-            </div>
+            <SegmentedToggle
+              options={[
+                { value: 'linear', label: 'Linear' },
+                { value: 'log', label: 'Log' },
+              ]}
+              value={useLogScale ? 'log' : 'linear'}
+              onChange={(v) => setUseLogScale(v === 'log')}
+              size="sm"
+            />
           </div>
         </div>
 
@@ -470,32 +447,32 @@ export function ProjectionsPanelV2({ account }: ProjectionsPanelV2Props) {
               <div className="header-left">
                 <h3>Cash Flow: {account.name}</h3>
                 <div className="header-actions">
-                  <button
-                    className={`data-toggle-btn ${showCashFlowTable ? 'active' : ''}`}
+                  <Button
+                    variant={showCashFlowTable ? 'primary' : 'secondary'}
+                    size="sm"
+                    leftIcon={showCashFlowTable ? <LineChart size={14} /> : <Table size={14} />}
                     onClick={() => setShowCashFlowTable(!showCashFlowTable)}
                   >
-                    {showCashFlowTable ? <LineChart size={14} /> : <Table size={14} />}
-                    <span className="action-label">{showCashFlowTable ? 'Graph' : 'Data'}</span>
-                  </button>
-                  <button
-                    className="download-btn download-csv"
+                    {showCashFlowTable ? 'Graph' : 'Data'}
+                  </Button>
+                  <IconButton
+                    icon={<Download size={14} />}
+                    label="Download CSV"
+                    variant="ghost"
+                    size="sm"
                     onClick={() => downloadCSV(cashFlowData, cashFlowColumns, `${account.name}-cash-flow`)}
-                    title="Download CSV"
-                  >
-                    <ChevronDown size={14} />
-                    <span className="download-label">CSV</span>
-                  </button>
+                  />
                 </div>
               </div>
               {/* ───── Right: Collapse Toggle ───── */}
               <div className="section-right">
-                <button
-                  className="collapse-btn"
+                <IconButton
+                  icon={isCashFlowCollapsed ? <ChevronDown size={14} /> : <ChevronUp size={14} />}
+                  label={isCashFlowCollapsed ? 'Expand cash flow chart' : 'Collapse cash flow chart'}
+                  variant="ghost"
+                  size="sm"
                   onClick={() => setIsCashFlowCollapsed(!isCashFlowCollapsed)}
-                  aria-label={isCashFlowCollapsed ? 'Expand cash flow chart' : 'Collapse cash flow chart'}
-                >
-                  {isCashFlowCollapsed ? <ChevronDown size={14} /> : <ChevronUp size={14} />}
-                </button>
+                />
               </div>
             </div>
             {/* ───── Chart Container (hidden when collapsed) ───── */}
@@ -539,30 +516,33 @@ export function ProjectionsPanelV2({ account }: ProjectionsPanelV2Props) {
           {/* Toggle Buttons */}
           <div className="side-panel-toggles">
             {!isDeterministic && (
-              <button
-                className={`toggle-btn ${showHistogram ? 'active' : ''}`}
+              <Button
+                variant={showHistogram ? 'primary' : 'secondary'}
+                size="sm"
+                leftIcon={<BarChart3 size={16} />}
                 onClick={() => { setShowHistogram(true); setShowSurvivalScatter(false); }}
               >
-                <BarChart3 size={16} />
                 Distribution
-              </button>
+              </Button>
             )}
             {!isDeterministic && (
-              <button
-                className={`toggle-btn ${showSurvivalScatter ? 'active' : ''}`}
+              <Button
+                variant={showSurvivalScatter ? 'primary' : 'secondary'}
+                size="sm"
+                leftIcon={<Target size={16} />}
                 onClick={() => { setShowSurvivalScatter(true); setShowHistogram(false); }}
               >
-                <Target size={16} />
                 Survival
-              </button>
+              </Button>
             )}
-            <button
-              className={`toggle-btn ${showDataTable ? 'active' : ''}`}
+            <Button
+              variant={showDataTable ? 'primary' : 'secondary'}
+              size="sm"
+              leftIcon={<Table size={16} />}
               onClick={() => setShowDataTable(!showDataTable)}
             >
-              <Table size={16} />
               Data
-            </button>
+            </Button>
           </div>
 
           {/* Histogram Section */}
@@ -571,14 +551,14 @@ export function ProjectionsPanelV2({ account }: ProjectionsPanelV2Props) {
               <div className="section-header">
                 <h4>Final Value Distribution</h4>
                 <div className="bin-control">
-                  <label>Bins: {histogramBins}</label>
-                  <input
-                    type="range"
-                    min="5"
-                    max="100"
-                    step="5"
+                  <Slider
+                    label={`Bins: ${histogramBins}`}
                     value={histogramBins}
-                    onChange={(e) => setHistogramBins(parseInt(e.target.value))}
+                    onChange={setHistogramBins}
+                    min={5}
+                    max={100}
+                    step={5}
+                    showValue={false}
                   />
                 </div>
               </div>
@@ -610,8 +590,11 @@ export function ProjectionsPanelV2({ account }: ProjectionsPanelV2Props) {
             <div className="data-table-section card">
               <div className="section-header">
                 <h4>Percentile Data</h4>
-                <button
-                  className="download-btn"
+                <IconButton
+                  icon={<Download size={14} />}
+                  label="Download as CSV"
+                  variant="ghost"
+                  size="sm"
                   onClick={() => {
                     const data = adjustedSimulation.years.map((year, idx) => ({
                       year,
@@ -635,10 +618,7 @@ export function ProjectionsPanelV2({ account }: ProjectionsPanelV2Props) {
                     ];
                     downloadCSV(data, cols, `${account.name}-percentiles`);
                   }}
-                  title="Download as CSV"
-                >
-                  <Download size={14} />
-                </button>
+                />
               </div>
               <div className="percentile-table-container">
                 <table className="percentile-table">

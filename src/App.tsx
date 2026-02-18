@@ -25,6 +25,7 @@
  */
 
 import { useState, useRef, useEffect } from 'react';
+import { Button, IconButton } from '@quentinlachaud/app-component-library';
 import { AccountForm } from './components/AccountForm';
 import { ProjectionsPanelV2 } from './components/ProjectionsPanelV2';
 import { ProjectionPortfolioPanel } from './components/ProjectionPortfolioPanel';
@@ -162,48 +163,54 @@ export default function App() {
               className="tab-slider" 
               style={sliderStyle}
             />
-            <button
+            <Button
+              variant="ghost"
               ref={(el) => (tabRefs.current[0] = el)}
               onClick={() => setTab('savings-calculator')}
               className={`tab-button ${tab === 'savings-calculator' ? 'active' : ''}`}
             >
               Savings Calculator
-            </button>
-            <button
+            </Button>
+            <Button
+              variant="ghost"
               ref={(el) => (tabRefs.current[1] = el)}
               onClick={() => setTab('investment-outcomes')}
               className={`tab-button ${tab === 'investment-outcomes' ? 'active' : ''}`}
             >
               Investment Outcomes
-            </button>
-            <button
+            </Button>
+            <Button
+              variant="ghost"
               ref={(el) => (tabRefs.current[2] = el)}
               onClick={() => setTab('tax-calculator')}
               className={`tab-button ${tab === 'tax-calculator' ? 'active' : ''}`}
             >
               Tax Calculator
-            </button>
-            <button
+            </Button>
+            <Button
+              variant="ghost"
               ref={(el) => (tabRefs.current[3] = el)}
               onClick={() => setTab('net-worth')}
               className={`tab-button ${tab === 'net-worth' ? 'active' : ''}`}
             >
               Net Worth
-            </button>
-            <button
+            </Button>
+            <Button
+              variant="ghost"
               ref={(el) => (tabRefs.current[4] = el)}
               onClick={() => setTab('projections')}
               className={`tab-button ${tab === 'projections' ? 'active' : ''}`}
             >
               Projections
-            </button>
-            <button
+            </Button>
+            <Button
+              variant="ghost"
               ref={(el) => (tabRefs.current[5] = el)}
               onClick={() => setTab('projection-portfolio')}
               className={`tab-button ${tab === 'projection-portfolio' ? 'active' : ''}`}
             >
               Portfolio
-            </button>
+            </Button>
           </div>
         </div>
       </header>
@@ -277,12 +284,14 @@ export default function App() {
           <div className="modal-content" onClick={(e) => e.stopPropagation()}>
             <div className="modal-header">
               <h2>{editingAccountId ? 'Edit Cash Flow' : `Add ${defaultTransactionType === 'deposit' ? 'Deposit' : 'Drawdown'}`}</h2>
-              <button 
+              <IconButton
+                icon={<span aria-hidden>×</span>}
+                label="Close modal"
+                variant="ghost"
+                size="sm"
                 className="modal-close"
                 onClick={closeAccountModal}
-              >
-                ×
-              </button>
+              />
             </div>
             <AccountForm 
               key={editingAccountId || `new-${defaultTransactionType}`}

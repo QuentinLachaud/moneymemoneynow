@@ -10,6 +10,7 @@
 
 import { useState, useMemo } from 'react';
 import { TrendingUp, PiggyBank, Minus, Plus } from 'lucide-react';
+import { SegmentedToggle, Slider } from '@quentinlachaud/app-component-library';
 import { 
   TaxRegion, 
   TaxCalculationResult,
@@ -147,62 +148,31 @@ export function ScenarioPanel({
     <div className="scenario-panel">
       {/* Mode Selector - Segment Buttons */}
       <div className="mode-selector-row">
-        <div className="scenario-toggle">
-          <button
-            className={`scenario-btn ${scenario === 'salary-change' ? 'active' : ''}`}
-            onClick={() => setScenario('salary-change')}
-          >
-            <TrendingUp size={16} />
-            Salary Change
-          </button>
-          <button
-            className={`scenario-btn ${scenario === 'salary-sacrifice' ? 'active' : ''}`}
-            onClick={() => setScenario('salary-sacrifice')}
-          >
-            <PiggyBank size={16} />
-            Salary Sacrifice
-          </button>
-        </div>
+        <SegmentedToggle
+          options={[
+            { value: 'salary-change', label: <span className="flex items-center gap-1"><TrendingUp size={16} />Salary Change</span> },
+            { value: 'salary-sacrifice', label: <span className="flex items-center gap-1"><PiggyBank size={16} />Salary Sacrifice</span> },
+          ]}
+          value={scenario}
+          onChange={(v) => setScenario(v as ScenarioType)}
+          size="sm"
+          fullWidth
+        />
       </div>
 
       {/* Scenario Controls */}
       <div className="scenario-controls">
         {scenario === 'salary-change' ? (
           <div className="stepped-input-group">
-            <div className="stepped-input-header">
-              <span className="stepped-input-label">Salary change</span>
-              <span className={`stepped-input-value ${changePercent >= 0 ? 'positive' : 'negative'}`}>
-                {changePercent >= 0 ? '+' : ''}{changePercent}%
-              </span>
-            </div>
-            
-            <div className="stepped-input-row">
-              <button 
-                className="stepper-btn large" 
-                onClick={() => handleSalaryChangeStep(-1)}
-                type="button"
-              >
-                <Minus size={18} />
-              </button>
-              
-              <input
-                type="range"
-                min={-30}
-                max={50}
-                step={1}
-                value={changePercent}
-                onChange={(e) => setChangePercent(parseInt(e.target.value))}
-                className="stepped-slider"
-              />
-              
-              <button 
-                className="stepper-btn large" 
-                onClick={() => handleSalaryChangeStep(1)}
-                type="button"
-              >
-                <Plus size={18} />
-              </button>
-            </div>
+            <Slider
+              label="Salary change"
+              value={changePercent}
+              onChange={(v) => setChangePercent(v)}
+              min={-30}
+              max={50}
+              step={1}
+              formatValue={(v) => `${v >= 0 ? '+' : ''}${v}%`}
+            />
             
             {/* Preset buttons */}
             <div className="stepped-presets">
@@ -225,40 +195,15 @@ export function ScenarioPanel({
           </div>
         ) : (
           <div className="stepped-input-group">
-            <div className="stepped-input-header">
-              <span className="stepped-input-label">Additional sacrifice</span>
-              <span className="stepped-input-value positive">+{salarySacrificePercent}%</span>
-            </div>
-            
-            <div className="stepped-input-row">
-              <button 
-                className="stepper-btn large" 
-                onClick={() => handleSacrificeStep(-1)}
-                disabled={salarySacrificePercent <= 0}
-                type="button"
-              >
-                <Minus size={18} />
-              </button>
-              
-              <input
-                type="range"
-                min={0}
-                max={20}
-                step={1}
-                value={salarySacrificePercent}
-                onChange={(e) => onSalarySacrificeChange(parseInt(e.target.value))}
-                className="stepped-slider"
-              />
-              
-              <button 
-                className="stepper-btn large" 
-                onClick={() => handleSacrificeStep(1)}
-                disabled={salarySacrificePercent >= 20}
-                type="button"
-              >
-                <Plus size={18} />
-              </button>
-            </div>
+            <Slider
+              label="Additional sacrifice"
+              value={salarySacrificePercent}
+              onChange={(v) => onSalarySacrificeChange(v)}
+              min={0}
+              max={20}
+              step={1}
+              formatValue={(v) => `+${v}%`}
+            />
             
             {/* Preset buttons */}
             <div className="stepped-presets">

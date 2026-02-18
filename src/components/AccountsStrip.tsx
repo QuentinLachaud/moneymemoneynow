@@ -39,6 +39,7 @@ import {
   Zap,
   ChevronUp
 } from 'lucide-react';
+import { Button, IconButton } from '@quentinlachaud/app-component-library';
 import { Account } from '../store/useAppStore';
 import { useMarketCrashStore, MarketCrash } from '../store/useMarketCrashStore';
 import { MarketCrashModal } from './MarketCrashModal';
@@ -215,13 +216,14 @@ export function AccountsStrip({
                     formatAmount={formatAmount}
                   />
                 ))}
-                <button 
-                  className="add-card-btn deposit-add"
+                <IconButton
+                  icon={<Plus size={18} />}
+                  label="Add new deposit"
+                  variant="ghost"
+                  size="sm"
                   onClick={onAddDeposit}
-                  title="Add new deposit"
-                >
-                  <Plus size={18} />
-                </button>
+                  className="add-card-btn deposit-add"
+                />
               </div>
             </div>
 
@@ -243,13 +245,14 @@ export function AccountsStrip({
                     formatAmount={formatAmount}
                   />
                 ))}
-                <button 
-                  className="add-card-btn drawdown-add"
+                <IconButton
+                  icon={<Plus size={18} />}
+                  label="Add new drawdown"
+                  variant="ghost"
+                  size="sm"
                   onClick={onAddDrawdown}
-                  title="Add new drawdown"
-                >
-                  <Plus size={18} />
-                </button>
+                  className="add-card-btn drawdown-add"
+                />
               </div>
             </div>
 
@@ -278,16 +281,17 @@ export function AccountsStrip({
                       onDelete={() => deleteCrash(crash.id)}
                     />
                   ))}
-                  <button 
-                    className="add-card-btn crash-add"
+                  <IconButton
+                    icon={<Plus size={18} />}
+                    label="Add market crash scenario"
+                    variant="ghost"
+                    size="sm"
                     onClick={() => {
                       setEditingCrash(null);
                       setShowCrashModal(true);
                     }}
-                    title="Add market crash scenario"
-                  >
-                    <Plus size={18} />
-                  </button>
+                    className="add-card-btn crash-add"
+                  />
                 </div>
               </div>
             )}
@@ -371,14 +375,13 @@ function AccountCard({
         </div>
       </div>
 
-      {/* Actions (stop propagation to prevent toggle) */}
       <div className="card-actions" onClick={e => e.stopPropagation()}>
-        <button className="card-action-btn" onClick={onEdit} title="Edit">
+        <Button variant="ghost" size="sm" onClick={onEdit}>
           Edit
-        </button>
-        <button className="card-action-btn danger" onClick={onDelete} title="Delete">
+        </Button>
+        <Button variant="ghost" size="sm" onClick={onDelete}>
           Delete
-        </button>
+        </Button>
       </div>
     </div>
   );
@@ -440,12 +443,12 @@ function CrashCard({
 
       {/* Actions */}
       <div className="card-actions" onClick={e => e.stopPropagation()}>
-        <button className="card-action-btn" onClick={onEdit} title="Edit">
+        <Button variant="ghost" size="sm" onClick={onEdit}>
           Edit
-        </button>
-        <button className="card-action-btn danger" onClick={onDelete} title="Delete">
+        </Button>
+        <Button variant="ghost" size="sm" onClick={onDelete}>
           Delete
-        </button>
+        </Button>
       </div>
     </div>
   );

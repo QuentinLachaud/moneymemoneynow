@@ -5,6 +5,7 @@
  */
 
 import { Pencil, Trash2 } from 'lucide-react';
+import { IconButton } from '@quentinlachaud/app-component-library';
 import { Liability, getLiabilityTypeLabel } from '../../store/useNetWorthStore';
 import { getLiabilityIcon } from '../../utils/netWorthIcons';
 import { formatCurrency, formatDate } from './formatters';
@@ -33,13 +34,13 @@ export function LiabilityCard({ liability, onEdit, onDelete }: LiabilityCardProp
         <div className="item-primary-row">
           <div className="item-name-section">
             <span className="item-name">{displayName}</span>
-            <button 
-              className="inline-edit-btn liability"
+            <IconButton
+              icon={<Pencil size={14} />}
+              label="Edit"
+              variant="ghost"
+              size="sm"
               onClick={() => onEdit(liability)}
-              title="Edit"
-            >
-              <Pencil size={14} className="edit-icon" />
-            </button>
+            />
           </div>
           <span className="item-value negative">{formatCurrency(liability.value)}</span>
         </div>
@@ -57,13 +58,13 @@ export function LiabilityCard({ liability, onEdit, onDelete }: LiabilityCardProp
       </div>
       
       {/* Delete Button */}
-      <button 
-        className="card-delete-btn"
+      <IconButton
+        icon={<Trash2 size={16} />}
+        label="Delete"
+        variant="ghost"
+        size="sm"
         onClick={() => onDelete(liability)}
-        title="Delete"
-      >
-        <Trash2 size={16} className="delete-icon" />
-      </button>
+      />
     </div>
   );
 }

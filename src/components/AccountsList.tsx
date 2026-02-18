@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Account } from '../App';
 import { Trash2, Edit2, X, Check } from 'lucide-react';
+import { IconButton } from '@quentinlachaud/app-component-library';
 import { AccountForm } from './AccountForm';
 
 interface AccountsListProps {
@@ -29,12 +30,13 @@ export function AccountsList({ accounts, onUpdate, onDelete }: AccountsListProps
             <div>
               <div className="flex justify-between items-center mb-3">
                 <span className="text-gray-900">Edit Account</span>
-                <button
+                <IconButton
+                  icon={<X size={18} />}
+                  label="Cancel editing"
+                  variant="ghost"
+                  size="sm"
                   onClick={() => setEditingId(null)}
-                  className="text-gray-500 hover:text-gray-700"
-                >
-                  <X size={18} />
-                </button>
+                />
               </div>
               <AccountForm
                 initialData={account}
@@ -53,18 +55,20 @@ export function AccountsList({ accounts, onUpdate, onDelete }: AccountsListProps
                   <p className="text-gray-600">${account.amount.toLocaleString()}</p>
                 </div>
                 <div className="flex gap-2">
-                  <button
+                  <IconButton
+                    icon={<Edit2 size={16} />}
+                    label="Edit account"
+                    variant="ghost"
+                    size="sm"
                     onClick={() => setEditingId(account.id)}
-                    className="text-blue-600 hover:text-blue-700 p-1"
-                  >
-                    <Edit2 size={16} />
-                  </button>
-                  <button
+                  />
+                  <IconButton
+                    icon={<Trash2 size={16} />}
+                    label="Delete account"
+                    variant="ghost"
+                    size="sm"
                     onClick={() => onDelete(account.id)}
-                    className="text-red-600 hover:text-red-700 p-1"
-                  >
-                    <Trash2 size={16} />
-                  </button>
+                  />
                 </div>
               </div>
                 <div className="text-sm text-gray-600 space-y-1">

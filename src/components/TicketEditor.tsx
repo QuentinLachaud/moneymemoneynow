@@ -18,6 +18,7 @@
 
 import { useState } from 'react';
 import { Account } from '../App';
+import { TextInput, NumberInput, Button } from '@quentinlachaud/app-component-library';
 
 interface Props {
   account: Account;
@@ -45,27 +46,80 @@ export default function TicketEditor({ account, onSave, onCancel }: Props) {
   };
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-      <input value={form.name} onChange={e => update('name', e.target.value)} placeholder="Name" />
-      <div style={{ display: 'flex', gap: 8 }}>
-        <input type="number" value={form.amount} onChange={e => update('amount', Number(e.target.value))} placeholder="Amount" />
-        <input type="date" value={form.date} onChange={e => update('date', e.target.value)} />
+    <div className="flex flex-col gap-2">
+      <TextInput
+        value={form.name}
+        onChange={(e) => update('name', e.target.value)}
+        placeholder="Name"
+        size="sm"
+        fullWidth
+      />
+      <div className="flex gap-2">
+        <NumberInput
+          value={form.amount}
+          onChange={(v) => update('amount', v ?? 0)}
+          placeholder="Amount"
+          size="sm"
+          hideControls
+          fullWidth
+        />
+        <input
+          type="date"
+          value={form.date}
+          onChange={(e) => update('date', e.target.value)}
+          className="bg-bg-surface border border-border-subtle rounded-md px-3 py-1.5 text-xs text-text-primary"
+        />
       </div>
-      <div style={{ display: 'flex', gap: 8 }}>
-        <select value={form.transactionType} onChange={e => update('transactionType', e.target.value as any)}>
+      <div className="flex gap-2">
+        {/* Select kept as raw — gap component needed */}
+        <select
+          value={form.transactionType}
+          onChange={(e) => update('transactionType', e.target.value as 'deposit' | 'withdraw')}
+          className="bg-bg-surface border border-border-subtle rounded-md px-3 py-1.5 text-xs text-text-primary"
+        >
           <option value="deposit">Deposit</option>
           <option value="withdraw">Withdraw</option>
         </select>
-        <input type="number" value={form.transactionAmount} onChange={e => update('transactionAmount', Number(e.target.value))} placeholder="Tx amount" />
+        <NumberInput
+          value={form.transactionAmount}
+          onChange={(v) => update('transactionAmount', v ?? 0)}
+          placeholder="Tx amount"
+          size="sm"
+          hideControls
+          fullWidth
+        />
       </div>
-      <div style={{ display: 'flex', gap: 8 }}>
-        <input type="number" value={form.timeHorizon} onChange={e => update('timeHorizon', Number(e.target.value))} placeholder="Years" />
-        <input type="number" value={form.expectedReturn} onChange={e => update('expectedReturn', Number(e.target.value))} step="0.01" placeholder="Return" />
-        <input type="number" value={form.annualIncreaseRate} onChange={e => update('annualIncreaseRate', Number(e.target.value))} step="0.01" placeholder="Annual Increase %" />
+      <div className="flex gap-2">
+        <NumberInput
+          value={form.timeHorizon}
+          onChange={(v) => update('timeHorizon', v ?? 10)}
+          placeholder="Years"
+          size="sm"
+          hideControls
+          fullWidth
+        />
+        <NumberInput
+          value={form.expectedReturn}
+          onChange={(v) => update('expectedReturn', v ?? 0)}
+          step={0.01}
+          placeholder="Return"
+          size="sm"
+          hideControls
+          fullWidth
+        />
+        <NumberInput
+          value={form.annualIncreaseRate}
+          onChange={(v) => update('annualIncreaseRate', v ?? 0)}
+          step={0.01}
+          placeholder="Annual Increase %"
+          size="sm"
+          hideControls
+          fullWidth
+        />
       </div>
-      <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end' }}>
-        <button onClick={onCancel} className="btn">Cancel</button>
-        <button onClick={() => onSave(form)} className="btn-primary">Save</button>
+      <div className="flex gap-2 justify-end">
+        <Button variant="ghost" size="sm" onClick={onCancel}>Cancel</Button>
+        <Button variant="primary" size="sm" onClick={() => onSave(form)}>Save</Button>
       </div>
     </div>
   );

@@ -12,6 +12,7 @@
 
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import { X, Search, ChevronDown } from 'lucide-react';
+import { Button, IconButton, TextInput, NumberInput, Slider, SegmentedToggle } from '@quentinlachaud/app-component-library';
 import {
   Asset,
   Liability,
@@ -210,32 +211,20 @@ export function AssetLiabilityModal({
         onClick={(e) => e.stopPropagation()}
       >
         {/* Close Button */}
-        <button className="nw-modal-close" onClick={handleClose}>
-          <X size={20} />
-        </button>
+        <IconButton icon={<X size={20} />} label="Close" variant="ghost" size="sm" onClick={handleClose} />
         
         {/* Mode Switch - Fixed at top */}
         <div className="nw-modal-switch-wrapper">
-          <div className="nw-modal-switch">
-            <button
-              className={`nw-switch-btn ${mode === 'asset' ? 'active' : ''}`}
-              onClick={() => handleModeSwitch('asset')}
-              disabled={isEditing}
-            >
-              Asset
-            </button>
-            <button
-              className={`nw-switch-btn liability ${mode === 'liability' ? 'active' : ''}`}
-              onClick={() => handleModeSwitch('liability')}
-              disabled={isEditing}
-            >
-              Liability
-            </button>
-            <div 
-              className={`nw-switch-slider ${mode}`}
-              style={{ transform: mode === 'liability' ? 'translateX(100%)' : 'translateX(0)' }}
-            />
-          </div>
+          <SegmentedToggle
+            options={[
+              { value: 'asset', label: 'Asset' },
+              { value: 'liability', label: 'Liability' },
+            ]}
+            value={mode}
+            onChange={(v) => handleModeSwitch(v as ModalMode)}
+            size="sm"
+            fullWidth
+          />
         </div>
         
         {/* Title */}
@@ -250,19 +239,12 @@ export function AssetLiabilityModal({
         <div className="nw-modal-form">
           {/* Custom Name Field */}
           <div className="nw-form-field">
-            <label>
-              Custom Name 
-              <span className="field-optional">(optional)</span>
-              {selectedType === 'custom' && (
-                <span className="field-required">*required for custom type</span>
-              )}
-            </label>
-            <input
-              type="text"
-              className="nw-text-input"
+            <TextInput
+              label={selectedType === 'custom' ? 'Custom Name *' : 'Custom Name (optional)'}
               placeholder='e.g., "My Emergency Fund", "Main House Mortgage"'
               value={customName}
               onChange={(e) => setCustomName(e.target.value)}
+              fullWidth
             />
           </div>
           
@@ -325,21 +307,19 @@ export function AssetLiabilityModal({
           {/* Liquidity Index Display (Assets only) */}
           {mode === 'asset' && displayLiquidityIndex !== null && (
             <div className="nw-liquidity-display">
-              <span className="nw-liquidity-label">Liquidity Index</span>
               {selectedType === 'custom' ? (
-                <div className="nw-custom-liquidity">
-                  <input
-                    type="range"
-                    min="1"
-                    max="10"
-                    value={customLiquidity}
-                    onChange={(e) => setCustomLiquidity(parseInt(e.target.value))}
-                    className="nw-liquidity-slider"
-                  />
-                  <span className="nw-liquidity-value">{customLiquidity}/10</span>
-                </div>
+                <Slider
+                  label="Liquidity Index"
+                  value={customLiquidity}
+                  onChange={(v) => setCustomLiquidity(v)}
+                  min={1}
+                  max={10}
+                  step={1}
+                  formatValue={(v) => `${v}/10`}
+                />
               ) : (
                 <>
+                  <span className="nw-liquidity-label">Liquidity Index</span>
                   <div className="nw-liquidity-bar">
                     <div 
                       className="nw-liquidity-fill"
@@ -354,18 +334,14 @@ export function AssetLiabilityModal({
           
           {/* Value Input */}
           <div className="nw-form-field">
-            <label>Current Value</label>
-            <div className="nw-value-input">
-              <span className="nw-currency">£</span>
-              <input
-                type="number"
-                placeholder={mode === 'liability' ? 'Enter amount' : 'Enter value'}
-                value={value}
-                onChange={(e) => setValue(e.target.value)}
-                min={0}
-                step={100}
-              />
-            </div>
+            <NumberInput
+              label="Current Value"
+              value={value ? parseFloat(value) : undefined}
+              onChange={(v) => setValue(v !== undefined ? v.toString() : '')}
+              min={0}
+              step={100}
+              fullWidth
+            />
             {mode === 'liability' && value && parseFloat(value) > 0 && (
               <span className="nw-value-preview">
                 Will be recorded as: {formatCurrency(-Math.abs(parseFloat(value)))}
@@ -376,21 +352,14 @@ export function AssetLiabilityModal({
           {/* Interest Rate (Liabilities only) */}
           {mode === 'liability' && (
             <div className="nw-form-field">
-              <label>
-                Interest Rate 
-                <span className="field-optional">(optional)</span>
-              </label>
-              <div className="nw-rate-input">
-                <input
-                  type="number"
-                  placeholder="e.g., 5.5"
-                  value={interestRate}
-                  onChange={(e) => setInterestRate(e.target.value)}
-                  step={0.1}
-                  min={0}
-                />
-                <span className="nw-rate-suffix">% APR</span>
-              </div>
+              <NumberInput
+                label="Interest Rate (optional)"
+                value={interestRate ? parseFloat(interestRate) : undefined}
+                onChange={(v) => setInterestRate(v !== undefined ? v.toString() : '')}
+                step={0.1}
+                min={0}
+                fullWidth
+              />
             </div>
           )}
           
@@ -407,8 +376,9 @@ export function AssetLiabilityModal({
         </div>
         
         {/* Submit Button */}
-        <button 
-          className={`nw-submit-btn ${mode}`}
+        <Button
+          variant="primary"
+          fullWidth
           onClick={handleSubmit}
           disabled={!isValid || requiresCustomName}
         >
@@ -416,7 +386,7 @@ export function AssetLiabilityModal({
             ? 'Save Changes'
             : (mode === 'asset' ? 'Add Asset' : 'Add Liability')
           }
-        </button>
+        </Button>
       </div>
     </div>
   );

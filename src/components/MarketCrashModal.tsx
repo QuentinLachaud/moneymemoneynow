@@ -11,6 +11,7 @@
 
 import { useState } from 'react';
 import { X, AlertTriangle, Trash2 } from 'lucide-react';
+import { Button, TextInput, NumberInput, IconButton, SegmentedToggle } from '@quentinlachaud/app-component-library';
 import { MarketCrash } from '../store/useMarketCrashStore';
 
 interface MarketCrashModalProps {
@@ -58,58 +59,44 @@ export function MarketCrashModal({
             <AlertTriangle size={20} className="crash-icon" />
             <h2>{initialData ? 'Edit Market Crash' : 'Add Market Crash'}</h2>
           </div>
-          <button className="modal-close" onClick={onClose}>
-            <X size={20} />
-          </button>
+          <IconButton icon={<X size={20} />} label="Close" variant="ghost" size="sm" onClick={onClose} />
         </div>
 
         <form onSubmit={handleSubmit} className="crash-form">
           {/* Crash Name */}
           <div className="form-group">
-            <label htmlFor="crash-name">Crash Label</label>
-            <input
-              id="crash-name"
-              type="text"
+            <TextInput
+              label="Crash Label"
               value={name}
               onChange={(e) => setName(e.target.value)}
               placeholder="e.g., GFC-style crash, Dot-com bust"
-              className="form-input"
-              required
+              fullWidth
             />
           </div>
 
           {/* Crash Year */}
           <div className="form-group">
-            <label htmlFor="crash-year">Crash Year</label>
-            <input
-              id="crash-year"
-              type="number"
+            <NumberInput
+              label="Crash Year"
+              value={crashYear}
+              onChange={(v) => setCrashYear(v ?? currentYear + 5)}
               min={currentYear}
               max={currentYear + 50}
-              value={crashYear}
-              onChange={(e) => setCrashYear(parseInt(e.target.value))}
-              className="form-input"
+              helperText="The year when the crash occurs, affecting all assets immediately."
+              fullWidth
             />
-            <p className="form-hint">
-              The year when the crash occurs, affecting all assets immediately.
-            </p>
           </div>
 
           {/* Severity Selector */}
           <div className="form-group">
-            <label>Crash Severity</label>
-            <div className="severity-selector">
-              {SEVERITY_OPTIONS.map((pct) => (
-                <button
-                  key={pct}
-                  type="button"
-                  className={`severity-btn ${severity === pct ? 'active' : ''}`}
-                  onClick={() => setSeverity(pct)}
-                >
-                  {pct}%
-                </button>
-              ))}
-            </div>
+            <label className="text-xs font-medium text-text-secondary">Crash Severity</label>
+            <SegmentedToggle
+              options={SEVERITY_OPTIONS.map(pct => ({ value: String(pct), label: `${pct}%` }))}
+              value={String(severity)}
+              onChange={(v) => setSeverity(parseInt(v))}
+              size="sm"
+              fullWidth
+            />
             <p className="form-hint">
               Percentage drop applied to entire portfolio at crash year. 
               Recovery occurs naturally through market returns.
@@ -119,22 +106,21 @@ export function MarketCrashModal({
           {/* Actions */}
           <div className="form-actions">
             {onDelete && (
-              <button
-                type="button"
-                className="btn btn-danger"
+              <Button
+                variant="secondary"
+                leftIcon={<Trash2 size={16} />}
                 onClick={onDelete}
               >
-                <Trash2 size={16} />
                 Delete
-              </button>
+              </Button>
             )}
             <div className="actions-right">
-              <button type="button" className="btn btn-secondary" onClick={onClose}>
+              <Button variant="secondary" onClick={onClose}>
                 Cancel
-              </button>
-              <button type="submit" className="btn btn-primary">
+              </Button>
+              <Button variant="primary" type="submit">
                 {initialData ? 'Save Changes' : 'Add Crash'}
-              </button>
+              </Button>
             </div>
           </div>
         </form>

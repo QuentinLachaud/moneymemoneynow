@@ -18,6 +18,7 @@ import { SimulationSummary } from './SimulationSummary';
 import { CashFlowChart } from './CashFlowChart';
 import { BarChart3, Table, TrendingUp, Shield } from 'lucide-react';
 import { generateHistogramBins } from '../utils/monteCarlo';
+import { Button, IconButton, NumberInput, Slider, SegmentedToggle } from '@quentinlachaud/app-component-library';
 
 interface PortfolioPanelProps {
   accounts: Account[];
@@ -158,43 +159,26 @@ export function PortfolioPanel({ accounts, selectedAccountIds }: PortfolioPanelP
         {/* Simulation Count Selector */}
         <div className="control-group">
           <label>Simulations</label>
-          <div className="simulation-count-selector">
-            {SIMULATION_COUNTS.map(count => (
-              <button
-                key={count}
-                className={`count-btn ${numSimulations === count ? 'active' : ''}`}
-                onClick={() => setNumSimulations(count)}
-              >
-                {count.toLocaleString()}
-              </button>
-            ))}
-          </div>
+          <SegmentedToggle
+            options={SIMULATION_COUNTS.map(count => ({ value: String(count), label: count.toLocaleString() }))}
+            value={String(numSimulations)}
+            onChange={(v) => setNumSimulations(Number(v))}
+            size="sm"
+          />
         </div>
 
         {/* Volatility Slider */}
         <div className="control-group volatility-control">
-          <label>
-            Volatility: <span className="value-display">{globalVolatilityOverride}%</span>
-          </label>
-          <div className="volatility-slider-container">
-            <input
-              type="range"
-              min="0"
-              max="50"
-              step="1"
-              value={globalVolatilityOverride}
-              onChange={(e) => handleGlobalVolatilityChange(parseInt(e.target.value))}
-              className="volatility-slider"
-            />
-            <div className="volatility-marks">
-              <span>0%</span>
-              <span>10%</span>
-              <span>20%</span>
-              <span>30%</span>
-              <span>40%</span>
-              <span>50%</span>
-            </div>
-          </div>
+          <Slider
+            label="Volatility"
+            value={globalVolatilityOverride}
+            onChange={handleGlobalVolatilityChange}
+            min={0}
+            max={50}
+            step={1}
+            showValue
+            formatValue={(v) => `${v}%`}
+          />
           <div className="volatility-presets">
             {[0, 5, 10, 15, 20, 25, 30].map(v => (
               <button
@@ -210,55 +194,42 @@ export function PortfolioPanel({ accounts, selectedAccountIds }: PortfolioPanelP
 
         {/* Projection Years Slider */}
         <div className="control-group projection-years-control">
-          <label>
-            Projection: <span className="value-display">{effectiveProjectionYears} years</span>
-            {projectionYearsOverride !== null && (
-              <button 
-                className="reset-btn" 
-                onClick={() => setProjectionYearsOverride(null)}
-                title="Reset to natural horizon"
-              >
-                ↺
-              </button>
-            )}
-          </label>
-          <div className="projection-slider-container">
-            <input
-              type="range"
-              min="1"
-              max="100"
-              step="1"
-              value={effectiveProjectionYears}
-              onChange={(e) => setProjectionYearsOverride(parseInt(e.target.value))}
-              className="projection-slider"
-            />
-            <div className="projection-marks">
-              <span>1</span>
-              <span>25</span>
-              <span>50</span>
-              <span>75</span>
-              <span>100</span>
-            </div>
-          </div>
+          <Slider
+            label={
+              <>
+                Projection{projectionYearsOverride !== null && (
+                  <button 
+                    className="reset-btn" 
+                    onClick={() => setProjectionYearsOverride(null)}
+                    title="Reset to natural horizon"
+                  >
+                    ↺
+                  </button>
+                )}
+              </>
+            }
+            value={effectiveProjectionYears}
+            onChange={(v) => setProjectionYearsOverride(v)}
+            min={1}
+            max={100}
+            step={1}
+            showValue
+            formatValue={(v) => `${v} years`}
+          />
         </div>
 
         {/* Scale Toggle */}
         <div className="control-group scale-toggle-control">
           <label>Y-Axis Scale</label>
-          <div className="scale-toggle">
-            <button
-              className={`scale-btn ${!useLogScale ? 'active' : ''}`}
-              onClick={() => setUseLogScale(false)}
-            >
-              Linear
-            </button>
-            <button
-              className={`scale-btn ${useLogScale ? 'active' : ''}`}
-              onClick={() => setUseLogScale(true)}
-            >
-              Log
-            </button>
-          </div>
+          <SegmentedToggle
+            options={[
+              { value: 'linear', label: 'Linear' },
+              { value: 'log', label: 'Log' },
+            ]}
+            value={useLogScale ? 'log' : 'linear'}
+            onChange={(v) => setUseLogScale(v === 'log')}
+            size="sm"
+          />
         </div>
       </div>
 
@@ -298,20 +269,20 @@ export function PortfolioPanel({ accounts, selectedAccountIds }: PortfolioPanelP
         <div className="projections-side-panel">
           {/* Toggle Buttons */}
           <div className="side-panel-toggles">
-            <button
-              className={`toggle-btn ${showHistogram ? 'active' : ''}`}
+            <Button
+              variant="ghost"
               onClick={() => setShowHistogram(!showHistogram)}
+              leftIcon={<BarChart3 size={16} />}
             >
-              <BarChart3 size={16} />
               Distribution
-            </button>
-            <button
-              className={`toggle-btn ${showDataTable ? 'active' : ''}`}
+            </Button>
+            <Button
+              variant="ghost"
               onClick={() => setShowDataTable(!showDataTable)}
+              leftIcon={<Table size={16} />}
             >
-              <Table size={16} />
               Data
-            </button>
+            </Button>
           </div>
 
           {/* Histogram Section */}
@@ -320,14 +291,14 @@ export function PortfolioPanel({ accounts, selectedAccountIds }: PortfolioPanelP
               <div className="section-header">
                 <h4>Final Value Distribution</h4>
                 <div className="bin-control">
-                  <label>Bins: {histogramBins}</label>
-                  <input
-                    type="range"
-                    min="5"
-                    max="100"
-                    step="5"
+                  <Slider
+                    label="Bins"
                     value={histogramBins}
-                    onChange={(e) => setHistogramBins(parseInt(e.target.value))}
+                    onChange={setHistogramBins}
+                    min={5}
+                    max={100}
+                    step={5}
+                    showValue
                   />
                 </div>
               </div>
@@ -401,34 +372,24 @@ export function PortfolioPanel({ accounts, selectedAccountIds }: PortfolioPanelP
                     </div>
                     <div className="account-overrides">
                       <div className="override-control">
-                        <label>Return</label>
-                        <div className="override-input-group">
-                          <input
-                            type="number"
-                            min="0"
-                            max="50"
-                            step="0.5"
-                            value={currentReturn}
-                            onChange={(e) => handleAssetReturnOverride(c.name, parseFloat(e.target.value) || null)}
-                            className="override-input"
-                          />
-                          <span className="override-unit">%</span>
-                        </div>
+                        <NumberInput
+                          label="Return %"
+                          value={currentReturn}
+                          onChange={(v) => handleAssetReturnOverride(c.name, v ?? null)}
+                          min={0}
+                          max={50}
+                          step={0.5}
+                        />
                       </div>
                       <div className="override-control">
-                        <label>σ</label>
-                        <div className="override-input-group">
-                          <input
-                            type="number"
-                            min="0"
-                            max="100"
-                            step="1"
-                            value={currentVolatility}
-                            onChange={(e) => handleAssetVolatilityOverride(c.name, parseFloat(e.target.value) || null)}
-                            className="override-input"
-                          />
-                          <span className="override-unit">%</span>
-                        </div>
+                        <NumberInput
+                          label="σ %"
+                          value={currentVolatility}
+                          onChange={(v) => handleAssetVolatilityOverride(c.name, v ?? null)}
+                          min={0}
+                          max={100}
+                          step={1}
+                        />
                       </div>
                       <div className="override-info">
                         <span className="year-range">{c.startYear}–{c.endYear}</span>

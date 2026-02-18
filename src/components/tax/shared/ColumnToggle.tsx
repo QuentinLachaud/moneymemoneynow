@@ -2,6 +2,8 @@
  * ColumnToggle — Annual/Monthly column visibility toggle
  */
 
+import { SegmentedToggle } from '@quentinlachaud/app-component-library';
+
 interface ColumnToggleProps {
   showAnnual: boolean;
   showMonthly: boolean;
@@ -15,20 +17,25 @@ export function ColumnToggle({
   onToggleAnnual,
   onToggleMonthly,
 }: ColumnToggleProps) {
+  // Determine current value based on state
+  const currentValue = showAnnual && showMonthly ? 'both' : showAnnual ? 'annual' : 'monthly';
+  
   return (
     <div className="column-toggle">
-      <button
-        className={`toggle-chip ${showAnnual ? 'active' : ''}`}
-        onClick={onToggleAnnual}
-      >
-        Annual
-      </button>
-      <button
-        className={`toggle-chip ${showMonthly ? 'active' : ''}`}
-        onClick={onToggleMonthly}
-      >
-        Monthly
-      </button>
+      <SegmentedToggle
+        options={[
+          { value: 'annual', label: 'Annual' },
+          { value: 'monthly', label: 'Monthly' },
+        ]}
+        value={currentValue === 'monthly' ? 'monthly' : 'annual'}
+        onChange={(v) => {
+          if (v === 'annual' && !showAnnual) onToggleAnnual();
+          if (v === 'annual' && showMonthly) onToggleMonthly();
+          if (v === 'monthly' && !showMonthly) onToggleMonthly();
+          if (v === 'monthly' && showAnnual) onToggleAnnual();
+        }}
+        size="sm"
+      />
     </div>
   );
 }

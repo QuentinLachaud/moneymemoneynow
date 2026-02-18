@@ -10,6 +10,7 @@
 
 import { useState, useRef, useEffect } from 'react';
 import { X } from 'lucide-react';
+import { Button, NumberInput, IconButton } from '@quentinlachaud/app-component-library';
 import { Currency, CURRENCY_SYMBOLS } from '../../utils/investmentSimulation';
 
 interface BonusModalProps {
@@ -84,14 +85,13 @@ export function BonusModal({
         {/* Header */}
         <div className="bonus-modal-header">
           <h3 className="bonus-modal-title">Add Annual Bonus</h3>
-          <button
-            type="button"
-            className="bonus-modal-close"
+          <IconButton
+            icon={<X size={20} />}
+            label="Close"
+            variant="ghost"
+            size="sm"
             onClick={onClose}
-            aria-label="Close"
-          >
-            <X size={20} />
-          </button>
+          />
         </div>
 
         {/* Content */}
@@ -101,17 +101,13 @@ export function BonusModal({
           </p>
           
           <div className="bonus-input-wrapper">
-            <span className="bonus-currency-prefix">{symbol}</span>
-            <input
-              ref={inputRef}
-              type="number"
-              value={bonusValue || ''}
-              onChange={(e) => setBonusValue(parseFloat(e.target.value) || 0)}
-              placeholder="0"
+            <NumberInput
+              label="Annual bonus"
+              value={bonusValue || undefined}
+              onChange={(v) => setBonusValue(v ?? 0)}
               min={0}
-              className="bonus-input"
+              fullWidth
             />
-            <span className="bonus-suffix">/year</span>
           </div>
           
           {bonusValue > 0 && (
@@ -123,20 +119,12 @@ export function BonusModal({
 
         {/* Actions */}
         <div className="bonus-modal-actions">
-          <button
-            type="button"
-            className="bonus-btn bonus-btn-secondary"
-            onClick={onClose}
-          >
+          <Button variant="secondary" onClick={onClose}>
             Cancel
-          </button>
-          <button
-            type="button"
-            className="bonus-btn bonus-btn-primary"
-            onClick={handleSave}
-          >
+          </Button>
+          <Button variant="primary" onClick={handleSave}>
             Save
-          </button>
+          </Button>
         </div>
       </div>
     </div>
